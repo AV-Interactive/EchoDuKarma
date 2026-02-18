@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://bbjg1eccmg2fu"
+
+[deps]
+
+files=["res://Datas/Bestiary/bestiary.Niveau.translation", "res://Datas/Bestiary/bestiary.PV.translation", "res://Datas/Bestiary/bestiary.XP.translation", "res://Datas/Bestiary/bestiary.FORCE.translation", "res://Datas/Bestiary/bestiary.ESPRIT.translation", "res://Datas/Bestiary/bestiary.AGI.translation", "res://Datas/Bestiary/bestiary.DEF.translation", "res://Datas/Bestiary/bestiary.IA.translation", "res://Datas/Bestiary/bestiary.LOOT.translation"]
+
+source_file="res://Datas/Bestiary/bestiary.csv"
+dest_files=["res://Datas/Bestiary/bestiary.Niveau.translation", "res://Datas/Bestiary/bestiary.PV.translation", "res://Datas/Bestiary/bestiary.XP.translation", "res://Datas/Bestiary/bestiary.FORCE.translation", "res://Datas/Bestiary/bestiary.ESPRIT.translation", "res://Datas/Bestiary/bestiary.AGI.translation", "res://Datas/Bestiary/bestiary.DEF.translation", "res://Datas/Bestiary/bestiary.IA.translation", "res://Datas/Bestiary/bestiary.LOOT.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

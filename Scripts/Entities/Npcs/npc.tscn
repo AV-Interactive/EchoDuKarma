@@ -1,0 +1,28 @@
+[gd_scene format=3 uid="uid://bqdkqqak5optc"]
+
+[ext_resource type="Script" uid="uid://c6u6wjja16ai6" path="res://Scripts/Entities/Npcs/Npc.cs" id="1_iuuga"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_r7p3x"]
+size = Vector2(32, 32)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_iuuga"]
+size = Vector2(38, 38)
+
+[node name="CharacterBody2D" type="CharacterBody2D" unique_id=499939312]
+collision_layer = 2
+collision_mask = 3
+script = ExtResource("1_iuuga")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=402536939]
+shape = SubResource("RectangleShape2D_r7p3x")
+debug_color = Color(0, 0.6, 0.69803923, 0)
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1140651245]
+
+[node name="InteractionArea" type="Area2D" parent="." unique_id=1319575601]
+collision_layer = 2
+collision_mask = 3
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionArea" unique_id=507064405]
+shape = SubResource("RectangleShape2D_iuuga")
+debug_color = Color(0.98613197, 0, 0.33149394, 0.41960785)

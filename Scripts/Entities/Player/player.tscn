@@ -1,0 +1,30 @@
+[gd_scene format=3 uid="uid://deitf4m52htu0"]
+
+[ext_resource type="Script" uid="uid://cppa6cijlxwut" path="res://Scripts/Entities/Player/Player.cs" id="1_4ntmi"]
+[ext_resource type="Texture2D" uid="uid://d31uenbc4gw01" path="res://Assets/Actors/player.png" id="1_l8h54"]
+[ext_resource type="Script" uid="uid://c3fcpq4old0uw" path="res://Scripts/Entities/Player/Camera.cs" id="3_btcbx"]
+[ext_resource type="Script" uid="uid://ccm84pwyrnwcg" path="res://Scripts/Data/StatHandler.cs" id="4_ons5c"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_btcbx"]
+size = Vector2(32, 32)
+
+[node name="Player" type="CharacterBody2D" unique_id=1254775452 node_paths=PackedStringArray("_stats")]
+collision_layer = 2
+collision_mask = 3
+script = ExtResource("1_4ntmi")
+_stats = NodePath("PlayerStats")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1530699820]
+shape = SubResource("RectangleShape2D_btcbx")
+
+[node name="Player" type="Sprite2D" parent="." unique_id=595485936]
+z_index = 2
+texture = ExtResource("1_l8h54")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=367264177]
+zoom = Vector2(3, 3)
+script = ExtResource("3_btcbx")
+
+[node name="PlayerStats" type="Node2D" parent="." unique_id=51476162]
+script = ExtResource("4_ons5c")
+DataFilePath = "uid://dc4xto357u8cs"

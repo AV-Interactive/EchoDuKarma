@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://dmn4avlw86whf"
+
+[deps]
+
+files=["res://Datas/Progress/Introduction/dialogues.TYPE DIALOGUE.translation", "res://Datas/Progress/Introduction/dialogues.PNJ.translation", "res://Datas/Progress/Introduction/dialogues.TEXTE.translation", "res://Datas/Progress/Introduction/dialogues.CONDITION ACCES.translation", "res://Datas/Progress/Introduction/dialogues.ACTION POST DIALOGUE.translation", "res://Datas/Progress/Introduction/dialogues.LIEN SUIVANT.translation"]
+
+source_file="res://Datas/Progress/Introduction/dialogues.csv"
+dest_files=["res://Datas/Progress/Introduction/dialogues.TYPE DIALOGUE.translation", "res://Datas/Progress/Introduction/dialogues.PNJ.translation", "res://Datas/Progress/Introduction/dialogues.TEXTE.translation", "res://Datas/Progress/Introduction/dialogues.CONDITION ACCES.translation", "res://Datas/Progress/Introduction/dialogues.ACTION POST DIALOGUE.translation", "res://Datas/Progress/Introduction/dialogues.LIEN SUIVANT.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

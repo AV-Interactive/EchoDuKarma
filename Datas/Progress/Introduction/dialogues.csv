@@ -1,0 +1,9 @@
+ID,TYPE DIALOGUE,PNJ,TEXTE,CONDITION ACCES,ACTION POST DIALOGUE,LIEN SUIVANT
+INTRO_SOS_01,TEXT,Marchand,"À l’aide ! Quelqu’un, aidez-moi ! ",proximité joueur,,INTRO_SOS_02
+INTRO_SOS_02,CHOICE,Marchand,Vite ! Ces [color=#58B4C6]rongeurs[/color] vont me dévorer ma cargaison !,interaction joueur,Aider,MARCHAND_AIDE
+,,,,,Partir,MARCHAND_FUITE
+MARCHAND_AIDE,TEXT,Marchand,Merci ! Réduis les en bouillis !,Lancer combat (2 rats),BATTLE:Rat:2,
+MARCHAND_FUITE,TEXT,Marchand,"Hé ! Attend, reviens ! … Pas cool…",,,
+PNJ_TEST,TEXT,Testeur,Je ne suis qu’un PNJ de test. Je suis là pour montrer les capacités des dialogues !,interaction joueur,,PNJ_TEST_2
+PNJ_TEST_2,TEXT,Testeur,"Je sais même afficher plusieurs lignes ;) Par exemple, ce message là me sert à démontrer l’affichage des longs messages. T’en pense quoi ? Il est bien affiché ? Dis moi si ça te conviens. Ou pas… Oui, effectivement. Le message semble inutilement log. Et c’est le cas…",interaction joueur,LEVEL_UP:1,PNJ_TEST_TROIS
+PNJ_TEST_TROIS,TEXT,Testeur en [color=red]retraite[/color],J’ai plus rien à dire.,,,

@@ -1,0 +1,102 @@
+[gd_scene format=3 uid="uid://df5ufudng06yc"]
+
+[ext_resource type="Script" uid="uid://b8swmikna55f0" path="res://Scripts/UI/Dialogue.cs" id="1_f8kjv"]
+
+[node name="DialogueUI" type="Control" unique_id=394009753 node_paths=PackedStringArray("npcNameLabel", "textLabel", "choicesContainer")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_f8kjv")
+npcNameLabel = NodePath("Panel/NpcName")
+textLabel = NodePath("Panel/NpcDialogue")
+choicesContainer = NodePath("VBoxContainer")
+
+[node name="Panel" type="Panel" parent="." unique_id=1874095793]
+custom_minimum_size = Vector2(0, 300)
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="NpcName" type="RichTextLabel" parent="Panel" unique_id=488434987]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.016
+anchor_top = 0.027
+anchor_right = 0.439
+anchor_bottom = 0.27
+offset_left = 9.279999
+offset_top = -0.10000038
+offset_right = 0.11999512
+theme_override_font_sizes/normal_font_size = 45
+theme_override_font_sizes/bold_font_size = 45
+theme_override_font_sizes/bold_italics_font_size = 45
+theme_override_font_sizes/italics_font_size = 45
+theme_override_font_sizes/mono_font_size = 45
+bbcode_enabled = true
+text = "[b]NOM DU PNJ[b]"
+
+[node name="NpcDialogue" type="RichTextLabel" parent="Panel" unique_id=897616576]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.013
+anchor_top = 0.293
+anchor_right = 0.98700005
+anchor_bottom = 0.95000005
+offset_left = 0.03999901
+offset_top = 0.099998474
+offset_right = 0.95996094
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/normal_font_size = 35
+theme_override_font_sizes/bold_font_size = 35
+theme_override_font_sizes/bold_italics_font_size = 35
+theme_override_font_sizes/italics_font_size = 35
+theme_override_font_sizes/mono_font_size = 35
+bbcode_enabled = true
+text = "Contenu du dialogue"
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1169628903]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -400.0
+offset_top = -340.0
+offset_right = -20.0
+offset_bottom = -310.0
+grow_horizontal = 0
+grow_vertical = 0
+metadata/_edit_use_anchors_ = true
+
+[node name="CHOICE_1" type="RichTextLabel" parent="VBoxContainer" unique_id=160435015]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/normal_font_size = 35
+theme_override_font_sizes/bold_font_size = 35
+theme_override_font_sizes/bold_italics_font_size = 35
+theme_override_font_sizes/italics_font_size = 35
+theme_override_font_sizes/mono_font_size = 35
+bbcode_enabled = true
+text = "CHOIX 1"
+autowrap_mode = 2
+
+[node name="CHOICE_2" type="RichTextLabel" parent="VBoxContainer" unique_id=2007331026]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/normal_font_size = 35
+theme_override_font_sizes/bold_font_size = 35
+theme_override_font_sizes/bold_italics_font_size = 35
+theme_override_font_sizes/italics_font_size = 35
+theme_override_font_sizes/mono_font_size = 35
+bbcode_enabled = true
+text = "CHOIX 2"
+autowrap_mode = 2

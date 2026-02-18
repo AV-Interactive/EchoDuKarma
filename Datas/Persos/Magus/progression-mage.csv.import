@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://dc4xto357u8cs"
+
+[deps]
+
+files=["res://Datas/Persos/Magus/progression-mage.Niveau.translation", "res://Datas/Persos/Magus/progression-mage.Multiplicateur.translation", "res://Datas/Persos/Magus/progression-mage.PV.translation", "res://Datas/Persos/Magus/progression-mage.PM.translation", "res://Datas/Persos/Magus/progression-mage.Force.translation", "res://Datas/Persos/Magus/progression-mage.Esprit  .translation", "res://Datas/Persos/Magus/progression-mage.Agi .translation", "res://Datas/Persos/Magus/progression-mage.Def.translation"]
+
+source_file="res://Datas/Persos/Magus/progression-mage.csv"
+dest_files=["res://Datas/Persos/Magus/progression-mage.Niveau.translation", "res://Datas/Persos/Magus/progression-mage.Multiplicateur.translation", "res://Datas/Persos/Magus/progression-mage.PV.translation", "res://Datas/Persos/Magus/progression-mage.PM.translation", "res://Datas/Persos/Magus/progression-mage.Force.translation", "res://Datas/Persos/Magus/progression-mage.Esprit  .translation", "res://Datas/Persos/Magus/progression-mage.Agi .translation", "res://Datas/Persos/Magus/progression-mage.Def.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true
