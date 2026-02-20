@@ -8,6 +8,7 @@ public partial class BattleHud : CanvasLayer
 
     Control _actionMenu;
     Sprite2D _targetCursor;
+    Tween _cursorTween;
     
     [Export] RichTextLabel _playerHpLabel;
     [Export] RichTextLabel _playerMpLabel;
@@ -53,6 +54,8 @@ public partial class BattleHud : CanvasLayer
                 _actionMenu.GetNode<Button>("Scene/ActionMenu/Panel/VBoxContainer/BtnAttack").GrabFocus();
             }
         };
+        
+        StartCursorAnim();
     }
 
     public void ShowMenu()
@@ -121,6 +124,14 @@ public partial class BattleHud : CanvasLayer
         await ToSignal(_logTween, "finished");
     }
 
+    void StartCursorAnim()
+    {
+        _cursorTween = CreateTween().SetLoops();
+        
+        _cursorTween.TweenProperty(_targetCursor, "offset:y", 10.0f, 0.25f).SetTrans(Tween.TransitionType.Sine);
+        _cursorTween.TweenProperty(_targetCursor, "offset:y", 0.0f, 0.25f).SetTrans(Tween.TransitionType.Sine);
+    }
+    
     public void UpdateTargetCursor(Vector2 targetPos)
     {
         _targetCursor.Show();
