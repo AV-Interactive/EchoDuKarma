@@ -35,6 +35,8 @@ public partial class BattleHud : CanvasLayer
         
         GetNode<Button>("Scene/ActionMenu/Panel/VBoxContainer/BtnAttack").Pressed += () => OnButtonPressed("Attack");
         GetNode<Button>("Scene/ActionMenu/Panel/VBoxContainer/BtnMagic").Pressed += () => OnButtonPressed("Magic");
+        GetNode<Button>("Scene/ActionMenu/Panel/VBoxContainer/BtnDefense").Pressed += () => OnButtonPressed("Defense");
+        GetNode<Button>("Scene/ActionMenu/Panel/VBoxContainer/BtnEscape").Pressed += () => OnButtonPressed("Flee");
 
         var battleManager = GetTree().Root.FindChild("BattleManager", true, false) as BattleManager;
         if (battleManager != null) battleManager.PlayerDamage += OnPlayerDamageReceived;

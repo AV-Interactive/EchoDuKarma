@@ -35,6 +35,8 @@ public partial class BattleManager : Node
     
     [Signal] public delegate void PlayerDamageEventHandler(int damage);
     
+    bool _isPlayerDefending = false;
+    
     public override void _Ready()
     {
         _player = GameManager.Instance.CurrentPlayer;
@@ -105,12 +107,49 @@ public partial class BattleManager : Node
     
     void OnPlayerActionSelected(string actionName)
     {
-        if (actionName == "Attack")
+        _isPlayerDefending = false;
+
+        switch (actionName)
         {
-            if (_enemies.Count > 0)
-            {
-                ExecutePlayerAttack(_enemies[0]);
-            }
+            case "Attack":
+                if (_enemies.Count > 0)
+                {
+                    ExecutePlayerAttack(_enemies[0]);
+                }
+                break;
+            case "Defense":
+                ExecuteDefense();
+                break;
+            case "Flee":
+                ExecuteFlee();
+                break;
+        }
+    }
+
+    async void ExecuteDefense()
+    {
+        _isPlayerDefending = true;
+        _hud.ShowLogs($"{_player.Name} est en mode DEFENSE !");
+        await ToSignal(GetTree().CreateTimer(2.0f), "timeout");
+        ChangeState(BattleState.Evaluation);
+    }
+
+    async void ExecuteFlee()
+    {
+        _hud.ShowLogs($"{_player.Name} tente de fuir...");
+        await ToSignal(GetTree().CreateTimer(2.0f), "timeout");
+
+        if (GD.Randf() > .5f)
+        {
+            _hud.ShowLogs("Fuite réussie !");
+            await ToSignal(GetTree().CreateTimer(1), "timeout");
+            GetTree().ChangeSceneToFile("res://Maps/Intro/Road.tscn");
+        }
+        else
+        {
+            _hud.ShowLogs("L'ennemie empêche la fuite !");
+            await ToSignal(GetTree().CreateTimer(1), "timeout");
+            ChangeState(BattleState.Evaluation);
         }
     }
     
@@ -164,6 +203,8 @@ public partial class BattleManager : Node
 
     async void EnemyAttack(Enemy enemy)
     {
+        await ToSignal(GetTree().CreateTimer(1f), "timeout");
+
         if (enemy == null || enemy.Stats == null) {
             GD.PrintErr("Erreur : L'ennemi ou ses stats sont nuls !");
             ChangeState(BattleState.Evaluation);
@@ -179,9 +220,14 @@ public partial class BattleManager : Node
         _hud.ShowLogs($"{enemy.EnemyName} prépare son attaque...");
         
         
-        await ToSignal(GetTree().CreateTimer(1.0f), "timeout");
         // Calcul des dégâts sécurisé
         int damage = CalculateFinalDamage(enemy.Stats.Strength, _player.Defense);
+
+        if (_isPlayerDefending)
+        {
+            damage /= 2;
+            _hud.ShowLogs($"La défense de {_player.Name} réduit les dégâts !");
+        }
         
         ShakeScreen();
         _player.CurrentPv -= damage;
