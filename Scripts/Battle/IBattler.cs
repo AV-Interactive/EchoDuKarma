@@ -1,6 +1,9 @@
+using Godot;
+
 public interface IBattler
 {
     string Name { get; }
+    Vector2 GlobalPosition { get; }
     int Level { get; }
     int Pv { get; }
     int CurrentPv { get; set; }

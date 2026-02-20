@@ -1,6 +1,8 @@
 using Godot;
 using System;
+using System.Collections.Generic;
 using EchoduKarma.Scripts.Data;
+using EchoduKarma.Scripts.Entities.Player;
 
 public partial class Player : CharacterBody2D, IBattler
 { 
@@ -17,17 +19,35 @@ public partial class Player : CharacterBody2D, IBattler
 		set => _stats.CurrentPv = value; 
 	}
 	public int Mp => _stats.MpMax;
-	public int CurrentMp  => _stats.CurrentMp;
+	public int CurrentMp
+	{
+		get => _stats.CurrentMp; 
+		set => _stats.CurrentMp = value;
+	}
+
 	public int Strength => _stats.Strength;
 	public int Dexterity => _stats.Dexterity;
 	public int Spirit => _stats.Spirit;
 	public int Defense => _stats.Defense;
+
+	public List<Skill> LearnedSkills = new List<Skill>();
 	
 	public override void _Ready()
 	{
 		GameManager.Instance.PlayerLevelUp += OnPlayerLevelUp;
 		GameManager.Instance.CurrentPlayer = this;
+		
 		_stats = GetNode<StatHandler>("PlayerStats");
+		var allSkills = SkillManager.LoadSkills();
+		foreach (var skill in allSkills)
+		{
+			if (skill.Classes.Contains("Magus")) //TODO |-> CHANGER PAR LA CLASSE DE FAÇON DYNAMIQUE
+			{
+				LearnedSkills.Add(skill);
+				GD.Print($"Le joueur a appris la skill {skill.Name}");
+			}
+		}
+		
 		GD.Print($"Le joueur est niveau {_stats.CurrentLevel} et à {_stats.CurrentPv} PV");
 	}
 

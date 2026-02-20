@@ -1,12 +1,15 @@
 using Godot;
 using System;
+using System.Collections.Generic;
 using EchoduKarma.Scripts.Data;
+using EchoduKarma.Scripts.Entities.Player;
 
 public partial class BattleHud : CanvasLayer
 {
     [Signal] public delegate void ActionSelectedEventHandler(string actionName);
 
     Control _actionMenu;
+    VBoxContainer _skillsListPanel;
     Sprite2D _targetCursor;
     Tween _cursorTween;
     
@@ -18,7 +21,9 @@ public partial class BattleHud : CanvasLayer
 
     public override void _Ready()
     {
-        _actionMenu = GetNode<Control>("Scene/ActionMenu");
+        _actionMenu = GetNode<Control>("Scene/Actions/Panel/ActionMenu");
+        _skillsListPanel = GetNode<VBoxContainer>("Scene/Actions/Panel/SkillsList");
+        
         _targetCursor = GetNode<Sprite2D>("Scene/TargetCursor");
         
         _playerHpLabel = GetNodeOrNull<RichTextLabel>("Scene/StatPanel/Panel/VBoxContainer/Control/HBoxContainer/VBoxContainer/HBoxContainer/NB_HP");
@@ -34,14 +39,15 @@ public partial class BattleHud : CanvasLayer
         }
         
         _actionMenu.Hide();
+        _skillsListPanel.Hide();
         
         // Stats Player
         _playerHpLabel.Text = $"{GameManager.Instance.CurrentPlayer.CurrentPv.ToString()}/{GameManager.Instance.CurrentPlayer.Pv.ToString()} HP";
         
-        GetNode<Button>("Scene/ActionMenu/Panel/VBoxContainer/BtnAttack").Pressed += () => OnButtonPressed("Attack");
-        GetNode<Button>("Scene/ActionMenu/Panel/VBoxContainer/BtnMagic").Pressed += () => OnButtonPressed("Magic");
-        GetNode<Button>("Scene/ActionMenu/Panel/VBoxContainer/BtnDefense").Pressed += () => OnButtonPressed("Defense");
-        GetNode<Button>("Scene/ActionMenu/Panel/VBoxContainer/BtnEscape").Pressed += () => OnButtonPressed("Flee");
+        GetNode<Button>("Scene/Actions/Panel/ActionMenu/BtnAttack").Pressed += () => OnButtonPressed("Attack");
+        GetNode<Button>("Scene/Actions/Panel/ActionMenu/BtnMagic").Pressed += () => OnButtonPressed("Magic");
+        GetNode<Button>("Scene/Actions/Panel/ActionMenu/BtnDefense").Pressed += () => OnButtonPressed("Defense");
+        GetNode<Button>("Scene/Actions/Panel/ActionMenu/BtnEscape").Pressed += () => OnButtonPressed("Flee");
 
         var battleManager = GetTree().Root.FindChild("BattleManager", true, false) as BattleManager;
         if (battleManager != null) battleManager.PlayerDamage += OnPlayerDamageReceived;
@@ -51,7 +57,7 @@ public partial class BattleHud : CanvasLayer
         {
             if (node == null)
             {
-                _actionMenu.GetNode<Button>("Scene/ActionMenu/Panel/VBoxContainer/BtnAttack").GrabFocus();
+                _actionMenu.GetNode<Button>("Scene/Actions/Panel/ActionMenu/BtnAttack").GrabFocus();
             }
         };
         
@@ -61,13 +67,18 @@ public partial class BattleHud : CanvasLayer
     public void ShowMenu()
     {
         _actionMenu.Show();
-        var btnAttack = _actionMenu.GetNode<Button>("Panel/VBoxContainer/BtnAttack");
+        var btnAttack = _actionMenu.GetNode<Button>("BtnAttack");
     
         btnAttack?.GrabFocus();
     }
 
-    public void HideMenu() => _actionMenu.Hide();
-    
+    public void HideMenu()
+    {
+        _actionMenu.Hide();
+        _skillsListPanel.Hide();
+        _targetCursor.Hide();
+    }
+
     void OnButtonPressed(string action)
     {
         HideMenu();
@@ -78,6 +89,21 @@ public partial class BattleHud : CanvasLayer
     {
         GD.Print($"Player HP : {damage}");
         _playerHpLabel.Text = $"{(GameManager.Instance.CurrentPlayer.CurrentPv - damage).ToString()}/{GameManager.Instance.CurrentPlayer.Pv.ToString()} HP";
+    }
+    
+    public void UpdatePlayerStats(Player player)
+    {
+        // Mise à jour des PV
+        if (_playerHpLabel != null)
+        {
+            _playerHpLabel.Text = $"{player.CurrentPv}/{player.Pv} HP";
+        }
+
+        // Mise à jour des PM
+        if (_playerMpLabel != null)
+        {
+            _playerMpLabel.Text = $"{player.CurrentMp}/{player.Mp} MP";
+        }
     }
 
     public void ShowDamage(Vector2 position, int amount, Color color)
@@ -137,6 +163,35 @@ public partial class BattleHud : CanvasLayer
         _targetCursor.Show();
         targetPos = new Vector2(targetPos.X, targetPos.Y - 100);
         _targetCursor.GlobalPosition = targetPos;
+    }
+
+    public void ShowMagicMenu(List<Skill> skills)
+    {
+        GD.Print("ShowMagicMenu");
+        _actionMenu.Hide();
+
+        foreach (Node n in _skillsListPanel.GetChildren())
+        {
+            _skillsListPanel.RemoveChild(n);
+            n.QueueFree();
+        }
+
+        foreach (var skill in skills)
+        {
+            Button btn = new Button();
+            btn.Text = $"{skill.Name} ({skill.Cost} MP)";
+            btn.AddThemeFontSizeOverride("font_size", 35);
+            btn.Pressed += () => OnButtonPressed($"Magic:{skill.Name}");
+            _skillsListPanel.AddChild(btn);
+            GD.Print($"Ajout de la skill {skill.Name} au menu");
+        }
+        
+        _skillsListPanel.Show();
+        if (_skillsListPanel.GetChildCount() > 0)
+        {
+            var firstBtn = _skillsListPanel.GetChild<Button>(0);
+            firstBtn.GrabFocus();
+        }
     }
     
     public void HideTargetCursor() => _targetCursor.Hide();

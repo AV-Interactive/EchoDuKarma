@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using EchoduKarma.Scripts.Data;
+using EchoduKarma.Scripts.Entities.Player;
 
 public partial class BattleManager : Node
 {
@@ -38,6 +39,7 @@ public partial class BattleManager : Node
     bool _isPlayerDefending = false;
     int _targetIndex = 0;
     bool _isSelectingTarget = false;
+    Skill _selectedSkill;
     
     public override void _Ready()
     {
@@ -110,6 +112,21 @@ public partial class BattleManager : Node
     void OnPlayerActionSelected(string actionName)
     {
         _isPlayerDefending = false;
+        _selectedSkill = null;
+        
+        if (actionName.StartsWith("Magic:"))
+        {
+            string skillName = actionName.Split(':')[1];
+            // On récupère l'objet Skill complet dans la liste de Toine
+            _selectedSkill = _player.LearnedSkills.Find(s => s.Name == skillName);
+        
+            if (_selectedSkill != null)
+            {
+                // On lance la sélection de cible (la même que pour l'attaque)
+                StartTargetSelection(); 
+            }
+            return; // On sort pour ne pas entrer dans le switch
+        }
 
         switch (actionName)
         {
@@ -121,6 +138,9 @@ public partial class BattleManager : Node
                    }
                  */
                 StartTargetSelection();
+                break;
+            case "Magic":
+                _hud.ShowMagicMenu(_player.LearnedSkills);
                 break;
             case "Defense":
                 ExecuteDefense();
@@ -165,7 +185,15 @@ public partial class BattleManager : Node
         {
             _isSelectingTarget = false;
             _hud.HideTargetCursor();
-            ExecutePlayerAttack(_enemies[_targetIndex]);
+
+            if (_selectedSkill != null)
+            {
+                ExecuteMagicAttack(_enemies[_targetIndex], _selectedSkill);
+            }
+            else
+            {
+                ExecutePlayerAttack(_enemies[_targetIndex]);
+            }
         }
         else if (@event.IsActionPressed("ui_cancel"))
         {
@@ -173,6 +201,61 @@ public partial class BattleManager : Node
             _hud.HideTargetCursor();
             _hud.ShowMenu();
         }
+    }
+
+    async void ExecuteMagicAttack(IBattler target, Skill skill)
+    {
+        if (_player.CurrentMp < skill.Cost)
+        {
+            _hud.ShowLogs($"{_player.Name} n'a pas assez de MP pour utiliser {skill.Name} !");
+            await ToSignal(GetTree().CreateTimer(1), "timeout");
+            _hud.ShowMenu();
+            return;
+        }
+        
+        ChangeState(BattleState.Action);
+        _player.CurrentMp -= skill.Cost;
+        _hud.UpdatePlayerStats(_player);
+        
+        bool isAttack = skill.Type == SkillType.Attack;
+        
+        if (!isAttack)
+        {
+            // LOGIQUE DE SOIN
+            _hud.ShowLogs($"{_player.Name} utilise {skill.Name} !");
+        
+            int healAmount = CalculateHealPower(skill);
+        
+            // On cible le joueur (Toine)
+            _player.CurrentPv = Math.Min(_player.Pv, _player.CurrentPv + healAmount);
+        
+            _hud.UpdatePlayerStats(_player);
+            _hud.ShowDamage(new Vector2(1920/2, 980), healAmount, Colors.Green); // Affichage en VERT
+        }
+        else
+        {
+            // LOGIQUE D'ATTAQUE (ton code existant)
+            _hud.ShowLogs($"{_player.Name} lance {skill.Name} sur {target.Name} !");
+        
+            int damage = CalculateFinalSkillDamage(target, skill);
+            if (target is Enemy e) {
+                e.CurrentPv -= damage;
+                e.PlayHitEffect();
+            }
+        
+            _hud.ShowDamage(new Vector2(target.GlobalPosition.X, target.GlobalPosition.Y - 50), damage, Colors.Red);
+        }
+        
+        await ToSignal(GetTree().CreateTimer(1), "timeout");
+        ChangeState(BattleState.Evaluation);
+    }
+    
+    int CalculateHealPower(Skill skill)
+    {
+        // Le soin dépend souvent de l'Esprit du lanceur
+        float baseHeal = skill.Power + (_player.Spirit * 1.5f);
+        float variance = (float)GD.RandRange(0.9, 1.1);
+        return Mathf.RoundToInt(baseHeal * variance);
     }
 
     async void ExecuteDefense()
@@ -387,6 +470,28 @@ public partial class BattleManager : Node
         float finalDamage = baseDamage * variance * karmaMod;
 
         // On s'assure d'infliger au moins 1 dégât et on arrondit proprement
+        return Math.Max(1, Mathf.RoundToInt(finalDamage));
+    }
+
+    int CalculateFinalSkillDamage(IBattler target, Skill skill)
+    {
+        // 1. Déterminer l'attaquant (Toine dans ce cas)
+        // On récupère ses stats via le StatHandler
+        int attackerEsprit = _player.Spirit; 
+
+        // 2. Formule de dégâts magiques
+        // On additionne la puissance du sort à l'Esprit de l'attaquant
+        // On soustrait une partie de l'Esprit de la cible (qui sert de défense magique)
+        float baseDamage = (skill.Power + attackerEsprit) - (target.Spirit / 2f);
+
+        // 3. Ajout de la variance (+/- 10%) pour rester cohérent avec l'attaque physique
+        float variance = (float)GD.RandRange(0.9, 1.1);
+
+        // 4. Calcul final
+        // Tu peux aussi appliquer le karmaMod ici si tes sorts sont influencés par l'alignement
+        float finalDamage = baseDamage * variance;
+
+        // Sécurité : au moins 1 dégât si le sort n'est pas un soin
         return Math.Max(1, Mathf.RoundToInt(finalDamage));
     }
 
