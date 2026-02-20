@@ -113,19 +113,27 @@ public partial class BattleManager : Node
     {
         _isPlayerDefending = false;
         _selectedSkill = null;
-        
+    
         if (actionName.StartsWith("Magic:"))
         {
             string skillName = actionName.Split(':')[1];
-            // On récupère l'objet Skill complet dans la liste de Toine
             _selectedSkill = _player.LearnedSkills.Find(s => s.Name == skillName);
-        
+    
             if (_selectedSkill != null)
             {
-                // On lance la sélection de cible (la même que pour l'attaque)
-                StartTargetSelection(); 
+                // --- LOGIQUE DE CIBLAGE DYNAMIQUE ---
+                // Si le sort est de type Support (Soin/Buff), on l'exécute direct sur le joueur
+                if (_selectedSkill.Type == SkillType.Support)
+                {
+                    ExecuteMagicAttack(_player, _selectedSkill);
+                }
+                else 
+                {
+                    // Si c'est un sort d'attaque, on demande de choisir un ennemi
+                    StartTargetSelection(); 
+                }
             }
-            return; // On sort pour ne pas entrer dans le switch
+            return;
         }
 
         switch (actionName)
@@ -480,9 +488,9 @@ public partial class BattleManager : Node
         int attackerEsprit = _player.Spirit; 
 
         // 2. Formule de dégâts magiques
-        // On additionne la puissance du sort à l'Esprit de l'attaquant
-        // On soustrait une partie de l'Esprit de la cible (qui sert de défense magique)
-        float baseDamage = (skill.Power + attackerEsprit) - (target.Spirit / 2f);
+        // (Puissance du sort * (Esprit / 5)) - (Esprit Cible / 4)
+        // On divise l'Esprit par 5 pour que chaque point d'Esprit apporte +20% de dégâts
+        float baseDamage = (skill.Power * (attackerEsprit / 5f)) - (target.Spirit / 4f);
 
         // 3. Ajout de la variance (+/- 10%) pour rester cohérent avec l'attaque physique
         float variance = (float)GD.RandRange(0.9, 1.1);
