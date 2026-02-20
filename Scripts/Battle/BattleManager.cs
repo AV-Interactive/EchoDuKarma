@@ -18,6 +18,12 @@ public partial class BattleManager : Node
     
     BattleState _currentState;
     
+    [Export] BattleHud _hud;
+
+    // Scène d'ennemi à instancier (assigner enemy.tscn dans l'éditeur)
+    [Export] public PackedScene EnemyScene { get; set; }
+    [Export] public NodePath PlayerPath { get; set; }
+    
     Player _player;
     // Instances réelles d'ennemis utilisées pendant le combat
     List<Enemy> _enemies = new List<Enemy>();
@@ -26,16 +32,12 @@ public partial class BattleManager : Node
     
     List<IBattler> _turnOrder = new List<IBattler>();
     int _currentTurnIndex = 0;
-
-    [Export] BattleHud _hud;
-
-    // Scène d'ennemi à instancier (assigner enemy.tscn dans l'éditeur)
-    [Export] public PackedScene EnemyScene { get; set; }
-    [Export] public NodePath PlayerPath { get; set; }
     
     [Signal] public delegate void PlayerDamageEventHandler(int damage);
     
     bool _isPlayerDefending = false;
+    int _targetIndex = 0;
+    bool _isSelectingTarget = false;
     
     public override void _Ready()
     {
@@ -112,10 +114,13 @@ public partial class BattleManager : Node
         switch (actionName)
         {
             case "Attack":
-                if (_enemies.Count > 0)
-                {
-                    ExecutePlayerAttack(_enemies[0]);
-                }
+                /*
+                   if (_enemies.Count > 0)
+                   {
+                       ExecutePlayerAttack(_enemies[0]);
+                   }
+                 */
+                StartTargetSelection();
                 break;
             case "Defense":
                 ExecuteDefense();
@@ -123,6 +128,50 @@ public partial class BattleManager : Node
             case "Flee":
                 ExecuteFlee();
                 break;
+        }
+    }
+    
+    void StartTargetSelection()
+    {
+        if(_enemies.Count == 0) return;
+        
+        _isSelectingTarget = true;
+        _targetIndex = 0;
+        UpdateTargetCursor();
+    }
+    
+    void UpdateTargetCursor()
+    {
+        var target = _enemies[_targetIndex];
+        
+        _hud.UpdateTargetCursor(target.GlobalPosition);
+    }
+    
+    public override void _Input(InputEvent @event)
+    {
+        if (!_isSelectingTarget) return;
+
+        if (@event.IsActionPressed("ui_right"))
+        {
+            _targetIndex = (_targetIndex + 1) % _enemies.Count;
+            UpdateTargetCursor();
+        }
+        else if (@event.IsActionPressed("ui_left"))
+        {
+            _targetIndex = (_targetIndex - 1 + _enemies.Count) % _enemies.Count;
+            UpdateTargetCursor();
+        }
+        else if (@event.IsActionPressed("ui_accept"))
+        {
+            _isSelectingTarget = false;
+            _hud.HideTargetCursor();
+            ExecutePlayerAttack(_enemies[_targetIndex]);
+        }
+        else if (@event.IsActionPressed("ui_cancel"))
+        {
+            _isSelectingTarget = false;
+            _hud.HideTargetCursor();
+            _hud.ShowMenu();
         }
     }
 

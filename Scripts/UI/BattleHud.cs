@@ -7,6 +7,8 @@ public partial class BattleHud : CanvasLayer
     [Signal] public delegate void ActionSelectedEventHandler(string actionName);
 
     Control _actionMenu;
+    Sprite2D _targetCursor;
+    
     [Export] RichTextLabel _playerHpLabel;
     [Export] RichTextLabel _playerMpLabel;
     [Export] RichTextLabel _logs;
@@ -16,6 +18,8 @@ public partial class BattleHud : CanvasLayer
     public override void _Ready()
     {
         _actionMenu = GetNode<Control>("Scene/ActionMenu");
+        _targetCursor = GetNode<Sprite2D>("Scene/TargetCursor");
+        
         _playerHpLabel = GetNodeOrNull<RichTextLabel>("Scene/StatPanel/Panel/VBoxContainer/Control/HBoxContainer/VBoxContainer/HBoxContainer/NB_HP");
         _playerMpLabel = GetNodeOrNull<RichTextLabel>("Scene/StatPanel/Panel/VBoxContainer/Control/HBoxContainer/VBoxContainer/HBoxContainer/NB_MP");
 
@@ -116,4 +120,13 @@ public partial class BattleHud : CanvasLayer
         // On attend la fin de l'animation
         await ToSignal(_logTween, "finished");
     }
+
+    public void UpdateTargetCursor(Vector2 targetPos)
+    {
+        _targetCursor.Show();
+        targetPos = new Vector2(targetPos.X, targetPos.Y - 100);
+        _targetCursor.GlobalPosition = targetPos;
+    }
+    
+    public void HideTargetCursor() => _targetCursor.Hide();
 }

@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://ef736oyqrbw3" path="res://Scripts/UI/BattleHud.cs" id="1_vyhb5"]
 [ext_resource type="PackedScene" uid="uid://d3eqkwg770s7m" path="res://UI/PlayerStat.tscn" id="2_t21px"]
+[ext_resource type="Texture2D" uid="uid://bpjrpwssi8wmw" path="res://Assets/UI/arrow.png" id="3_j4epl"]
 [ext_resource type="Script" uid="uid://c2ln5w8e7jnn3" path="res://Scripts/Battle/BattleManager.cs" id="3_wnljt"]
 [ext_resource type="PackedScene" uid="uid://dtwuv7yk21542" path="res://Scripts/Entities/Enemy/enemy.tscn" id="4_j4epl"]
 [ext_resource type="Texture2D" uid="uid://5tksyi11alen" path="res://Assets/Images/Battles_BG/campain.png" id="5_t21px"]
@@ -154,6 +155,9 @@ theme_override_font_sizes/mono_font_size = 20
 bbcode_enabled = true
 text = "Je suis un log du style \"Rat 1 apparait !"
 vertical_alignment = 1
+
+[node name="TargetCursor" type="Sprite2D" parent="BattleHUD/Scene" unique_id=2002183410]
+texture = ExtResource("3_j4epl")
 
 [node name="BattleManager" type="Node" parent="." unique_id=984934980]
 script = ExtResource("3_wnljt")
