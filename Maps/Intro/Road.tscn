@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://deitf4m52htu0" path="res://Scripts/Entities/Player/player.tscn" id="2_l08hp"]
 [ext_resource type="PackedScene" uid="uid://bqdkqqak5optc" path="res://Scripts/Entities/Npcs/npc.tscn" id="3_wta73"]
 [ext_resource type="Texture2D" uid="uid://bi5huhrtcasnq" path="res://Assets/Actors/pnj.png" id="4_kf07n"]
-[ext_resource type="Texture2D" uid="uid://c005mixqkjny0" path="res://Assets/Actors/enemy.png" id="6_exhf2"]
+[ext_resource type="Texture2D" uid="uid://c005mixqkjny0" path="res://Assets/Actors/Enemies/gobi.png" id="6_exhf2"]
 [ext_resource type="PackedScene" uid="uid://df5ufudng06yc" path="res://UI/dialogue.tscn" id="6_rhr72"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ybxo3"]

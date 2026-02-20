@@ -27,7 +27,7 @@ public partial class BattleManager : Node
     List<IBattler> _turnOrder = new List<IBattler>();
     int _currentTurnIndex = 0;
 
-    BattleHud _hud;
+    [Export] BattleHud _hud;
 
     // Scène d'ennemi à instancier (assigner enemy.tscn dans l'éditeur)
     [Export] public PackedScene EnemyScene { get; set; }
@@ -97,6 +97,9 @@ public partial class BattleManager : Node
             case BattleState.Evaluation:
                 CheckBattleStatus();
                 break;
+            case BattleState.Victory:
+                HandleVictory();
+                break;
         }
     }
     
@@ -125,10 +128,12 @@ public partial class BattleManager : Node
         int damage = CalculateFinalDamage(_player.Strength, target.Defense);
         target.CurrentPv -= damage;
         if (target.CurrentPv < 0) target.CurrentPv = 0;
-    
-        GD.Print($"Toine attaque {target.EnemyName} pour {damage} dégâts !");
-    
-        await ToSignal(GetTree().CreateTimer(0.5f), "timeout");
+        
+        _hud.ShowLogs($"Toine attaque {target.EnemyName} pour {damage} dégâts !");
+        _hud.ShowDamage(new Vector2(target.Position.X, target.Position.Y - 50), damage, Colors.Red);
+        target.PlayHitEffect();
+        
+        await ToSignal(GetTree().CreateTimer(1), "timeout");
         ChangeState(BattleState.Evaluation);
     }
 
@@ -171,14 +176,20 @@ public partial class BattleManager : Node
             return;
         }
 
-        GD.Print($"{enemy.EnemyName} prépare son attaque...");
+        _hud.ShowLogs($"{enemy.EnemyName} prépare son attaque...");
+        
+        
         await ToSignal(GetTree().CreateTimer(1.0f), "timeout");
-    
         // Calcul des dégâts sécurisé
         int damage = CalculateFinalDamage(enemy.Stats.Strength, _player.Defense);
+        
+        ShakeScreen();
         _player.CurrentPv -= damage;
+        
+        _hud.ShowDamage(new Vector2(1920/2, 980), damage, Colors.Red);
     
-        GD.Print($"{enemy.EnemyName} inflige {damage} dégâts !");
+        _hud.ShowLogs($"{enemy.EnemyName} inflige {damage} dégâts !");
+        
         EmitSignal(SignalName.PlayerDamage, damage);
         ChangeState(BattleState.Evaluation);
     }
@@ -198,16 +209,29 @@ public partial class BattleManager : Node
             if (_enemies[i].CurrentPv <= 0)
             {
                 var dead = _enemies[i];
+
+                var tween = CreateTween();
+                tween.TweenProperty(dead, "modulate:a", 0, 0.5f);
+                tween.Parallel().TweenProperty(dead, "scale", Vector2.Zero, .5f);
+                
                 _enemies.RemoveAt(i);
                 _turnOrder.Remove(dead);
-                if (IsInstanceValid(dead)) dead.QueueFree();
+
+                tween.Finished += () =>
+                {
+                    dead.QueueFree();
+                };
+                
                 if (_currentTurnIndex >= _turnOrder.Count) _currentTurnIndex = 0;
+                
+                _hud.ShowLogs($"{dead.EnemyName} est mort !");
             }
         }
 
         if (_enemies.Count == 0)
         {
             // Joueur gagne
+            _hud.ShowLogs("Tous les ennemis on été vaincus !");
             ChangeState(BattleState.Victory);
             return;
         }
@@ -237,10 +261,19 @@ public partial class BattleManager : Node
         }
 
         _enemies.Clear();
-        foreach (var stats in _enemyStatsSource)
+        int spacing = 200;
+        Vector2 startPos = new Vector2((1920 / 2) - spacing, 1080/2);
+        
+        for (int i = 0; i < _enemyStatsSource.Count; i++)
         {
+            var stats = _enemyStatsSource[i];
             var enemy = EnemyScene.Instantiate<Enemy>();
-            enemy.EnemyName = stats.EnemyName; // injecte les stats via le nom
+        
+            enemy.EnemyName = stats.EnemyName;
+        
+            // On décale chaque ennemi pour éviter qu'ils soient l'un sur l'autre
+            enemy.Position = startPos + new Vector2(i * spacing, 0);
+        
             AddChild(enemy);
             _enemies.Add(enemy);
         }
@@ -260,5 +293,38 @@ public partial class BattleManager : Node
 
         // On s'assure d'infliger au moins 1 dégât et on arrondit proprement
         return Math.Max(1, Mathf.RoundToInt(finalDamage));
+    }
+
+    void ShakeScreen(float intensity = 10)
+    {
+        var tween = CreateTween();
+        var map = GetParent<Node2D>();
+        
+        tween.TweenProperty(map, "position", new Vector2(intensity, 0), .05f);
+        tween.TweenProperty(map, "position", new Vector2(-intensity, 0), .05f);
+        tween.TweenProperty(map, "position", Vector2.Zero, .05f);
+    }
+
+    async void HandleVictory()
+    {
+        float delay = 2.0f;
+        await ToSignal(GetTree().CreateTimer(delay), "timeout");
+        
+        int totalXp = 0;
+        int totalGold = 0;
+
+        foreach (var enemy in _enemyStatsSource)
+        {
+            totalXp += enemy.XpValue;
+        }
+        _hud.ShowLogs($"{totalXp.ToString()} XP Gagnés !");
+        ExitBattleWithDelay();
+    }
+
+    async void ExitBattleWithDelay()
+    {
+        float delay = 2.0f;
+        await ToSignal(GetTree().CreateTimer(delay), "timeout");
+        GD.Print("Retour au menu...");
     }
 }

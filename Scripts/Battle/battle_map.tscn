@@ -4,12 +4,15 @@
 [ext_resource type="PackedScene" uid="uid://d3eqkwg770s7m" path="res://UI/PlayerStat.tscn" id="2_t21px"]
 [ext_resource type="Script" uid="uid://c2ln5w8e7jnn3" path="res://Scripts/Battle/BattleManager.cs" id="3_wnljt"]
 [ext_resource type="PackedScene" uid="uid://dtwuv7yk21542" path="res://Scripts/Entities/Enemy/enemy.tscn" id="4_j4epl"]
+[ext_resource type="Texture2D" uid="uid://5tksyi11alen" path="res://Assets/Images/Battles_BG/campain.png" id="5_t21px"]
 
 [node name="BattleMap" type="Node2D" unique_id=23252002]
 
-[node name="BattleHUD" type="CanvasLayer" parent="." unique_id=364095169 node_paths=PackedStringArray("_playerMpLabel")]
+[node name="BattleHUD" type="CanvasLayer" parent="." unique_id=364095169 node_paths=PackedStringArray("_playerHpLabel", "_playerMpLabel", "_logs")]
 script = ExtResource("1_vyhb5")
-_playerMpLabel = NodePath("Scene/StatPanel/Panel/VBoxContainer/Control/HBoxContainer/VBoxContainer/HBoxContainer/NB_HP")
+_playerHpLabel = NodePath("Scene/StatPanel/Panel/VBoxContainer/Control/HBoxContainer/VBoxContainer/HBoxContainer/NB_HP")
+_playerMpLabel = NodePath("Scene/StatPanel/Panel/VBoxContainer/Control/HBoxContainer/VBoxContainer/HBoxContainer/NB_MP")
+_logs = NodePath("Scene/LogPanel/RichTextLabel")
 
 [node name="Scene" type="Control" parent="BattleHUD" unique_id=2034142044]
 custom_minimum_size = Vector2(1920, 1080)
@@ -26,13 +29,13 @@ metadata/_edit_use_anchors_ = true
 [node name="StatPanel" type="HBoxContainer" parent="BattleHUD/Scene" unique_id=1583530217]
 layout_mode = 1
 anchors_preset = -1
-anchor_left = 0.47400004
+anchor_left = 0.397
 anchor_top = 0.694
-anchor_right = 0.794
+anchor_right = 0.70900005
 anchor_bottom = 0.96900004
-offset_left = -0.080078125
+offset_left = 0.75994873
 offset_top = 0.47998047
-offset_right = -0.48010254
+offset_right = 0.71984863
 offset_bottom = -0.52001953
 grow_vertical = 0
 
@@ -62,12 +65,12 @@ size_flags_vertical = 1
 [node name="ActionMenu" type="HBoxContainer" parent="BattleHUD/Scene" unique_id=1474736952]
 layout_mode = 1
 anchors_preset = -1
-anchor_left = 0.855
-anchor_top = 0.694
+anchor_left = 0.786
+anchor_top = 0.606
 anchor_right = 0.99300003
 anchor_bottom = 0.96900004
-offset_left = 0.39990234
-offset_top = 0.47998047
+offset_left = 0.8800049
+offset_top = 0.52001953
 offset_right = 0.4399414
 offset_bottom = -0.52001953
 grow_horizontal = 2
@@ -88,37 +91,37 @@ grow_vertical = 2
 
 [node name="Label" type="Label" parent="BattleHUD/Scene/ActionMenu/Panel/VBoxContainer" unique_id=1396644937]
 layout_mode = 2
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 62
 text = "Actions"
 horizontal_alignment = 1
 
 [node name="BtnAttack" type="Button" parent="BattleHUD/Scene/ActionMenu/Panel/VBoxContainer" unique_id=768493787]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
-size_flags_horizontal = 4
 size_flags_vertical = 4
+theme_override_font_sizes/font_size = 45
 text = "ATTAQUER"
 
 [node name="BtnMagic" type="Button" parent="BattleHUD/Scene/ActionMenu/Panel/VBoxContainer" unique_id=1673696511]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
-size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 45
 text = "Magie
 "
 
 [node name="BtnDefense" type="Button" parent="BattleHUD/Scene/ActionMenu/Panel/VBoxContainer" unique_id=1830802042]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
-size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 45
 text = "Defense"
 
 [node name="BtnEscape" type="Button" parent="BattleHUD/Scene/ActionMenu/Panel/VBoxContainer" unique_id=245865078]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
-size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 45
 text = "Fuite"
 
-[node name="Panel" type="Panel" parent="BattleHUD/Scene" unique_id=433391598]
+[node name="LogPanel" type="Panel" parent="BattleHUD/Scene" unique_id=433391598]
 custom_minimum_size = Vector2(1500, 100)
 layout_mode = 1
 anchors_preset = -1
@@ -132,7 +135,7 @@ offset_right = -250.7201
 offset_bottom = 6.3600006
 grow_horizontal = 2
 
-[node name="RichTextLabel" type="RichTextLabel" parent="BattleHUD/Scene/Panel" unique_id=636507636]
+[node name="RichTextLabel" type="RichTextLabel" parent="BattleHUD/Scene/LogPanel" unique_id=636507636]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -155,5 +158,11 @@ vertical_alignment = 1
 [node name="BattleManager" type="Node" parent="." unique_id=984934980]
 script = ExtResource("3_wnljt")
 EnemyScene = ExtResource("4_j4epl")
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=932467889]
+offset_top = -500.0
+offset_right = 2048.0
+offset_bottom = 1548.0
+texture = ExtResource("5_t21px")
 
 [editable path="BattleHUD/Scene/StatPanel/Panel/VBoxContainer/Control"]
