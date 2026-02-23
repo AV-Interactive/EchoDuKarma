@@ -164,7 +164,7 @@ bbcode_enabled = true
 text = "Je suis un log du style \"Rat 1 apparait !"
 vertical_alignment = 1
 
-[node name="TargetCursor" type="Sprite3D" parent="BattleHUD/Scene" unique_id=1602873268]
+[node name="TargetCursor" type="Sprite2D" parent="BattleHUD/Scene" unique_id=1602873268]
 texture = ExtResource("3_j4epl")
 
 [node name="BattleManager" type="Node" parent="." unique_id=984934980 node_paths=PackedStringArray("_hud")]
@@ -172,7 +172,12 @@ script = ExtResource("3_wnljt")
 _hud = NodePath("../BattleHUD")
 EnemyScene = ExtResource("4_j4epl")
 
+[node name="Camera3D" type="Camera3D" parent="." unique_id=123456789]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 5)
+current = true
+
 [node name="TextureRect" type="TextureRect" parent="." unique_id=932467889]
+visible = false
 offset_top = -500.0
 offset_right = 2048.0
 offset_bottom = 1548.0

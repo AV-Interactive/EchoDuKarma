@@ -30,6 +30,12 @@ public partial class Enemy : CharacterBody3D, IBattler
             CurrentPv = Stats.Pv;
             LoadTexture();
         }
+
+        // Configuration du Billboard pour le combat
+        if (_sprite != null)
+        {
+            _sprite.Billboard = BaseMaterial3D.BillboardModeEnum.Enabled;
+        }
     }
 
     private void LoadTexture()

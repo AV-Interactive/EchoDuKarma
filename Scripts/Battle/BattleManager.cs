@@ -253,7 +253,11 @@ public partial class BattleManager : Node
 
     private void StartTargetSelection()
     {
-        if (_enemies.Count == 0) return;
+        if (_enemies == null || _enemies.Count == 0) 
+        {
+            GD.PrintErr("[BattleManager] StartTargetSelection: No enemies to target!");
+            return;
+        }
 
         _isSelectingTarget = true;
         _targetIndex = 0;
@@ -262,7 +266,13 @@ public partial class BattleManager : Node
 
     private void UpdateTargetCursor()
     {
-        if (_targetIndex < 0 || _targetIndex >= _enemies.Count) return;
+        if (_enemies == null || _targetIndex < 0 || _targetIndex >= _enemies.Count)
+        {
+            _hud?.HideTargetCursor();
+            return;
+        }
+        
+        // Lead Dev Tip: On utilise GetScreenPositionOfNode car le curseur est un Sprite2D dans l'UI
         _hud?.UpdateTargetCursor(GetScreenPositionOfNode(_enemies[_targetIndex]));
     }
 
@@ -505,9 +515,27 @@ public partial class BattleManager : Node
     
     Vector2 GetScreenPositionOfNode(Node3D node)
     {
+        if (node == null || !IsInstanceValid(node)) return Vector2.Zero;
+        
         var camera = GetViewport().GetCamera3D();
+        if (camera == null)
+        {
+            GD.PrintErr("[BattleManager] GetScreenPositionOfNode: No active Camera3D found!");
+            // Fallback: position centrale par défaut ou position arbitraire
+            var size = GetViewport().GetVisibleRect().Size;
+            return size / 2;
+        }
+
         // Projette le point 3D sur l'espace 2D de l'écran
-        return camera.UnprojectPosition(node.GlobalPosition);
+        try 
+        {
+            return camera.UnprojectPosition(node.GlobalPosition);
+        }
+        catch (ObjectDisposedException)
+        {
+            GD.PrintErr($"[BattleManager] Tentative d'accès à un objet libéré : {node.Name}");
+            return GetViewport().GetVisibleRect().Size / 2;
+        }
     }
 
     private int CalculatePhysicalDamage(int attackerAtk, int defenderDef)
@@ -584,6 +612,12 @@ public partial class BattleManager : Node
 
     private Vector2 GetPlayerUIPosition()
     {
+        // On récupère la position écran du joueur (qui est en 3D)
+        if (_player != null && IsInstanceValid(_player))
+        {
+            return GetScreenPositionOfNode(_player as Node3D);
+        }
+        
         var size = GetViewport()?.GetVisibleRect().Size ?? new Vector2(1920, 1080);
         return new Vector2(size.X / 2.0f, 980);
     }

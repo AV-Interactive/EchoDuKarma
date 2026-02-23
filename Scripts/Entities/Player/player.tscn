@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://cppa6cijlxwut" path="res://Scripts/Entities/Player/Player.cs" id="1_4ntmi"]
 [ext_resource type="Texture2D" uid="uid://d31uenbc4gw01" path="res://Assets/Actors/player.png" id="1_l8h54"]
+[ext_resource type="Script" uid="uid://bfffhqo5mnmbr" path="res://Scripts/Entities/Player/CameraFollow3D.cs" id="4_oai4o"]
 [ext_resource type="Script" uid="uid://ccm84pwyrnwcg" path="res://Scripts/Data/StatHandler.cs" id="4_ons5c"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_ons5c"]
@@ -20,7 +21,7 @@ shape = SubResource("CapsuleShape3D_ons5c")
 [node name="Node3D" type="Node3D" parent="." unique_id=290432175]
 
 [node name="Sprite3D" type="Sprite3D" parent="Node3D" unique_id=120836683]
-billboard = 2
+billboard = 1
 texture = ExtResource("1_l8h54")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="Node3D" unique_id=1509368393]
@@ -28,3 +29,10 @@ texture = ExtResource("1_l8h54")
 [node name="PlayerStats" type="Node2D" parent="." unique_id=51476162]
 script = ExtResource("4_ons5c")
 DataFilePath = "uid://dc4xto357u8cs"
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=967178187 node_paths=PackedStringArray("Target")]
+transform = Transform3D(-3.9400224e-08, -0.9435758, 0.33115673, -1.8929022e-08, 0.33115673, 0.9435758, -1, 3.090862e-08, -3.090862e-08, 5.8512516, 1.5290618, 0.33136153)
+fov = 80.0
+script = ExtResource("4_oai4o")
+Target = NodePath("..")
+Offset = Vector3(0, 5, 2)

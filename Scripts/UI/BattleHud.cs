@@ -161,8 +161,9 @@ public partial class BattleHud : CanvasLayer
     public void UpdateTargetCursor(Vector2 targetPos)
     {
         _targetCursor.Show();
-        targetPos = new Vector2(targetPos.X, targetPos.Y - 100);
-        _targetCursor.GlobalPosition = targetPos;
+        // Lead Dev: targetPos vient déjà d'une projection 3D->2D via UnprojectPosition.
+        // On place le curseur 2D sur cette position écran, avec un décalage vertical.
+        _targetCursor.GlobalPosition = new Vector2(targetPos.X, targetPos.Y - 150);
     }
 
     public void ShowMagicMenu(List<Skill> skills)
