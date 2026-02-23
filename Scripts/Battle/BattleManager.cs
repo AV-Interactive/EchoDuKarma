@@ -5,146 +5,196 @@ using System.Linq;
 using EchoduKarma.Scripts.Data;
 using EchoduKarma.Scripts.Entities.Player;
 
+/// <summary>
+/// Lead Developer Refactor: Orchestrates the turn-based battle logic.
+/// Handles State transitions, turn ordering, and execution of player/enemy actions.
+/// </summary>
 public partial class BattleManager : Node
 {
+    #region --- Enums & Signals ---
+
     public enum BattleState
     {
-        Setup,
-        Selection,
-        Action,
-        Evaluation,
-        Victory,
-        Defeat,
+        Setup,      // Initializing units and turn order
+        Selection,  // Waiting for player input or starting AI turn
+        Action,     // Executing animations and damage
+        Evaluation, // Checking win/loss conditions
+        Victory,    // Player won
+        Defeat      // Player lost
     }
     
-    BattleState _currentState;
-    
-    [Export] BattleHud _hud;
+    public enum BattleEndReason
+    {
+        Victory,
+        Defeat,
+        Flee
+    }
 
-    // Scène d'ennemi à instancier (assigner enemy.tscn dans l'éditeur)
+    [Signal] public delegate void PlayerDamageEventHandler(int damage);
+    [Signal] public delegate void BattleEndedEventHandler(BattleEndReason reason);
+
+    #endregion
+
+    #region --- Fields & Properties ---
+
+    [ExportGroup("Nodes & Scenes")]
+    [Export] private BattleHud _hud;
     [Export] public PackedScene EnemyScene { get; set; }
     [Export] public NodePath PlayerPath { get; set; }
-    
-    Player _player;
-    // Instances réelles d'ennemis utilisées pendant le combat
-    List<Enemy> _enemies = new List<Enemy>();
-    // Source de données provenant du GameManager pour instantiation
-    List<EnemyStats> _enemyStatsSource = new List<EnemyStats>();
-    
-    List<IBattler> _turnOrder = new List<IBattler>();
-    int _currentTurnIndex = 0;
-    
-    [Signal] public delegate void PlayerDamageEventHandler(int damage);
-    
-    bool _isPlayerDefending = false;
-    int _targetIndex = 0;
-    bool _isSelectingTarget = false;
-    Skill _selectedSkill;
-    
+
+    [ExportGroup("Combatants")]
+    private Player _player;
+    private readonly List<Enemy> _enemies = new List<Enemy>();
+    private List<EnemyStats> _enemyStatsSource = new List<EnemyStats>();
+
+    [ExportGroup("Turn Management")]
+    private BattleState _currentState;
+    private List<IBattler> _turnOrder = new List<IBattler>();
+    private int _currentTurnIndex = 0;
+
+    [ExportGroup("Action Selection State")]
+    private bool _isPlayerDefending = false;
+    private int _targetIndex = 0;
+    private bool _isSelectingTarget = false;
+    private Skill _selectedSkill;
+
+    #endregion
+
+    #region --- Lifecycle & Initialization ---
+
     public override void _Ready()
     {
+        InitializeBattle();
+    }
+
+    private void InitializeBattle()
+    {
         _player = GameManager.Instance.CurrentPlayer;
-        
+
         if (_player == null)
         {
-            GD.PrintErr("ERREUR CRITIQUE : Le joueur est introuvable dans le GameManager.");
+            GD.PrintErr("[BattleManager] CRITICAL ERROR: Player not found in GameManager.");
+            return;
         }
 
-        // On récupère la source des stats d'ennemis depuis le GameManager pour instantiation
         _enemyStatsSource = GameManager.Instance.ListEnemiesBattle;
-        
-        _hud = GetTree().Root.FindChild("BattleHUD", true, false) as BattleHud;
+
+        // Auto-link HUD if not assigned
+        if (_hud == null)
+            _hud = GetTree().Root.FindChild("BattleHUD", true, false) as BattleHud;
+
         if (_hud != null)
         {
             _hud.ActionSelected += OnPlayerActionSelected;
         }
-        
+        else
+        {
+            GD.PrintErr("[BattleManager] WARNING: BattleHud not found.");
+        }
+
         ChangeState(BattleState.Setup);
     }
 
+    #endregion
+
+    #region --- State Machine Core ---
+
+    /// <summary>
+    /// Centralized state switcher to ensure consistent logic flow.
+    /// </summary>
     public void ChangeState(BattleState newState)
     {
         _currentState = newState;
+        GD.Print($"[BattleState] Entering: {newState}");
+
         switch (newState)
         {
-            case BattleState.Setup:
-                SpawnEnemies();
-                DetermineTurnOrder();
-                break;
-            case BattleState.Selection:
-                if (_turnOrder.Count == 0)
-                {
-                    GD.PushError("[Battle] Aucun combattant dans l'ordre de tour. Retour au Setup.");
-                    ChangeState(BattleState.Setup);
-                    return;
-                }
-
-                if (_currentTurnIndex >= _turnOrder.Count)
-                {
-                    _currentTurnIndex = 0;
-                }
-
-                // Attente de choix du joueur
-                var activeUnit = _turnOrder[_currentTurnIndex];
-
-                if (activeUnit is Player)
-                {
-                    _hud?.ShowMenu();
-                }
-                else
-                {
-                    ChangeState(BattleState.Action);
-                }
-                
-                break;
-            case BattleState.Action:
-                ExecuteCurrentTurn();
-                break;
-            case BattleState.Evaluation:
-                CheckBattleStatus();
-                break;
-            case BattleState.Victory:
-                HandleVictory();
-                break;
+            case BattleState.Setup:      HandleSetupState(); break;
+            case BattleState.Selection:  HandleSelectionState(); break;
+            case BattleState.Action:     HandleActionState(); break;
+            case BattleState.Evaluation: HandleEvaluationState(); break;
+            case BattleState.Victory:    HandleVictoryState(); break;
+            case BattleState.Defeat:     HandleDefeatState(); break;
         }
     }
-    
-    void OnPlayerActionSelected(string actionName)
+
+    private void HandleSetupState()
     {
+        SpawnEnemies();
+        DetermineTurnOrder();
+    }
+
+    private void HandleSelectionState()
+    {
+        if (_turnOrder.Count == 0)
+        {
+            GD.PushError("[BattleManager] Turn order empty. Resetting to Setup.");
+            ChangeState(BattleState.Setup);
+            return;
+        }
+
+        // Loop turn index if out of bounds
+        if (_currentTurnIndex >= _turnOrder.Count)
+            _currentTurnIndex = 0;
+
+        var activeUnit = _turnOrder[_currentTurnIndex];
+
+        if (activeUnit is Player)
+        {
+            _hud?.ShowMenu();
+        }
+        else
+        {
+            // Auto-transition to Action for AI units
+            ChangeState(BattleState.Action);
+        }
+    }
+
+    private void HandleActionState()
+    {
+        ExecuteCurrentTurn();
+    }
+
+    private void HandleEvaluationState()
+    {
+        CheckBattleStatus();
+    }
+
+    private void HandleVictoryState()
+    {
+        HandleVictory();
+    }
+
+    private void HandleDefeatState()
+    {
+        _hud?.ShowLogs($"Défaite... {_player.Name} a succombé.");
+        EndBattle(BattleEndReason.Defeat);
+    }
+
+    #endregion
+
+    #region --- Player Input & Selection ---
+
+    /// <summary>
+    /// Callback from BattleHud when a button is pressed.
+    /// </summary>
+    private void OnPlayerActionSelected(string actionName)
+    {
+        if (_currentState != BattleState.Selection) return;
+
+        // Reset context
         _isPlayerDefending = false;
         _selectedSkill = null;
-    
+
         if (actionName.StartsWith("Magic:"))
         {
-            string skillName = actionName.Split(':')[1];
-            _selectedSkill = _player.LearnedSkills.Find(s => s.Name == skillName);
-    
-            if (_selectedSkill != null)
-            {
-                // --- LOGIQUE DE CIBLAGE DYNAMIQUE ---
-                // Si le sort est de type Support (Soin/Buff), on l'exécute direct sur le joueur
-                if (_selectedSkill.Type == SkillType.Support)
-                {
-                    ExecuteMagicAttack(_player, _selectedSkill);
-                }
-                else 
-                {
-                    // Si c'est un sort d'attaque, on demande de choisir un ennemi
-                    StartTargetSelection(); 
-                }
-            }
+            ProcessMagicSelection(actionName);
             return;
         }
 
         switch (actionName)
         {
             case "Attack":
-                /*
-                   if (_enemies.Count > 0)
-                   {
-                       ExecutePlayerAttack(_enemies[0]);
-                   }
-                 */
                 StartTargetSelection();
                 break;
             case "Magic":
@@ -158,23 +208,25 @@ public partial class BattleManager : Node
                 break;
         }
     }
-    
-    void StartTargetSelection()
+
+    private void ProcessMagicSelection(string actionName)
     {
-        if(_enemies.Count == 0) return;
-        
-        _isSelectingTarget = true;
-        _targetIndex = 0;
-        UpdateTargetCursor();
+        string skillName = actionName.Split(':')[1];
+        _selectedSkill = _player.LearnedSkills.Find(s => s.Name == skillName);
+
+        if (_selectedSkill == null) return;
+
+        // Support skills (Heal/Buff) are self-targeted for now
+        if (_selectedSkill.Type == SkillType.Support)
+        {
+            ExecuteMagicAction(_player, _selectedSkill);
+        }
+        else
+        {
+            StartTargetSelection();
+        }
     }
-    
-    void UpdateTargetCursor()
-    {
-        var target = _enemies[_targetIndex];
-        
-        _hud.UpdateTargetCursor(target.GlobalPosition);
-    }
-    
+
     public override void _Input(InputEvent @event)
     {
         if (!_isSelectingTarget) return;
@@ -191,348 +243,386 @@ public partial class BattleManager : Node
         }
         else if (@event.IsActionPressed("ui_accept"))
         {
-            _isSelectingTarget = false;
-            _hud.HideTargetCursor();
-
-            if (_selectedSkill != null)
-            {
-                ExecuteMagicAttack(_enemies[_targetIndex], _selectedSkill);
-            }
-            else
-            {
-                ExecutePlayerAttack(_enemies[_targetIndex]);
-            }
+            ConfirmTargetSelection();
         }
         else if (@event.IsActionPressed("ui_cancel"))
         {
-            _isSelectingTarget = false;
-            _hud.HideTargetCursor();
-            _hud.ShowMenu();
+            CancelTargetSelection();
         }
     }
 
-    async void ExecuteMagicAttack(IBattler target, Skill skill)
+    private void StartTargetSelection()
+    {
+        if (_enemies.Count == 0) return;
+
+        _isSelectingTarget = true;
+        _targetIndex = 0;
+        UpdateTargetCursor();
+    }
+
+    private void UpdateTargetCursor()
+    {
+        if (_targetIndex < 0 || _targetIndex >= _enemies.Count) return;
+        _hud?.UpdateTargetCursor(GetScreenPositionOfNode(_enemies[_targetIndex]));
+    }
+
+    private void ConfirmTargetSelection()
+    {
+        _isSelectingTarget = false;
+        _hud?.HideTargetCursor();
+
+        if (_selectedSkill != null)
+            ExecuteMagicAction(_enemies[_targetIndex], _selectedSkill);
+        else
+            ExecutePhysicalAttack(_enemies[_targetIndex]);
+    }
+
+    private void CancelTargetSelection()
+    {
+        _isSelectingTarget = false;
+        _hud?.HideTargetCursor();
+        _hud?.ShowMenu();
+    }
+
+    #endregion
+
+    #region --- Combat Execution: Player ---
+
+    private async void ExecutePhysicalAttack(Enemy target)
+    {
+        if (_player == null || target == null)
+        {
+            ChangeState(BattleState.Evaluation);
+            return;
+        }
+
+        ChangeState(BattleState.Action);
+
+        int damage = CalculatePhysicalDamage(_player.Strength, target.Defense);
+        target.CurrentPv -= damage;
+
+        _hud?.ShowLogs($"{_player.Name} attaque {target.EnemyName} pour {damage} dégâts !");
+        
+        // Lead Dev Tip: On utilise GetScreenPositionOfNode pour projeter la position 3D en 2D pour l'UI
+        Vector2 screenPos = GetScreenPositionOfNode(target);
+        _hud?.ShowDamage(new Vector2(screenPos.X, screenPos.Y - 50), damage, Colors.Red);
+        
+        target.PlayHitEffect();
+
+        await ToSignal(GetTree().CreateTimer(1.0f), "timeout");
+        ChangeState(BattleState.Evaluation);
+    }
+
+    private async void ExecuteMagicAction(IBattler target, Skill skill)
     {
         if (_player.CurrentMp < skill.Cost)
         {
-            _hud.ShowLogs($"{_player.Name} n'a pas assez de MP pour utiliser {skill.Name} !");
-            await ToSignal(GetTree().CreateTimer(1), "timeout");
-            _hud.ShowMenu();
+            _hud?.ShowLogs($"{_player.Name} n'a pas assez de MP pour utiliser {skill.Name} !");
+            await ToSignal(GetTree().CreateTimer(1.0f), "timeout");
+            _hud?.ShowMenu();
             return;
         }
-        
+
         ChangeState(BattleState.Action);
         _player.CurrentMp -= skill.Cost;
-        _hud.UpdatePlayerStats(_player);
-        
-        bool isAttack = skill.Type == SkillType.Attack;
-        
-        if (!isAttack)
-        {
-            // LOGIQUE DE SOIN
-            _hud.ShowLogs($"{_player.Name} utilise {skill.Name} !");
-        
-            int healAmount = CalculateHealPower(skill);
-        
-            // On cible le joueur (Toine)
-            _player.CurrentPv = Math.Min(_player.Pv, _player.CurrentPv + healAmount);
-        
-            _hud.UpdatePlayerStats(_player);
-            _hud.ShowDamage(new Vector2(1920/2, 980), healAmount, Colors.Green); // Affichage en VERT
-        }
+        _hud?.UpdatePlayerStats(_player);
+
+        if (skill.Type == SkillType.Support)
+            ApplyHealEffect(skill);
         else
-        {
-            // LOGIQUE D'ATTAQUE (ton code existant)
-            _hud.ShowLogs($"{_player.Name} lance {skill.Name} sur {target.Name} !");
-        
-            int damage = CalculateFinalSkillDamage(target, skill);
-            if (target is Enemy e) {
-                e.CurrentPv -= damage;
-                e.PlayHitEffect();
-            }
-        
-            _hud.ShowDamage(new Vector2(target.GlobalPosition.X, target.GlobalPosition.Y - 50), damage, Colors.Red);
-        }
-        
-        await ToSignal(GetTree().CreateTimer(1), "timeout");
+            ApplyMagicDamage(target, skill);
+
+        await ToSignal(GetTree().CreateTimer(1.0f), "timeout");
         ChangeState(BattleState.Evaluation);
     }
-    
-    int CalculateHealPower(Skill skill)
+
+    private void ApplyHealEffect(Skill skill)
     {
-        // Le soin dépend souvent de l'Esprit du lanceur
-        float baseHeal = skill.Power + (_player.Spirit * 1.5f);
-        float variance = (float)GD.RandRange(0.9, 1.1);
-        return Mathf.RoundToInt(baseHeal * variance);
+        _hud?.ShowLogs($"{_player.Name} utilise {skill.Name} !");
+        int healAmount = CalculateHealAmount(skill);
+
+        _player.CurrentPv = Math.Min(_player.Pv, _player.CurrentPv + healAmount);
+        _hud?.UpdatePlayerStats(_player);
+        _hud?.ShowDamage(GetPlayerUIPosition(), healAmount, Colors.Green);
     }
 
-    async void ExecuteDefense()
+    private void ApplyMagicDamage(IBattler target, Skill skill)
     {
+        _hud?.ShowLogs($"{_player.Name} lance {skill.Name} sur {target.Name} !");
+        int damage = CalculateMagicDamage(target, skill);
+
+        if (target is Enemy e)
+        {
+            e.CurrentPv -= damage;
+            e.PlayHitEffect();
+        }
+
+        Vector2 screenPos = GetScreenPositionOfNode(target as Node3D);
+        _hud?.ShowDamage(new Vector2(screenPos.X, screenPos.Y - 50), damage, Colors.Red);
+    }
+
+    private async void ExecuteDefense()
+    {
+        ChangeState(BattleState.Action);
         _isPlayerDefending = true;
-        _hud.ShowLogs($"{_player.Name} est en mode DEFENSE !");
-        await ToSignal(GetTree().CreateTimer(2.0f), "timeout");
+        _hud?.ShowLogs($"{_player.Name} se prépare à encaisser !");
+        await ToSignal(GetTree().CreateTimer(1.5f), "timeout");
         ChangeState(BattleState.Evaluation);
     }
 
     async void ExecuteFlee()
     {
-        _hud.ShowLogs($"{_player.Name} tente de fuir...");
-        await ToSignal(GetTree().CreateTimer(2.0f), "timeout");
+        ChangeState(BattleState.Action);
+        _hud?.ShowLogs($"{_player.Name} tente de fuir...");
+        await ToSignal(GetTree().CreateTimer(1.5f), "timeout");
 
-        if (GD.Randf() > .5f)
+        if (GD.Randf() > 0.5f)
         {
-            _hud.ShowLogs("Fuite réussie !");
-            await ToSignal(GetTree().CreateTimer(1), "timeout");
-            GetTree().ChangeSceneToFile("res://Maps/Intro/Road.tscn");
+            _hud?.ShowLogs("Fuite réussie !");
+            await ToSignal(GetTree().CreateTimer(1.0f), "timeout");
+            EndBattle(BattleEndReason.Flee);
         }
         else
         {
-            _hud.ShowLogs("L'ennemie empêche la fuite !");
-            await ToSignal(GetTree().CreateTimer(1), "timeout");
+            _hud?.ShowLogs("L'ennemi vous barre la route !");
+            await ToSignal(GetTree().CreateTimer(1.0f), "timeout");
             ChangeState(BattleState.Evaluation);
         }
     }
-    
-    async void ExecutePlayerAttack(Enemy target)
+
+    #endregion
+
+    #region --- Combat Execution: Enemy ---
+
+    private void ExecuteCurrentTurn()
     {
-        if (_player == null || target == null || target.Stats == null)
+        if (_currentTurnIndex >= _turnOrder.Count) return;
+        var activeUnit = _turnOrder[_currentTurnIndex];
+
+        if (activeUnit is Enemy enemy)
+            ProcessEnemyTurn(enemy);
+    }
+
+    private async void ProcessEnemyTurn(Enemy enemy)
+    {
+        if (enemy == null || enemy.CurrentPv <= 0)
         {
-            GD.PushError("[Battle] Player ou Target invalide dans ExecutePlayerAttack.");
             ChangeState(BattleState.Evaluation);
             return;
         }
 
-        ChangeState(BattleState.Action);
+        _hud?.ShowLogs($"{enemy.EnemyName} prépare son attaque...");
+        await ToSignal(GetTree().CreateTimer(1.0f), "timeout");
+
+        int damage = CalculatePhysicalDamage(enemy.Stats.Strength, _player.Defense);
+
+        if (_isPlayerDefending)
+        {
+            damage = Math.Max(1, damage / 2);
+            _hud?.ShowLogs($"{_player.Name} bloque une partie de l'attaque !");
+        }
+
+        ShakeScreen();
+        _player.CurrentPv -= damage;
+        _hud?.UpdatePlayerStats(_player);
+        _hud?.ShowDamage(GetPlayerUIPosition(), damage, Colors.Red);
         
-        int damage = CalculateFinalDamage(_player.Strength, target.Defense);
-        target.CurrentPv -= damage;
-        if (target.CurrentPv < 0) target.CurrentPv = 0;
-        
-        _hud.ShowLogs($"Toine attaque {target.EnemyName} pour {damage} dégâts !");
-        _hud.ShowDamage(new Vector2(target.Position.X, target.Position.Y - 50), damage, Colors.Red);
-        target.PlayHitEffect();
-        
-        await ToSignal(GetTree().CreateTimer(1), "timeout");
+        _hud?.ShowLogs($"{enemy.EnemyName} inflige {damage} dégâts !");
+        EmitSignal(SignalName.PlayerDamage, damage);
+
+        await ToSignal(GetTree().CreateTimer(1.0f), "timeout");
         ChangeState(BattleState.Evaluation);
     }
 
-    public void StartBattle()
-    {
-        _currentState = BattleState.Setup;
-    }
+    #endregion
 
-    void DetermineTurnOrder()
+    #region --- Turn Flow & Status Checks ---
+
+    private void DetermineTurnOrder()
     {
         _turnOrder.Clear();
         if (_player != null) _turnOrder.Add(_player);
         _turnOrder.AddRange(_enemies);
-        
+
+        // Turn order based on Dexterity
         _turnOrder = _turnOrder.OrderByDescending(x => x.Dexterity).ToList();
+        _currentTurnIndex = 0;
+        
         ChangeState(BattleState.Selection);
     }
-    
-    void ExecuteCurrentTurn()
+
+    private void CheckBattleStatus()
     {
-        var activeUnit = _turnOrder[_currentTurnIndex];
-
-        if (activeUnit is Enemy enemy)
-        {
-            EnemyAttack(enemy);
-        }
-    }
-
-    async void EnemyAttack(Enemy enemy)
-    {
-        await ToSignal(GetTree().CreateTimer(1f), "timeout");
-
-        if (enemy == null || enemy.Stats == null) {
-            GD.PrintErr("Erreur : L'ennemi ou ses stats sont nuls !");
-            ChangeState(BattleState.Evaluation);
-            return;
-        }
-
-        // Sécurité 2 : On vérifie si le joueur est bien là
-        if (_player == null) {
-            GD.PrintErr("Erreur : Le joueur est introuvable pour l'attaque ennemie !");
-            return;
-        }
-
-        _hud.ShowLogs($"{enemy.EnemyName} prépare son attaque...");
-        
-        
-        // Calcul des dégâts sécurisé
-        int damage = CalculateFinalDamage(enemy.Stats.Strength, _player.Defense);
-
-        if (_isPlayerDefending)
-        {
-            damage /= 2;
-            _hud.ShowLogs($"La défense de {_player.Name} réduit les dégâts !");
-        }
-        
-        ShakeScreen();
-        _player.CurrentPv -= damage;
-        
-        _hud.ShowDamage(new Vector2(1920/2, 980), damage, Colors.Red);
-    
-        _hud.ShowLogs($"{enemy.EnemyName} inflige {damage} dégâts !");
-        
-        EmitSignal(SignalName.PlayerDamage, damage);
-        ChangeState(BattleState.Evaluation);
-    }
-
-    void CheckBattleStatus()
-    {
+        // 1. Defeat Check
         if (_player != null && _player.CurrentPv <= 0)
         {
-            // Joueur perdu
             ChangeState(BattleState.Defeat);
             return;
         }
 
-        // Nettoyage des ennemis vaincus
+        // 2. Victory Check (after cleaning up dead enemies)
+        UpdateActiveEnemies();
+
+        if (_enemies.Count == 0)
+        {
+            ChangeState(BattleState.Victory);
+            return;
+        }
+
+        // 3. Increment turn and continue
+        _currentTurnIndex = (_currentTurnIndex + 1) % _turnOrder.Count;
+        ChangeState(BattleState.Selection);
+    }
+
+    private void UpdateActiveEnemies()
+    {
         for (int i = _enemies.Count - 1; i >= 0; i--)
         {
             if (_enemies[i].CurrentPv <= 0)
             {
                 var dead = _enemies[i];
+                _hud?.ShowLogs($"{dead.EnemyName} est vaincu !");
 
                 var tween = CreateTween();
                 tween.TweenProperty(dead, "modulate:a", 0, 0.5f);
-                tween.Parallel().TweenProperty(dead, "scale", Vector2.Zero, .5f);
-                
+                tween.Parallel().TweenProperty(dead, "scale", Vector2.Zero, 0.5f);
+
                 _enemies.RemoveAt(i);
                 _turnOrder.Remove(dead);
 
-                tween.Finished += () =>
-                {
-                    dead.QueueFree();
-                };
-                
-                if (_currentTurnIndex >= _turnOrder.Count) _currentTurnIndex = 0;
-                
-                _hud.ShowLogs($"{dead.EnemyName} est mort !");
+                tween.Finished += () => dead.QueueFree();
             }
         }
-
-        if (_enemies.Count == 0)
-        {
-            // Joueur gagne
-            _hud.ShowLogs("Tous les ennemis on été vaincus !");
-            ChangeState(BattleState.Victory);
-            return;
-        }
         
-        if (_turnOrder.Count == 0)
-        {
-            // Sécurité: si tout le monde est retiré, recalculer
-            DetermineTurnOrder();
-            return;
-        }
-
-        _currentTurnIndex = (_currentTurnIndex + 1) % _turnOrder.Count;
-        ChangeState(BattleState.Selection);
+        // Safety: index adjustment if units were removed
+        if (_currentTurnIndex >= _turnOrder.Count) 
+            _currentTurnIndex = 0;
     }
-    void SpawnEnemies()
+
+    #endregion
+
+    #region --- Formulas & Math ---
+    
+    Vector2 GetScreenPositionOfNode(Node3D node)
     {
-        // Instancie les ennemis à partir des stats fournies par le GameManager
+        var camera = GetViewport().GetCamera3D();
+        // Projette le point 3D sur l'espace 2D de l'écran
+        return camera.UnprojectPosition(node.GlobalPosition);
+    }
+
+    private int CalculatePhysicalDamage(int attackerAtk, int defenderDef)
+    {
+        float baseDamage = (attackerAtk / 2.0f) - (defenderDef / 4.0f);
+        float variance = (float)GD.RandRange(0.9, 1.1);
+        return Math.Max(1, Mathf.RoundToInt(baseDamage * variance));
+    }
+
+    private int CalculateMagicDamage(IBattler target, Skill skill)
+    {
+        // Formula: (Power * (Spirit / 5)) - (Target Spirit / 4)
+        float baseDamage = (skill.Power * (_player.Spirit / 5.0f)) - (target.Spirit / 4.0f);
+        float variance = (float)GD.RandRange(0.9, 1.1);
+        return Math.Max(1, Mathf.RoundToInt(baseDamage * variance));
+    }
+
+    private int CalculateHealAmount(Skill skill)
+    {
+        // Formula: Power + (Spirit * 1.5)
+        float baseHeal = skill.Power + (_player.Spirit * 1.5f);
+        float variance = (float)GD.RandRange(0.9, 1.1);
+        return Mathf.RoundToInt(baseHeal * variance);
+    }
+
+    #endregion
+
+    #region --- Helpers: Spawning & VFX ---
+
+    private void SpawnEnemies()
+    {
         if (_enemyStatsSource == null || _enemyStatsSource.Count == 0)
         {
-            GD.PrintErr("Aucun ennemi fourni par le GameManager pour ce combat.");
+            GD.PrintErr("[BattleManager] No enemies provided by GameManager.");
             return;
         }
+
         if (EnemyScene == null)
         {
-            GD.PrintErr("EnemyScene n'est pas assigné dans le BattleManager. Assigne Scripts/Entities/Enemy/enemy.tscn dans l'éditeur.");
+            GD.PrintErr("[BattleManager] EnemyScene is not assigned!");
             return;
         }
 
         _enemies.Clear();
-        int spacing = 200;
-        Vector2 startPos = new Vector2((1920 / 2) - spacing, 1080/2);
-        
+        float startX = -2;
+        float spacing = 2;
+
         for (int i = 0; i < _enemyStatsSource.Count; i++)
         {
             var stats = _enemyStatsSource[i];
             var enemy = EnemyScene.Instantiate<Enemy>();
-        
+
             enemy.EnemyName = stats.EnemyName;
-        
-            // On décale chaque ennemi pour éviter qu'ils soient l'un sur l'autre
-            enemy.Position = startPos + new Vector2(i * spacing, 0);
-        
+            enemy.Position = new Vector3(startX + i * spacing, 0, -5);
+
             AddChild(enemy);
             _enemies.Add(enemy);
         }
     }
-    
-    int CalculateFinalDamage(int attackerAtk, int defenderDef, float karmaMod = 1.0f)
+
+    private void ShakeScreen(float intensity = 0.2f)
     {
-        // 1. Dégâts de base (Ta formule GDD)
-        float baseDamage = (attackerAtk / 2f) - (defenderDef / 4f);
-    
-        // 2. Ajout de la variance (+/- 10%) pour le côté "Rétro"
-        float variance = (float)GD.RandRange(0.9, 1.1);
-    
-        // 3. Application du Karma (issu de tes fichiers persos-et-stats.csv)
-        // On multiplie par le modificateur (ex: 1.25 si Chaos)
-        float finalDamage = baseDamage * variance * karmaMod;
+        var camera = GetViewport().GetCamera3D();
+        if (camera == null) return;
 
-        // On s'assure d'infliger au moins 1 dégât et on arrondit proprement
-        return Math.Max(1, Mathf.RoundToInt(finalDamage));
-    }
-
-    int CalculateFinalSkillDamage(IBattler target, Skill skill)
-    {
-        // 1. Déterminer l'attaquant (Toine dans ce cas)
-        // On récupère ses stats via le StatHandler
-        int attackerEsprit = _player.Spirit; 
-
-        // 2. Formule de dégâts magiques
-        // (Puissance du sort * (Esprit / 5)) - (Esprit Cible / 4)
-        // On divise l'Esprit par 5 pour que chaque point d'Esprit apporte +20% de dégâts
-        float baseDamage = (skill.Power * (attackerEsprit / 5f)) - (target.Spirit / 4f);
-
-        // 3. Ajout de la variance (+/- 10%) pour rester cohérent avec l'attaque physique
-        float variance = (float)GD.RandRange(0.9, 1.1);
-
-        // 4. Calcul final
-        // Tu peux aussi appliquer le karmaMod ici si tes sorts sont influencés par l'alignement
-        float finalDamage = baseDamage * variance;
-
-        // Sécurité : au moins 1 dégât si le sort n'est pas un soin
-        return Math.Max(1, Mathf.RoundToInt(finalDamage));
-    }
-
-    void ShakeScreen(float intensity = 10)
-    {
         var tween = CreateTween();
-        var map = GetParent<Node2D>();
+        Vector3 originalPos = camera.Position;
         
-        tween.TweenProperty(map, "position", new Vector2(intensity, 0), .05f);
-        tween.TweenProperty(map, "position", new Vector2(-intensity, 0), .05f);
-        tween.TweenProperty(map, "position", Vector2.Zero, .05f);
+        // Secousse en 3D sur les axes X et Y relatifs à la caméra
+        tween.TweenProperty(camera, "position", originalPos + new Vector3(intensity, intensity, 0), 0.05f);
+        tween.TweenProperty(camera, "position", originalPos + new Vector3(-intensity, -intensity, 0), 0.05f);
+        tween.TweenProperty(camera, "position", originalPos, 0.05f);
     }
 
-    async void HandleVictory()
+    private Vector2 GetPlayerUIPosition()
     {
-        float delay = 2.0f;
-        await ToSignal(GetTree().CreateTimer(delay), "timeout");
-        
-        int totalXp = 0;
-        int totalGold = 0;
-
-        foreach (var enemy in _enemyStatsSource)
-        {
-            totalXp += enemy.XpValue;
-        }
-        _hud.ShowLogs($"{totalXp.ToString()} XP Gagnés !");
-        ExitBattleWithDelay();
+        var size = GetViewport()?.GetVisibleRect().Size ?? new Vector2(1920, 1080);
+        return new Vector2(size.X / 2.0f, 980);
     }
 
-    async void ExitBattleWithDelay()
+    #endregion
+
+    #region --- Victory / Reward Logic ---
+
+    private async void HandleVictory()
     {
-        float delay = 2.0f;
-        await ToSignal(GetTree().CreateTimer(delay), "timeout");
-        GD.Print("Retour au menu...");
+        await ToSignal(GetTree().CreateTimer(2.0f), "timeout");
+
+        int totalXp = _enemyStatsSource.Sum(e => e.XpValue);
+        _hud?.ShowLogs($"{totalXp} XP Gagnés !");
+        
+        ExitBattleSequence();
+    }
+
+    private async void ExitBattleSequence()
+    {
+        await ToSignal(GetTree().CreateTimer(2.0f), "timeout");
+        GD.Print("[BattleManager] Battle finished. Returning to map...");
+        EndBattle(BattleEndReason.Victory);
+    }
+
+    #endregion
+    
+    void EndBattle(BattleEndReason reason)
+    {
+        GD.Print($"[BattleManager] Battle ended with reason: {reason}");
+        // Nettoyage des abonnements pour éviter des callbacks fantômes après la scene change
+        if (_hud != null)
+            _hud.ActionSelected -= OnPlayerActionSelected;
+
+        _isSelectingTarget = false; // stoppe la capture d’input locale
+
+        EmitSignalBattleEnded(reason);
+        
+        // Laisse l’orchestrateur changer de scène; le combat se libère proprement
+        CallDeferred(MethodName.QueueFree);
     }
 }

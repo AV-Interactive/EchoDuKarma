@@ -88,7 +88,6 @@ public partial class Dialogue : Control
             btn.CustomMinimumSize = new Vector2(0, 40); 
             btn.Alignment = HorizontalAlignment.Right;
             btn.FocusMode = FocusModeEnum.All;
-            btn.MouseFilter = MouseFilterEnum.Ignore; // Désactiver la souris sur le bouton
             btn.Pressed += () => DialogueSystem.Instance.SelectChoice(choice.Value);
         
             choicesContainer.AddChild(btn);

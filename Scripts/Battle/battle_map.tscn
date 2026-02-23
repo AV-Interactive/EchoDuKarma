@@ -7,7 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://dtwuv7yk21542" path="res://Scripts/Entities/Enemy/enemy.tscn" id="4_j4epl"]
 [ext_resource type="Texture2D" uid="uid://5tksyi11alen" path="res://Assets/Images/Battles_BG/campain.png" id="5_t21px"]
 
-[node name="BattleMap" type="Node2D" unique_id=23252002]
+[node name="BattleMap" type="Node3D" unique_id=335777453]
 
 [node name="BattleHUD" type="CanvasLayer" parent="." unique_id=364095169 node_paths=PackedStringArray("_playerHpLabel", "_playerMpLabel", "_logs")]
 script = ExtResource("1_vyhb5")
@@ -164,11 +164,12 @@ bbcode_enabled = true
 text = "Je suis un log du style \"Rat 1 apparait !"
 vertical_alignment = 1
 
-[node name="TargetCursor" type="Sprite2D" parent="BattleHUD/Scene" unique_id=2002183410]
+[node name="TargetCursor" type="Sprite3D" parent="BattleHUD/Scene" unique_id=1602873268]
 texture = ExtResource("3_j4epl")
 
-[node name="BattleManager" type="Node" parent="." unique_id=984934980]
+[node name="BattleManager" type="Node" parent="." unique_id=984934980 node_paths=PackedStringArray("_hud")]
 script = ExtResource("3_wnljt")
+_hud = NodePath("../BattleHUD")
 EnemyScene = ExtResource("4_j4epl")
 
 [node name="TextureRect" type="TextureRect" parent="." unique_id=932467889]

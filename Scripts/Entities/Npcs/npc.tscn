@@ -1,28 +1,37 @@
 [gd_scene format=3 uid="uid://bqdkqqak5optc"]
 
 [ext_resource type="Script" uid="uid://c6u6wjja16ai6" path="res://Scripts/Entities/Npcs/Npc.cs" id="1_iuuga"]
+[ext_resource type="Texture2D" uid="uid://bi5huhrtcasnq" path="res://Assets/Actors/pnj.png" id="2_r7p3x"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_r7p3x"]
-size = Vector2(32, 32)
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_iuuga"]
+radius = 0.14550781
+height = 0.5831299
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_iuuga"]
-size = Vector2(38, 38)
+[sub_resource type="BoxShape3D" id="BoxShape3D_r7p3x"]
+size = Vector3(0.72161865, 1, 0.49658203)
 
-[node name="CharacterBody2D" type="CharacterBody2D" unique_id=499939312]
+[node name="CharacterBody3D" type="CharacterBody3D" unique_id=943380825]
 collision_layer = 2
 collision_mask = 3
 script = ExtResource("1_iuuga")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=402536939]
-shape = SubResource("RectangleShape2D_r7p3x")
-debug_color = Color(0, 0.6, 0.69803923, 0)
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=453306974]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.006652832, 0)
+shape = SubResource("CapsuleShape3D_iuuga")
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1140651245]
+[node name="Node3D" type="Node3D" parent="." unique_id=1928349061]
 
-[node name="InteractionArea" type="Area2D" parent="." unique_id=1319575601]
+[node name="Sprite3D" type="Sprite3D" parent="Node3D" unique_id=2017281585]
+billboard = 2
+texture = ExtResource("2_r7p3x")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Node3D" unique_id=944259790]
+
+[node name="InteractionArea" type="Area3D" parent="." unique_id=534383063]
 collision_layer = 2
 collision_mask = 3
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionArea" unique_id=507064405]
-shape = SubResource("RectangleShape2D_iuuga")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="InteractionArea" unique_id=1772436929]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.003326416, 0, 0.0056152344)
+shape = SubResource("BoxShape3D_r7p3x")
 debug_color = Color(0.98613197, 0, 0.33149394, 0.41960785)

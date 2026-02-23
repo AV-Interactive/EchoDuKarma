@@ -2,61 +2,60 @@ using Godot;
 using System;
 using EchoduKarma.Scripts.Data;
 
-public partial class Npc : CharacterBody2D
+public partial class Npc : CharacterBody3D
 {
-    [Export] public string Name;
+    [Export] public string NpcName;
+    [Export] public Texture2D SpriteTexture;
     [Export] public string StartDialogueId;
-    [Export] public Texture2D SpritePath;
     
-    Sprite2D _sprite;
-    bool _isPlayerInRange = false;
-    string _currentDialogueId;
+    private Sprite3D _sprite;
+    private bool _isPlayerInRange = false;
+    private string _currentDialogueId;
 
     public override void _Ready()
     {
-        _sprite = GetNode<Sprite2D>("Sprite2D");
-        if (SpritePath != null) _sprite.Texture = SpritePath;
+        _sprite = GetNode<Sprite3D>("Node3D/Sprite3D");
+        _sprite.Texture = SpriteTexture;
         _currentDialogueId = StartDialogueId;
         
-        var area = GetNode<Area2D>("InteractionArea");
+        // On récupère l'Area3D pour la détection 3D
+        var area = GetNode<Area3D>("InteractionArea");
         
         area.BodyEntered += (body) =>
         {
-            if (body.Name == "Player")
+            // Note: Vérifie si ton joueur possède un script "Player" ou utilise les Groupes
+            if (body.Name == "Player" || body.IsInGroup("Player"))
             {
                 _isPlayerInRange = true;
+                GD.Print($"Toine, le joueur est proche de {NpcName}");
             }
         };
+
         area.BodyExited += (body) =>
         {
-            if (body.Name == "Player")
+            if (body.Name == "Player" || body.IsInGroup("Player"))
             {
                 _isPlayerInRange = false;
                 ResetDialogue();
             }
         };
         
+        // Ton système de dialogue reste identique (logique pure)
         DialogueSystem.Instance.ChoiceSelected += (nextId) => 
         {
             if (_isPlayerInRange)
             {
-                GD.Print($"[DialogueSystem] Choix de dialogue pour {Name} : {nextId}");
                 _currentDialogueId = nextId;
             }
         };
     }
 
-    public override void _Input(InputEvent @event)
-    {
-    }
-    
+    // On utilise UnhandledInput pour ne pas déclencher le dialogue si on clique sur un bouton d'UI
     public override void _UnhandledInput(InputEvent @event)
     {
         if (_isPlayerInRange && @event.IsActionPressed("Interaction"))
         {
-            // Si l'UI a le focus, on la laisse gérer l'input (Espace)
-            if (GetViewport().GuiGetFocusOwner() != null) return;
-            
+            GD.Print($"On tente une interaction avec {NpcName}");
             AdvanceDialogue();
         }
     }
@@ -68,37 +67,30 @@ public partial class Npc : CharacterBody2D
         if (line != null)
         {
             GameManager.Instance.PlayerMoved = false;
-            // Dans Npc.cs
             DialogueSystem.Instance.RequestDialogue(line);
 
-            if (line.Type == DialogueType.CHOICE)
-            {
-                // On ne change pas _currentDialogueId ici, 
-                // il sera mis à jour via le signal ChoiceSelected
-                return;
-            }
+            if (line.Type == DialogueType.CHOICE) return;
             
             if (!string.IsNullOrWhiteSpace(line.NextId))
-            {
                 _currentDialogueId = line.NextId;
-            }
             else
-            {
-                _currentDialogueId = "FINISH";
-                ResetDialogue();
-            }
+                FinishInteraction();
         }
         else
         {
-            GameManager.Instance.PlayerMoved = true;
-            ResetDialogue();
+            FinishInteraction();
         }
     }
     
+    private void FinishInteraction()
+    {
+        ResetDialogue();
+        DialogueSystem.Instance.RequestDialogue(null); // Ferme l'UI
+    }
+
     public void ResetDialogue()
     {
         _currentDialogueId = StartDialogueId;
         GameManager.Instance.PlayerMoved = true;
-        DialogueSystem.Instance.EmitSignal(DialogueSystem.SignalName.DialogueRequested, (DialogueLine)null);
     }
 }

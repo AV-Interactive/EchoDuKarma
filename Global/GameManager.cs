@@ -101,8 +101,33 @@ public partial class GameManager: Node
                 GD.PrintErr($"Erreur : L'ennemi '{enemyName}' n'existe pas dans le Bestiaire !");
             }
         }
-        GD.Print("On se téléporte dans le combat !");
+        
+        GD.Print("[GameManager] Transition vers la scène de combat...");
         GetTree().ChangeSceneToFile("res://Scripts/Battle/battle_map.tscn");
+        
+        // On utilise un timer court pour laisser à la scène le temps de s'instancier
+        // avant de chercher le BattleManager
+        GetTree().CreateTimer(0.1f).Timeout += ConnectBattleSignals;
+    }
+
+    void OnBattleEnded(BattleManager.BattleEndReason reason)
+    {
+        GD.Print($"[GameManager] Signal de fin de combat reçu : {reason}");
+        var map = "res://Maps/Intro/Road.tscn";
+        PlayerMoved = true;
+        GetTree().Paused = false;
+        
+        Error err = GetTree().ChangeSceneToFile(map);
+        if (err != Error.Ok)
+        {
+            GD.PrintErr($"[GameManager] Erreur lors du retour sur map : {err}");
+        }
+        else
+        {
+            GD.Print("[GameManager] Téléportation vers la map en cours...");
+        }
+        
+        DialogueSystem.Instance?.LoadZoneDialogues(map);
     }
 
     void OnActionTriggered(string fullActionRaw)
@@ -116,6 +141,39 @@ public partial class GameManager: Node
         if (_eventLibrary.TryGetValue(actionKey, out var action))
         {
             action.Invoke(args);
+        }
+    }
+    
+    void ConnectBattleSignals()
+    {
+        // On cherche le BattleManager de manière récursive
+        var bm = GetTree().Root.FindChild("BattleManager", true, false) as BattleManager;
+
+        if (bm != null)
+        {
+            // Sécurité : On se déconnecte si déjà connecté (pour éviter les doublons)
+            if (bm.IsConnected(BattleManager.SignalName.BattleEnded, Callable.From<BattleManager.BattleEndReason>(OnBattleEnded)))
+            {
+                bm.BattleEnded -= OnBattleEnded;
+            }
+        
+            bm.BattleEnded += OnBattleEnded;
+            GD.Print("[GameManager] Connexion au signal BattleEnded réussie !");
+        }
+        else
+        {
+            GD.PrintErr("[GameManager] ERREUR : Impossible de trouver le nœud 'BattleManager' après le délai.");
+            // Si on ne le trouve pas, on réessaie une frame plus tard
+            CallDeferred(nameof(ConnectBattleSignals));
+        }
+    }
+    
+    void PrintNodeTree(Node node)
+    {
+        foreach (Node child in node.GetChildren())
+        {
+            GD.Print($"Node: {child.Name} (Type: {child.GetType()})");
+            PrintNodeTree(child);
         }
     }
 }

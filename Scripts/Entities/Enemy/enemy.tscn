@@ -2,10 +2,17 @@
 
 [ext_resource type="Script" uid="uid://bpxcabvu1ikgp" path="res://Scripts/Entities/Enemy/Enemy.cs" id="1_u0f2l"]
 
-[node name="Node2D" type="Node2D" unique_id=173239191]
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_s5c4s"]
+
+[node name="Enemy" type="CharacterBody3D" unique_id=1311539160]
 script = ExtResource("1_u0f2l")
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1842705711]
-scale = Vector2(4, 4)
+[node name="CollisionShape2D" type="CollisionShape3D" parent="." unique_id=1108489441]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.008361816, 0)
+shape = SubResource("CapsuleShape3D_s5c4s")
 
-[node name="EnemyStat" type="Node2D" parent="." unique_id=1326027174]
+[node name="Node3D" type="Node3D" parent="." unique_id=203416493]
+
+[node name="Sprite3D" type="Sprite3D" parent="Node3D" unique_id=774562645]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="Node3D" unique_id=1026383362]
