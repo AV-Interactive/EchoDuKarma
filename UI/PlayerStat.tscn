@@ -8,28 +8,26 @@
 anchors_preset = -1
 anchor_right = 0.3125
 anchor_bottom = 0.09259259
-grow_horizontal = 2
-grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-metadata/_edit_use_anchors_ = true
 
 [node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=1863532779]
 layout_mode = 1
-anchors_preset = 15
+anchors_preset = -1
 anchor_right = 1.0
 anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+offset_right = 43.0
+offset_bottom = -0.00033187866
+scale = Vector2(0.82, 1)
 metadata/_edit_use_anchors_ = true
 
 [node name="VBoxContainer2" type="VBoxContainer" parent="HBoxContainer" unique_id=224454653]
-custom_minimum_size = Vector2(90, 0)
+custom_minimum_size = Vector2(39.22, 0)
 layout_mode = 2
 
 [node name="Avatar" type="Sprite2D" parent="HBoxContainer/VBoxContainer2" unique_id=1015721325]
-position = Vector2(50, 50)
-scale = Vector2(0.5, 0.5)
+position = Vector2(18, 17)
+scale = Vector2(0.2, 0.2)
 texture = ExtResource("1_fuk18")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer" unique_id=139954052]
@@ -41,11 +39,11 @@ custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 3
-theme_override_font_sizes/normal_font_size = 18
-theme_override_font_sizes/bold_font_size = 18
-theme_override_font_sizes/bold_italics_font_size = 18
-theme_override_font_sizes/italics_font_size = 18
-theme_override_font_sizes/mono_font_size = 18
+theme_override_font_sizes/normal_font_size = 6
+theme_override_font_sizes/bold_font_size = 6
+theme_override_font_sizes/bold_italics_font_size = 6
+theme_override_font_sizes/italics_font_size = 6
+theme_override_font_sizes/mono_font_size = 6
 bbcode_enabled = true
 text = "Nom Perso"
 
@@ -56,33 +54,34 @@ size_flags_vertical = 3
 [node name="NB_HP" type="RichTextLabel" parent="HBoxContainer/VBoxContainer/HBoxContainer" unique_id=2140217591]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/normal_font_size = 14
-theme_override_font_sizes/bold_font_size = 14
-theme_override_font_sizes/bold_italics_font_size = 14
-theme_override_font_sizes/italics_font_size = 14
-theme_override_font_sizes/mono_font_size = 14
+theme_override_font_sizes/normal_font_size = 6
+theme_override_font_sizes/bold_font_size = 6
+theme_override_font_sizes/bold_italics_font_size = 6
+theme_override_font_sizes/italics_font_size = 6
+theme_override_font_sizes/mono_font_size = 6
 bbcode_enabled = true
 text = "[color=#F54927]42/42 HP[/color]"
+fit_content = true
 
 [node name="HP" type="Sprite2D" parent="HBoxContainer/VBoxContainer/HBoxContainer" unique_id=1545513796]
-position = Vector2(114, 22)
-scale = Vector2(7, -0.061)
+position = Vector2(34.5, 16)
+scale = Vector2(2.0312502, -0.06249991)
 texture = ExtResource("2_rlcie")
 
 [node name="NB_MP" type="RichTextLabel" parent="HBoxContainer/VBoxContainer/HBoxContainer" unique_id=212533978]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/normal_font_size = 14
-theme_override_font_sizes/bold_font_size = 14
-theme_override_font_sizes/bold_italics_font_size = 14
-theme_override_font_sizes/italics_font_size = 14
-theme_override_font_sizes/mono_font_size = 14
+theme_override_font_sizes/normal_font_size = 6
+theme_override_font_sizes/bold_font_size = 6
+theme_override_font_sizes/bold_italics_font_size = 6
+theme_override_font_sizes/italics_font_size = 6
+theme_override_font_sizes/mono_font_size = 6
 bbcode_enabled = true
 text = "[color=#27B0F5]34/34 MP[/color]"
 
 [node name="MP" type="Sprite2D" parent="HBoxContainer/VBoxContainer/HBoxContainer" unique_id=1958176738]
-position = Vector2(367, 22)
-scale = Vector2(7, -0.061)
+position = Vector2(115.50001, 16)
+scale = Vector2(2.03, -0.06)
 texture = ExtResource("3_loee7")
 
 [node name="HBoxContainer2" type="HBoxContainer" parent="HBoxContainer/VBoxContainer" unique_id=1677608110]

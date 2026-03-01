@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://b6tg1uasbb56e"
+
+[deps]
+
+files=["res://Datas/Bestiary/EdK.Niveau.translation", "res://Datas/Bestiary/EdK.PV.translation", "res://Datas/Bestiary/EdK.XP.translation", "res://Datas/Bestiary/EdK.FORCE.translation", "res://Datas/Bestiary/EdK.ESPRIT.translation", "res://Datas/Bestiary/EdK.AGI.translation", "res://Datas/Bestiary/EdK.DEF.translation", "res://Datas/Bestiary/EdK.IA.translation", "res://Datas/Bestiary/EdK.LOOT.translation"]
+
+source_file="res://Datas/Bestiary/EdK.csv"
+dest_files=["res://Datas/Bestiary/EdK.Niveau.translation", "res://Datas/Bestiary/EdK.PV.translation", "res://Datas/Bestiary/EdK.XP.translation", "res://Datas/Bestiary/EdK.FORCE.translation", "res://Datas/Bestiary/EdK.ESPRIT.translation", "res://Datas/Bestiary/EdK.AGI.translation", "res://Datas/Bestiary/EdK.DEF.translation", "res://Datas/Bestiary/EdK.IA.translation", "res://Datas/Bestiary/EdK.LOOT.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

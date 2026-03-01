@@ -16,11 +16,12 @@ _playerMpLabel = NodePath("Scene/StatPanel/Panel/VBoxContainer/Control/HBoxConta
 _logs = NodePath("Scene/LogPanel/RichTextLabel")
 
 [node name="Scene" type="Control" parent="BattleHUD" unique_id=2034142044]
-custom_minimum_size = Vector2(1920, 1080)
+custom_minimum_size = Vector2(640, 360)
 layout_mode = 3
-anchors_preset = 15
+anchor_top = 0.013888889
 anchor_right = 1.0
-anchor_bottom = 1.0
+anchor_bottom = 1.014
+offset_bottom = -0.040008545
 grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 3
@@ -31,11 +32,11 @@ metadata/_edit_use_anchors_ = true
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 0.397
-anchor_top = 0.694
+anchor_top = 0.809
 anchor_right = 0.70900005
 anchor_bottom = 0.96900004
 offset_left = 0.75994873
-offset_top = 0.47998047
+offset_top = 0.27996826
 offset_right = 0.71984863
 offset_bottom = -0.52001953
 grow_vertical = 0
@@ -71,7 +72,7 @@ anchor_top = 0.606
 anchor_right = 0.99300003
 anchor_bottom = 0.96900004
 offset_left = 0.8800049
-offset_top = 0.52001953
+offset_top = -17.160004
 offset_right = 0.4399414
 offset_bottom = -0.52001953
 grow_horizontal = 2
@@ -86,40 +87,39 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = 2.0
+offset_left = -1.920044
+offset_top = 3.3199768
+offset_right = -1.9200134
+offset_bottom = -1.6800232
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Label" type="Label" parent="BattleHUD/Scene/Actions/Panel/ActionMenu" unique_id=1396644937]
 layout_mode = 2
-theme_override_font_sizes/font_size = 62
+theme_override_font_sizes/font_size = 18
 text = "Actions"
 horizontal_alignment = 1
 
 [node name="BtnAttack" type="Button" parent="BattleHUD/Scene/Actions/Panel/ActionMenu" unique_id=768493787]
-custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 size_flags_vertical = 4
-theme_override_font_sizes/font_size = 45
+theme_override_font_sizes/font_size = 12
 text = "ATTAQUER"
 
 [node name="BtnMagic" type="Button" parent="BattleHUD/Scene/Actions/Panel/ActionMenu" unique_id=1673696511]
-custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
-theme_override_font_sizes/font_size = 45
+theme_override_font_sizes/font_size = 12
 text = "Magie
 "
 
 [node name="BtnDefense" type="Button" parent="BattleHUD/Scene/Actions/Panel/ActionMenu" unique_id=1830802042]
-custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
-theme_override_font_sizes/font_size = 45
+theme_override_font_sizes/font_size = 12
 text = "Defense"
 
 [node name="BtnEscape" type="Button" parent="BattleHUD/Scene/Actions/Panel/ActionMenu" unique_id=245865078]
-custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
-theme_override_font_sizes/font_size = 45
+theme_override_font_sizes/font_size = 12
 text = "Fuite"
 
 [node name="SkillsList" type="VBoxContainer" parent="BattleHUD/Scene/Actions/Panel" unique_id=1888352597]
@@ -131,17 +131,16 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="LogPanel" type="Panel" parent="BattleHUD/Scene" unique_id=433391598]
-custom_minimum_size = Vector2(1500, 100)
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 0.109000005
 anchor_top = 0.046000004
 anchor_right = 0.89100003
 anchor_bottom = 0.133
-offset_left = 250.71999
+offset_left = -1.7600021
 offset_top = 0.31999588
-offset_right = -250.7201
-offset_bottom = 6.3600006
+offset_right = 3.7600098
+offset_bottom = 6.119999
 grow_horizontal = 2
 
 [node name="RichTextLabel" type="RichTextLabel" parent="BattleHUD/Scene/LogPanel" unique_id=636507636]
@@ -149,17 +148,17 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 30.0
-offset_top = 16.0
-offset_right = -30.0
-offset_bottom = -12.0
+offset_left = 12.0
+offset_top = 8.120003
+offset_right = -11.0
+offset_bottom = -4.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_font_sizes/normal_font_size = 20
-theme_override_font_sizes/bold_font_size = 20
-theme_override_font_sizes/bold_italics_font_size = 20
-theme_override_font_sizes/italics_font_size = 20
-theme_override_font_sizes/mono_font_size = 20
+theme_override_font_sizes/normal_font_size = 14
+theme_override_font_sizes/bold_font_size = 14
+theme_override_font_sizes/bold_italics_font_size = 14
+theme_override_font_sizes/italics_font_size = 14
+theme_override_font_sizes/mono_font_size = 14
 bbcode_enabled = true
 text = "Je suis un log du style \"Rat 1 apparait !"
 vertical_alignment = 1

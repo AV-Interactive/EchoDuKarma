@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://dpi5qacohuaiy"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_qvte6"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qvte6"]
+albedo_color = Color(0.5877369, 0.4319613, 2.8878452e-07, 1)
+
+[node name="Ground" type="Node3D" unique_id=817237313]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=2024568435]
+transform = Transform3D(1, 0, 0, 0, 0.2, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("BoxMesh_qvte6")
+surface_material_override/0 = SubResource("StandardMaterial3D_qvte6")

@@ -10,13 +10,35 @@ public partial class Dialogue : Control
     
     Tween _typewriterTween;
     
+    bool _isTyping = false;
+
     public override void _Ready()
     {
         DialogueSystem.Instance.DialogueRequested += OnDialogueRecevied;
         Visible = false;
         choicesContainer.Visible = false;
         
-        MouseFilter = MouseFilterEnum.Ignore;
+        MouseFilter = MouseFilterEnum.Stop; // Changé de Ignore à Stop pour bloquer les clics
+    }
+
+    public override void _Input(InputEvent @event)
+    {
+        if (Visible && @event.IsActionPressed("Interaction"))
+        {
+            if (_isTyping)
+            {
+                // Si on est en train d'écrire, on complète le texte instantanément
+                if (_typewriterTween != null && _typewriterTween.IsRunning())
+                {
+                    _typewriterTween.Kill();
+                    textLabel.VisibleCharacters = textLabel.Text.Length;
+                    _isTyping = false;
+                    
+                    // On consomme l'input pour ne pas faire avancer le NPC tout de suite
+                    GetViewport().SetInputAsHandled();
+                }
+            }
+        }
     }
 
     void OnDialogueRecevied(DialogueLine line)
@@ -26,6 +48,7 @@ public partial class Dialogue : Control
         if (line == null)
         {
             Visible = false;
+            _isTyping = false;
             CallDeferred(MethodName.ReleaseFocus);
             return;
         }
@@ -42,7 +65,7 @@ public partial class Dialogue : Control
             child.QueueFree();
         }
         
-        npcNameLabel.Text = line.NpcName;
+        npcNameLabel.Text = $"[color=#3F9DD9]{line.NpcName}[/color]";
         Visible = true;
         
         textLabel.Text = line.Text;
@@ -53,13 +76,14 @@ public partial class Dialogue : Control
             _typewriterTween.Kill();
         }
         
-        // Utilisation du CreateTween du Node directement
+        _isTyping = true;
         _typewriterTween = CreateTween();
         
         float duration = line.Text.Length * 0.02f;
         
         _typewriterTween.TweenProperty(textLabel, "visible_characters", textLabel.Text.Length, duration);
-        
+        _typewriterTween.Finished += () => _isTyping = false;
+
         if (line.Type == DialogueType.CHOICE)
         {
             choicesContainer.Visible = false;
@@ -71,7 +95,7 @@ public partial class Dialogue : Control
         else
         {
             choicesContainer.Visible = false;
-            // Libérer le focus clavier différé
+            // Libérer le focus clavier différé pour permettre à l'input de remonter au NPC après le texte
             CallDeferred(MethodName.ReleaseFocus);
         }
     }
@@ -83,7 +107,7 @@ public partial class Dialogue : Control
         foreach (var choice in line.Choices) 
         {
             var btn = new Button();
-            btn.AddThemeFontSizeOverride("font_size", 35);
+            btn.AddThemeFontSizeOverride("font_size", 16);
             btn.Text = choice.Key;
             btn.CustomMinimumSize = new Vector2(0, 40); 
             btn.Alignment = HorizontalAlignment.Right;

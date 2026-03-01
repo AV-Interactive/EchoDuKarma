@@ -1,13 +1,141 @@
 [gd_scene format=3 uid="uid://deitf4m52htu0"]
 
 [ext_resource type="Script" uid="uid://cppa6cijlxwut" path="res://Scripts/Entities/Player/Player.cs" id="1_4ntmi"]
-[ext_resource type="Texture2D" uid="uid://d31uenbc4gw01" path="res://Assets/Actors/player.png" id="1_l8h54"]
+[ext_resource type="Texture2D" uid="uid://ctkbskepw3pk" path="res://Assets/Actors/Heroes/Magus.png" id="2_ons5c"]
+[ext_resource type="Script" uid="uid://cug7s0blrt05v" path="res://Scripts/Entities/Player/PlayerVisuals.cs" id="3_oai4o"]
+[ext_resource type="Texture2D" uid="uid://mpi5frvnod3v" path="res://Assets/Actors/Heroes/shadow.png" id="4_4xntx"]
 [ext_resource type="Script" uid="uid://bfffhqo5mnmbr" path="res://Scripts/Entities/Player/CameraFollow3D.cs" id="4_oai4o"]
 [ext_resource type="Script" uid="uid://ccm84pwyrnwcg" path="res://Scripts/Data/StatHandler.cs" id="4_ons5c"]
+[ext_resource type="Script" uid="uid://o2i6s7fyolvr" path="res://Scripts/Entities/Player/ShadowFollow.cs" id="5_aq3pl"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_ons5c"]
 radius = 0.21942139
 height = 0.43884277
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_aq3pl"]
+transparency = 1
+diffuse_mode = 1
+vertex_color_use_as_albedo = true
+albedo_color = Color(0.9, 0.80999994, 0.80999994, 1)
+albedo_texture = ExtResource("2_ons5c")
+rim_enabled = true
+rim = 0.05
+rim_tint = 0.05
+texture_filter = 0
+billboard_mode = 1
+billboard_keep_scale = true
+proximity_fade_enabled = true
+proximity_fade_distance = 0.05
+
+[sub_resource type="Animation" id="Animation_ons5c"]
+resource_name = "DOWN"
+length = 1.4
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite3D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [16, 17, 18, 19, 20, 21, 22, 23]
+}
+
+[sub_resource type="Animation" id="Animation_oai4o"]
+resource_name = "IDLE"
+length = 2.4
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite3D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.19999999, 0.39999998, 0.8, 1.2, 1.6, 2, 2.4),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [10, 9, 10, 11, 12, 13, 14, 15]
+}
+
+[sub_resource type="Animation" id="Animation_4xntx"]
+resource_name = "LEFT"
+length = 1.4
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite3D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [32, 33, 34, 35, 36, 37, 38, 39]
+}
+
+[sub_resource type="Animation" id="Animation_aq3pl"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite3D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [9]
+}
+
+[sub_resource type="Animation" id="Animation_g54ni"]
+resource_name = "RIGHT"
+length = 1.4
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite3D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [64, 65, 66, 67, 68, 69, 70, 71]
+}
+
+[sub_resource type="Animation" id="Animation_8y56s"]
+resource_name = "UP"
+length = 1.4
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite3D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [48, 49, 50, 51, 52, 53, 54, 55]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_lduhk"]
+_data = {
+&"DOWN": SubResource("Animation_ons5c"),
+&"IDLE": SubResource("Animation_oai4o"),
+&"LEFT": SubResource("Animation_4xntx"),
+&"RESET": SubResource("Animation_aq3pl"),
+&"RIGHT": SubResource("Animation_g54ni"),
+&"UP": SubResource("Animation_8y56s")
+}
 
 [node name="Player" type="CharacterBody3D" unique_id=228775926 groups=["Player"]]
 collision_layer = 2
@@ -15,16 +143,39 @@ collision_mask = 3
 script = ExtResource("1_4ntmi")
 
 [node name="CollisionShape2D" type="CollisionShape3D" parent="." unique_id=1854523749]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.008361816, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.0866411, 0)
 shape = SubResource("CapsuleShape3D_ons5c")
 
 [node name="Node3D" type="Node3D" parent="." unique_id=290432175]
 
-[node name="Sprite3D" type="Sprite3D" parent="Node3D" unique_id=120836683]
+[node name="Sprite3D" type="Sprite3D" parent="Node3D" unique_id=120836683 node_paths=PackedStringArray("_animPlayer")]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
+material_override = SubResource("StandardMaterial3D_aq3pl")
+modulate = Color(0.9829839, 0.935285, 0.9052742, 1)
 billboard = 1
-texture = ExtResource("1_l8h54")
+shaded = true
+alpha_cut = 2
+texture_filter = 0
+texture = ExtResource("2_ons5c")
+hframes = 8
+vframes = 10
+frame = 9
+region_rect = Rect2(0, 0, 256, 320)
+script = ExtResource("3_oai4o")
+_animPlayer = NodePath("../AnimationPlayer")
+
+[node name="Shadow" type="Sprite3D" parent="Node3D" unique_id=1084570940 node_paths=PackedStringArray("PlayerBody")]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0.01, 0.255)
+cast_shadow = 0
+modulate = Color(1, 1, 1, 0.5882353)
+no_depth_test = true
+render_priority = -1
+texture = ExtResource("4_4xntx")
+script = ExtResource("5_aq3pl")
+PlayerBody = NodePath("../..")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="Node3D" unique_id=1509368393]
+libraries/ = SubResource("AnimationLibrary_lduhk")
 
 [node name="PlayerStats" type="Node2D" parent="." unique_id=51476162]
 script = ExtResource("4_ons5c")
@@ -35,4 +186,6 @@ transform = Transform3D(-3.9400224e-08, -0.9435758, 0.33115673, -1.8929022e-08, 
 fov = 80.0
 script = ExtResource("4_oai4o")
 Target = NodePath("..")
-Offset = Vector3(0, 5, 2)
+TargetFov = 35.0
+Offset = Vector3(4, 5, 2)
+LookAtOffset = Vector3(2, 0, 8)

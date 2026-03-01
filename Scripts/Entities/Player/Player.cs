@@ -32,6 +32,8 @@ public partial class Player : CharacterBody3D, IBattler
 	public int Defense => _stats.Defense;
 
 	public List<Skill> LearnedSkills = new List<Skill>();
+
+	PlayerVisuals _visuals;
 	
 	public override void _Ready()
 	{
@@ -63,6 +65,8 @@ public partial class Player : CharacterBody3D, IBattler
 			// Si tu veux que le sprite ne soit pas affecté par les ombres (look rétro HD-2D)
 			material.ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded;
 		}
+		
+		_visuals = GetNode<PlayerVisuals>("Node3D/Sprite3D");
 	}
 
 	void OnPlayerLevelUp(int levelUpAmount)
@@ -113,6 +117,7 @@ public partial class Player : CharacterBody3D, IBattler
 
 		Velocity = velocity;
 		MoveAndSlide();
+		_visuals.UpdateFrame(Velocity);
 	}
 
 	void UpdateSpriteDirection(float moveX)

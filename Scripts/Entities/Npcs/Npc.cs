@@ -45,7 +45,19 @@ public partial class Npc : CharacterBody3D
         {
             if (_isPlayerInRange)
             {
-                _currentDialogueId = nextId;
+                var line = DialogueSystem.Instance.GetDialogue(nextId);
+                
+                if (line != null && line.Type != DialogueType.CHOICE)
+                {
+                    // Comme le DialogueSystem affiche déjà la réponse du choix,
+                    // on prépare directement l'ID suivant pour le NPC.
+                    _currentDialogueId = line.NextId;
+                }
+                else
+                {
+                    // Si c'est un autre choix ou si la ligne n'existe pas, on garde l'ID actuel
+                    _currentDialogueId = nextId;
+                }
             }
         };
     }
@@ -55,6 +67,8 @@ public partial class Npc : CharacterBody3D
     {
         if (_isPlayerInRange && @event.IsActionPressed("Interaction"))
         {
+            if (GetViewport().GuiGetFocusOwner() != null) return;
+            
             GD.Print($"On tente une interaction avec {NpcName}");
             AdvanceDialogue();
         }
@@ -62,19 +76,35 @@ public partial class Npc : CharacterBody3D
 
     public void AdvanceDialogue()
     {
+        // Si l'ID est null (on a fini le dialogue précédemment), on ferme
+        if (string.IsNullOrWhiteSpace(_currentDialogueId))
+        {
+            FinishInteraction();
+            return;
+        }
+
         DialogueLine line = DialogueSystem.Instance.GetDialogue(_currentDialogueId);
 
         if (line != null)
         {
             GameManager.Instance.PlayerMoved = false;
+            
+            // On prépare le texte et on l'envoie à l'UI
             DialogueSystem.Instance.RequestDialogue(line);
 
+            // Si c'est un choix, on s'arrête là (l'UI prend le relais)
             if (line.Type == DialogueType.CHOICE) return;
             
+            // On prépare l'ID pour le PROCHAIN appui sur Interaction
             if (!string.IsNullOrWhiteSpace(line.NextId))
+            {
                 _currentDialogueId = line.NextId;
+            }
             else
-                FinishInteraction();
+            {
+                // Si pas de suite, on marque que le prochain appui fermera le dialogue
+                _currentDialogueId = null; 
+            }
         }
         else
         {

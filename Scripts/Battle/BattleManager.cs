@@ -580,8 +580,8 @@ public partial class BattleManager : Node
         }
 
         _enemies.Clear();
-        float startX = -2;
-        float spacing = 2;
+        float startX = 0;
+        float spacing = 1;
 
         for (int i = 0; i < _enemyStatsSource.Count; i++)
         {
@@ -589,7 +589,7 @@ public partial class BattleManager : Node
             var enemy = EnemyScene.Instantiate<Enemy>();
 
             enemy.EnemyName = stats.EnemyName;
-            enemy.Position = new Vector3(startX + i * spacing, 0, -5);
+            enemy.Position = new Vector3(startX + i * spacing, 1, 2);
 
             AddChild(enemy);
             _enemies.Add(enemy);

@@ -161,9 +161,9 @@ public partial class BattleHud : CanvasLayer
     public void UpdateTargetCursor(Vector2 targetPos)
     {
         _targetCursor.Show();
-        // Lead Dev: targetPos vient déjà d'une projection 3D->2D via UnprojectPosition.
-        // On place le curseur 2D sur cette position écran, avec un décalage vertical.
-        _targetCursor.GlobalPosition = new Vector2(targetPos.X, targetPos.Y - 150);
+        
+        float offset = GetViewport().GetVisibleRect().Size.Y * 0.08f; // 8% de la hauteur
+        _targetCursor.GlobalPosition = new Vector2(targetPos.X, targetPos.Y - offset);
     }
 
     public void ShowMagicMenu(List<Skill> skills)
@@ -181,7 +181,8 @@ public partial class BattleHud : CanvasLayer
         {
             Button btn = new Button();
             btn.Text = $"{skill.Name} ({skill.Cost} MP)";
-            btn.AddThemeFontSizeOverride("font_size", 35);
+            int baseFontSize = (int)(GetViewport().GetVisibleRect().Size.Y * 0.04f);
+            btn.AddThemeFontSizeOverride("font_size", baseFontSize);
             btn.Pressed += () => OnButtonPressed($"Magic:{skill.Name}");
             _skillsListPanel.AddChild(btn);
             GD.Print($"Ajout de la skill {skill.Name} au menu");

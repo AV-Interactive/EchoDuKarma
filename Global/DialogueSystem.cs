@@ -125,5 +125,9 @@ public partial class DialogueSystem: Node
         EmitSignal(SignalName.DialogueRequested, line);
     }
     
-    public DialogueLine GetDialogue(string id) => _dialogues.GetValueOrDefault(id);
+    public DialogueLine GetDialogue(string id)
+    {
+        if (string.IsNullOrWhiteSpace(id)) return null;
+        return _dialogues.GetValueOrDefault(id);
+    }
 }

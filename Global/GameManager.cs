@@ -75,8 +75,8 @@ public partial class GameManager: Node
     void StartBattle(string enemies, string quantity)
     {
         ListEnemiesBattle.Clear();
-        string[] enemiesArray = enemies.Split(',');
-        string[] quantityArray = quantity.Split(',');
+        string[] enemiesArray = enemies.Split('|');
+        string[] quantityArray = quantity.Split('|');
         
         // Enemies = ["Rats", "Gobi"]
         // Quantity = ["2", "1"]
@@ -113,7 +113,7 @@ public partial class GameManager: Node
     void OnBattleEnded(BattleManager.BattleEndReason reason)
     {
         GD.Print($"[GameManager] Signal de fin de combat reçu : {reason}");
-        var map = "res://Maps/Intro/Road.tscn";
+        var map = "res://Maps/Intro/Map.tscn";
         PlayerMoved = true;
         GetTree().Paused = false;
         

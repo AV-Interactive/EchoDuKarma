@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://bcqkrsmq8218y"
+
+[deps]
+
+files=["res://Datas/Persos/equipments.Slot.translation", "res://Datas/Persos/equipments.Type.translation", "res://Datas/Persos/equipments.Force.translation", "res://Datas/Persos/equipments.Agi.translation", "res://Datas/Persos/equipments.Esprit.translation", "res://Datas/Persos/equipments.Defense.translation", "res://Datas/Persos/equipments.en.translation", "res://Datas/Persos/equipments.Classes.translation", "res://Datas/Persos/equipments.Prix.translation"]
+
+source_file="res://Datas/Persos/equipments.csv"
+dest_files=["res://Datas/Persos/equipments.Slot.translation", "res://Datas/Persos/equipments.Type.translation", "res://Datas/Persos/equipments.Force.translation", "res://Datas/Persos/equipments.Agi.translation", "res://Datas/Persos/equipments.Esprit.translation", "res://Datas/Persos/equipments.Defense.translation", "res://Datas/Persos/equipments.en.translation", "res://Datas/Persos/equipments.Classes.translation", "res://Datas/Persos/equipments.Prix.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

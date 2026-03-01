@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://dmip8b4yelf8q"
+
+[deps]
+
+files=["res://Datas/Persos/skills.Type.translation", "res://Datas/Persos/skills.en.translation", "res://Datas/Persos/skills.Coût PM.translation", "res://Datas/Persos/skills.Puissance.translation", "res://Datas/Persos/skills.Élément.translation", "res://Datas/Persos/skills.Vitesse.translation", "res://Datas/Persos/skills.en.translation", "res://Datas/Persos/skills.Type de cible.translation", "res://Datas/Persos/skills.Classes.translation", "res://Datas/Persos/skills.Level requis.translation"]
+
+source_file="res://Datas/Persos/skills.csv"
+dest_files=["res://Datas/Persos/skills.Type.translation", "res://Datas/Persos/skills.en.translation", "res://Datas/Persos/skills.Coût PM.translation", "res://Datas/Persos/skills.Puissance.translation", "res://Datas/Persos/skills.Élément.translation", "res://Datas/Persos/skills.Vitesse.translation", "res://Datas/Persos/skills.en.translation", "res://Datas/Persos/skills.Type de cible.translation", "res://Datas/Persos/skills.Classes.translation", "res://Datas/Persos/skills.Level requis.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true
