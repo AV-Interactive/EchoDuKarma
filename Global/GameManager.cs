@@ -78,8 +78,6 @@ public partial class GameManager: Node
         string[] enemiesArray = enemies.Split('|');
         string[] quantityArray = quantity.Split('|');
         
-        // Enemies = ["Rats", "Gobi"]
-        // Quantity = ["2", "1"]
         for (int i = 0; i < enemiesArray.Length; i++)
         {
             string enemyName = enemiesArray[i].Trim();
@@ -103,7 +101,7 @@ public partial class GameManager: Node
         }
         
         GD.Print("[GameManager] Transition vers la scène de combat...");
-        GetTree().ChangeSceneToFile("res://Scripts/Battle/battle_map.tscn");
+        GetTree().ChangeSceneToFile("res://Maps/Battles/Basic.tscn");
         
         // On utilise un timer court pour laisser à la scène le temps de s'instancier
         // avant de chercher le BattleManager
@@ -146,25 +144,22 @@ public partial class GameManager: Node
     
     void ConnectBattleSignals()
     {
-        // On cherche le BattleManager de manière récursive
-        var bm = GetTree().Root.FindChild("BattleManager", true, false) as BattleManager;
-
-        if (bm != null)
+        int _retryCount = 0;
+        void ConnectBattleSignals()
         {
-            // Sécurité : On se déconnecte si déjà connecté (pour éviter les doublons)
-            if (bm.IsConnected(BattleManager.SignalName.BattleEnded, Callable.From<BattleManager.BattleEndReason>(OnBattleEnded)))
+            var bm = GetTree().Root.FindChild("BattleManager", true, false) as BattleManager;
+            if (bm == null)
             {
-                bm.BattleEnded -= OnBattleEnded;
+                if (++_retryCount > 10)
+                {
+                    GD.PrintErr("[GameManager] BattleManager introuvable après 10 tentatives.");
+                    return;
+                }
+                CallDeferred(nameof(ConnectBattleSignals));
+                return;
             }
-        
+            _retryCount = 0;
             bm.BattleEnded += OnBattleEnded;
-            GD.Print("[GameManager] Connexion au signal BattleEnded réussie !");
-        }
-        else
-        {
-            GD.PrintErr("[GameManager] ERREUR : Impossible de trouver le nœud 'BattleManager' après le délai.");
-            // Si on ne le trouve pas, on réessaie une frame plus tard
-            CallDeferred(nameof(ConnectBattleSignals));
         }
     }
     

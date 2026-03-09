@@ -1,0 +1,31 @@
+[gd_scene format=3 uid="uid://k8vub3w4frn8"]
+
+[ext_resource type="PackedScene" uid="uid://orws2w6gwh4s" path="res://Assets/World/Props/Models/Cart/Cart.glb" id="1_s4t62"]
+
+[node name="Cart" type="Node3D" unique_id=1237753171]
+
+[node name="Cart" parent="." unique_id=538016460 instance=ExtResource("1_s4t62")]
+transform = Transform3D(0.4, 0, 0, 0, 0.4, 0, 0, 0, 0.4, 0, 0, 0)
+
+[node name="CAISSE_CHARIOT" parent="Cart" index="0" unique_id=6236885]
+layers = 8
+
+[node name="ROUES_CHARIOT_1" parent="Cart" index="1" unique_id=1615856720]
+layers = 8
+
+[node name="ROUES_CHARIOT_2" parent="Cart" index="2" unique_id=2033709498]
+layers = 8
+
+[node name="ROUES_CHARIOT_4" parent="Cart" index="3" unique_id=1715808429]
+layers = 8
+
+[node name="ROUES_CHARIOT_3" parent="Cart" index="4" unique_id=1774284853]
+layers = 8
+
+[node name="ESSIEU_CHARIOT_1" parent="Cart" index="5" unique_id=1443888745]
+layers = 8
+
+[node name="ESSIEU_CHARIOT_2" parent="Cart" index="6" unique_id=867284020]
+layers = 8
+
+[editable path="Cart"]

@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://chtptmrannklu"]
+
+[ext_resource type="PackedScene" uid="uid://1eq5p6a8l6ib" path="res://Assets/World/Props/Blender/CampainMap.blend" id="1_migxj"]
+[ext_resource type="Texture2D" uid="uid://1uuvo8k8ow8n" path="res://Assets/World/Textures/IntroMap_Albedo.png" id="2_attjp"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_457at"]
+albedo_color = Color(0.67481464, 0.67481464, 0.6748146, 1)
+albedo_texture = ExtResource("2_attjp")
+
+[node name="CampainMap" unique_id=744160863 instance=ExtResource("1_migxj")]
+
+[node name="Plane" parent="." index="0" unique_id=205995662]
+surface_material_override/0 = SubResource("StandardMaterial3D_457at")

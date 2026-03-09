@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://dg3wvkgnaaui0"]
+
+[ext_resource type="PackedScene" uid="uid://cxgojxh0ujpmv" path="res://Assets/World/Props/Models/Crate/crate.glb" id="1_wp72f"]
+
+[node name="Crate" type="Node3D" unique_id=299936812]
+
+[node name="crate" parent="." unique_id=124198737 instance=ExtResource("1_wp72f")]
+transform = Transform3D(0.4, 0, 0, 0, 0.4, 0, 0, 0, 0.4, 0, 0, 0)
+
+[node name="CRATE" parent="crate" index="0" unique_id=1050671319]
+layers = 8
+
+[node name="StaticBody3D" parent="crate/CRATE" index="0" unique_id=1001977907]
+collision_layer = 14
+collision_mask = 8
+
+[editable path="crate"]

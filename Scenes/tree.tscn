@@ -1,0 +1,29 @@
+[gd_scene format=3 uid="uid://kqhj7bngint6"]
+
+[ext_resource type="PackedScene" uid="uid://ctube1qmk6gc2" path="res://Assets/World/Props/Models/Tree/Tree.glb" id="1_0vwjc"]
+
+[node name="Tree" type="Node3D" unique_id=956844646]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
+
+[node name="Tree" parent="." unique_id=1921656197 instance=ExtResource("1_0vwjc")]
+
+[node name="Tree" parent="Tree" index="0" unique_id=1654752964]
+layers = 8
+
+[node name="StaticBody3D" parent="Tree/Tree" index="0" unique_id=590478962]
+collision_layer = 14
+collision_mask = 15
+
+[node name="Plane" parent="Tree" index="1" unique_id=665467195]
+layers = 8
+
+[node name="Plane_001" parent="Tree" index="2" unique_id=2124988656]
+layers = 8
+
+[node name="Plane_002" parent="Tree" index="3" unique_id=1043476704]
+layers = 8
+
+[node name="Plane_003" parent="Tree" index="4" unique_id=415117767]
+layers = 8
+
+[editable path="Tree"]

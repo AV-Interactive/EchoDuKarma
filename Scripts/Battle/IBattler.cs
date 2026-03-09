@@ -8,6 +8,7 @@ public interface IBattler
     int Pv { get; }
     int CurrentPv { get; set; }
     int Mp { get; }
+    int CurrentMp { get; set; }
     int Strength { get; }
     int Dexterity { get; }
     int Spirit { get; }

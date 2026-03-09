@@ -3,30 +3,45 @@
 [ext_resource type="PackedScene" uid="uid://bytrlpkuio8lg" path="res://Maps/Intro/Road.tscn" id="1_gyees"]
 [ext_resource type="Script" uid="uid://bggl6eh4yrnq2" path="res://Scripts/Data/MapLoader.cs" id="1_jsb3r"]
 [ext_resource type="PackedScene" uid="uid://deitf4m52htu0" path="res://Scripts/Entities/Player/player.tscn" id="2_axsiu"]
-[ext_resource type="PackedScene" uid="uid://dpi5qacohuaiy" path="res://Scenes/ground.tscn" id="2_hrx2w"]
+[ext_resource type="PackedScene" uid="uid://k8vub3w4frn8" path="res://Scenes/cart.tscn" id="2_t4cgs"]
 [ext_resource type="PackedScene" uid="uid://bqdkqqak5optc" path="res://Scripts/Entities/Npcs/npc.tscn" id="4_y7c5g"]
-[ext_resource type="Texture2D" uid="uid://bi5huhrtcasnq" path="res://Assets/Actors/pnj.png" id="5_2whbv"]
+[ext_resource type="Texture2D" uid="uid://cde3ducm2ro8v" path="res://Assets/World/Textures/GrassMask.png" id="5_ne6lv"]
 [ext_resource type="PackedScene" uid="uid://df5ufudng06yc" path="res://UI/dialogue.tscn" id="6_2whbv"]
-[ext_resource type="PackedScene" uid="uid://10rxgtkol1qa" path="res://Assets/World/Props/Cart-col.blend" id="8_me1ua"]
-[ext_resource type="PackedScene" uid="uid://drmf4s6v2a12o" path="res://Assets/World/Props/crate.blend" id="9_ne6lv"]
+[ext_resource type="PackedScene" uid="uid://kqhj7bngint6" path="res://Scenes/tree.tscn" id="6_t4cgs"]
+[ext_resource type="PackedScene" uid="uid://dg3wvkgnaaui0" path="res://Scenes/crate.tscn" id="7_t4cgs"]
+[ext_resource type="Texture2D" uid="uid://bxmu5hk73bkey" path="res://Assets/Actors/Npcs/Generic Male NPCs A.png" id="9_ifhrt"]
 
 [sub_resource type="Gradient" id="Gradient_me1ua"]
 
 [sub_resource type="GradientTexture2D" id="GradientTexture2D_ne6lv"]
 gradient = SubResource("Gradient_me1ua")
 
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_ne6lv"]
+sky_top_color = Color(0.22745098, 0.48235294, 0.8352941, 1)
+sky_horizon_color = Color(0.5294118, 0.80784315, 0.92156863, 1)
+ground_bottom_color = Color(0.15900809, 0.2555741, 0.07281049, 1)
+ground_horizon_color = Color(0.15594476, 0.28448847, 0.07242776, 1)
+
+[sub_resource type="Sky" id="Sky_t4cgs"]
+sky_material = SubResource("ProceduralSkyMaterial_ne6lv")
+
 [sub_resource type="Environment" id="Environment_me1ua"]
-background_mode = 1
+background_mode = 2
 background_color = Color(0.010280861, 0.08815598, 0.2882901, 1)
+background_energy_multiplier = 0.6
+sky = SubResource("Sky_t4cgs")
+ambient_light_source = 2
+ambient_light_color = Color(0.55630004, 0.8294431, 0.8848624, 1)
+ambient_light_sky_contribution = 0.0
+ambient_light_energy = 0.5
 tonemap_mode = 3
-ssao_enabled = true
 glow_enabled = true
 glow_intensity = 0.7
 glow_bloom = 0.2
 glow_blend_mode = 2
 fog_enabled = true
 fog_mode = 1
-fog_density = 1.0
+fog_density = 0.02
 adjustment_enabled = true
 adjustment_contrast = 1.1
 adjustment_saturation = 0.9
@@ -36,107 +51,167 @@ adjustment_color_correction = SubResource("GradientTexture2D_ne6lv")
 script = ExtResource("1_jsb3r")
 ZoneName = "Introduction"
 
-[node name="-- WORLD" type="Node3D" parent="." unique_id=1909004944]
+[node name="SubViewportContainer" type="SubViewportContainer" parent="." unique_id=1299417155]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+stretch = true
+stretch_shrink = 3
 
-[node name="Road" parent="-- WORLD" unique_id=917559144 instance=ExtResource("1_gyees")]
+[node name="SubViewport" type="SubViewport" parent="SubViewportContainer" unique_id=1026714073]
+handle_input_locally = false
+size = Vector2i(640, 360)
+render_target_update_mode = 4
 
-[node name="Ground" parent="-- WORLD" unique_id=817237313 instance=ExtResource("2_hrx2w")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.498715, -0.057081938, 0)
+[node name="-- WORLD" type="Node3D" parent="SubViewportContainer/SubViewport" unique_id=1909004944]
 
-[node name="Ground2" parent="-- WORLD" unique_id=964770526 instance=ExtResource("2_hrx2w")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.504336, -0.057081938, 0)
+[node name="Cart" parent="SubViewportContainer/SubViewport/-- WORLD" unique_id=1237753171 instance=ExtResource("2_t4cgs")]
+transform = Transform3D(-0.81701344, -0.06585292, -0.572846, -0.04462764, 0.99769884, -0.051043388, 0.57488906, -0.016138371, -0.8180722, 1.4265604, -0.48028353, 1.9923778)
 
-[node name="Ground3" parent="-- WORLD" unique_id=237903926 instance=ExtResource("2_hrx2w")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5086517, -0.057081938, 0)
+[node name="Road" parent="SubViewportContainer/SubViewport/-- WORLD" unique_id=917559144 instance=ExtResource("1_gyees")]
 
-[node name="Ground4" parent="-- WORLD" unique_id=221450859 instance=ExtResource("2_hrx2w")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5169487, -0.057081938, 0)
+[node name="GrassSpawner" parent="SubViewportContainer/SubViewport/-- WORLD/Road" index="0" unique_id=962071211]
+ChunkRadius = 4
+GrassPerChunk = 500
+NoiseThreshold = 0.1
+TerrainPath = NodePath("../CampainMap2/Plane")
+TerrainAlbedo = ExtResource("5_ne6lv")
+MultiMeshPath = NodePath("MultiMeshInstance3D")
+PlayerPath = NodePath("../../../CHARACTERS/Player")
 
-[node name="Ground5" parent="-- WORLD" unique_id=155191791 instance=ExtResource("2_hrx2w")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5222063, -0.057081938, 0)
+[node name="PropSpawner" parent="SubViewportContainer/SubViewport/-- WORLD/Road" index="2" unique_id=29801914]
+PropScene = ExtResource("6_t4cgs")
+TerrainPath = NodePath("../CampainMap2/Plane")
+TerrainAlbedo = ExtResource("5_ne6lv")
+Seed = 20690
 
-[node name="Ground6" parent="-- WORLD" unique_id=894711504 instance=ExtResource("2_hrx2w")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.552712, -0.057081938, 0)
+[node name="Crate" parent="SubViewportContainer/SubViewport/-- WORLD" unique_id=299936812 instance=ExtResource("7_t4cgs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5914083, -0.012112623, 1.0734954)
 
-[node name="Ground7" parent="-- WORLD" unique_id=599503807 instance=ExtResource("2_hrx2w")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.590105, -0.057081938, 0)
+[node name="Crate2" parent="SubViewportContainer/SubViewport/-- WORLD" unique_id=1216662330 instance=ExtResource("7_t4cgs")]
+transform = Transform3D(0.86487997, 0, 0.50197875, 0, 1, 0, -0.50197875, 0, 0.86487997, 4.4744434, -0.012112623, 1.8407974)
 
-[node name="Ground8" parent="-- WORLD" unique_id=1821454605 instance=ExtResource("2_hrx2w")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6486864, -0.057081938, 0)
+[node name="Crate3" parent="SubViewportContainer/SubViewport/-- WORLD" unique_id=1513457053 instance=ExtResource("7_t4cgs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.185931, -0.012112623, 1.3221807)
 
-[node name="Ground9" parent="-- WORLD" unique_id=418843408 instance=ExtResource("2_hrx2w")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6833639, -0.057081938, 0)
+[node name="Crate4" parent="SubViewportContainer/SubViewport/-- WORLD" unique_id=1106714726 instance=ExtResource("7_t4cgs")]
+transform = Transform3D(0.59857625, 0, 0.8010658, 0, 1, 0, -0.8010658, 0, 0.59857625, 4.3832855, 0.39121646, 1.3221807)
 
-[node name="Ground10" parent="-- WORLD" unique_id=778789035 instance=ExtResource("2_hrx2w")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.6889849, -0.057081938, 0)
+[node name="Trees" type="Node3D" parent="SubViewportContainer/SubViewport/-- WORLD" unique_id=1671621808]
 
-[node name="Ground11" parent="-- WORLD" unique_id=1451251507 instance=ExtResource("2_hrx2w")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.30669975, -0.057081938, 0)
+[node name="Tree" parent="SubViewportContainer/SubViewport/-- WORLD/Trees" unique_id=956844646 instance=ExtResource("6_t4cgs")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 3.0645216, -0.32703328, 0)
 
-[node name="Ground12" parent="-- WORLD" unique_id=1430703101 instance=ExtResource("2_hrx2w")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2984028, -0.057081938, 0)
+[node name="Tree2" parent="SubViewportContainer/SubViewport/-- WORLD/Trees" unique_id=2121201572 instance=ExtResource("6_t4cgs")]
+transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, -1.6636608, -0.5243936, -3.30053)
+visible = false
 
-[node name="Ground13" parent="-- WORLD" unique_id=248502411 instance=ExtResource("2_hrx2w")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.2931452, -0.057081938, 0)
+[node name="Tree3" parent="SubViewportContainer/SubViewport/-- WORLD/Trees" unique_id=1422211360 instance=ExtResource("6_t4cgs")]
+transform = Transform3D(0.44723722, 0, -0.22355956, 0, 0.5, 0, 0.22355956, 0, 0.44723722, 0.70015216, -0.49658293, -2.1245084)
+visible = false
 
-[node name="Ground14" parent="-- WORLD" unique_id=1789134553 instance=ExtResource("2_hrx2w")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.2626395, -0.057081938, 0)
+[node name="Tree4" parent="SubViewportContainer/SubViewport/-- WORLD/Trees" unique_id=1265043134 instance=ExtResource("6_t4cgs")]
+transform = Transform3D(0.44723722, 0, -0.22355956, 0, 0.5, 0, 0.22355956, 0, 0.44723722, 3.6842601, -0.2580542, -8.524384)
+visible = false
 
-[node name="Ground15" parent="-- WORLD" unique_id=828925250 instance=ExtResource("2_hrx2w")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.2252464, -0.057081938, 0)
+[node name="Tree6" parent="SubViewportContainer/SubViewport/-- WORLD/Trees" unique_id=1855853602 instance=ExtResource("6_t4cgs")]
+transform = Transform3D(0.24406694, 0, -0.4363844, 0, 0.5, 0, 0.4363844, 0, 0.24406694, -9.102065, -0.2580542, -3.5470304)
+visible = false
 
-[node name="Ground16" parent="-- WORLD" unique_id=1056194033 instance=ExtResource("2_hrx2w")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.166665, -0.057081938, 0)
+[node name="Tree5" parent="SubViewportContainer/SubViewport/-- WORLD/Trees" unique_id=936609086 instance=ExtResource("6_t4cgs")]
+transform = Transform3D(0.44723722, 0, -0.22355956, 0, 0.5, 0, 0.22355956, 0, 0.44723722, -3.2387965, -0.44512627, -7.226294)
+visible = false
 
-[node name="Ground17" parent="-- WORLD" unique_id=2144302104 instance=ExtResource("2_hrx2w")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.0741644, -0.057081938, 0)
+[node name="Tree7" parent="SubViewportContainer/SubViewport/-- WORLD/Trees" unique_id=1325001845 instance=ExtResource("6_t4cgs")]
+transform = Transform3D(0.24406694, 0, -0.4363844, 0, 0.5, 0, 0.4363844, 0, 0.24406694, -4.948769, -0.2580542, 6.333025)
+visible = false
 
-[node name="Ground18" parent="-- WORLD" unique_id=1277944634 instance=ExtResource("2_hrx2w")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.0685434, -0.057081938, 0)
+[node name="Tree8" parent="SubViewportContainer/SubViewport/-- WORLD/Trees" unique_id=1131368816 instance=ExtResource("6_t4cgs")]
+transform = Transform3D(0.24406694, 0, -0.4363844, 0, 0.5, 0, 0.4363844, 0, 0.24406694, 8.437607, -0.2580542, 6.333025)
+visible = false
 
-[node name="Ground19" parent="-- WORLD" unique_id=1523006069 instance=ExtResource("2_hrx2w")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.064228, -0.057081938, 0)
+[node name="Tree9" parent="SubViewportContainer/SubViewport/-- WORLD/Trees" unique_id=1605293136 instance=ExtResource("6_t4cgs")]
+transform = Transform3D(0.04620266, 0, -0.49786073, 0, 0.5, 0, 0.49786073, 0, 0.04620266, 5.7783203, -0.2580542, 10.039825)
+visible = false
 
-[node name="Ground20" parent="-- WORLD" unique_id=869338307 instance=ExtResource("2_hrx2w")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.055931, -0.057081938, 0)
+[node name="Tree10" parent="SubViewportContainer/SubViewport/-- WORLD/Trees" unique_id=617134679 instance=ExtResource("6_t4cgs")]
+transform = Transform3D(0.04620266, 0, -0.49786073, 0, 0.5, 0, 0.49786073, 0, 0.04620266, -6.757968, 0.40314275, 10.039825)
+visible = false
 
-[node name="Ground21" parent="-- WORLD" unique_id=1747877242 instance=ExtResource("2_hrx2w")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.797875, -0.057081938, 0)
+[node name="CHARACTERS" type="Node3D" parent="SubViewportContainer/SubViewport" unique_id=1057958063]
 
-[node name="Cart-col" parent="-- WORLD" unique_id=49357941 instance=ExtResource("8_me1ua")]
-transform = Transform3D(0.17655225, 0, -0.358928, 0, 0.4, 0, 0.358928, 0, 0.17655225, 0.71444917, 0, -1.5318995)
+[node name="Player" parent="SubViewportContainer/SubViewport/CHARACTERS" unique_id=228775926 instance=ExtResource("2_axsiu")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.049902, -0.0021262765, -5.684823)
+TerrainPath = NodePath("../../-- WORLD/Road/CampainMap2/Plane")
 
-[node name="crate" parent="-- WORLD" unique_id=420086017 instance=ExtResource("9_ne6lv")]
-transform = Transform3D(0.2, 0, 0, 0, 0.2, 0, 0, 0, 0.2, 1.3293414, 0, -0.87030673)
+[node name="Camera3D" parent="SubViewportContainer/SubViewport/CHARACTERS/Player" index="3" unique_id=967178187]
+TerrainPath = NodePath("../../../-- WORLD/Road/CampainMap2/Plane")
 
-[node name="CHARACTERS" type="Node3D" parent="." unique_id=1057958063]
-
-[node name="Player" parent="CHARACTERS" unique_id=228775926 instance=ExtResource("2_axsiu")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.171477, 0.28111833, 1.119595)
-
-[node name="CharacterBody3D" parent="CHARACTERS" unique_id=943380825 instance=ExtResource("4_y7c5g")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.3550253, -1)
+[node name="Marchand" parent="SubViewportContainer/SubViewport/CHARACTERS" unique_id=943380825 instance=ExtResource("4_y7c5g")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.988659, 0.043306172, 0.6704476)
 NpcName = "Marchand"
-SpriteTexture = ExtResource("5_2whbv")
+SpriteTexture = ExtResource("9_ifhrt")
 StartDialogueId = "INTRO_SOS_01"
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1849374619]
+[node name="Sprite3D" parent="SubViewportContainer/SubViewport/CHARACTERS/Marchand/Node3D" parent_id_path=PackedInt32Array(943380825, 1928349061) index="0" unique_id=2017281585]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
+texture = ExtResource("9_ifhrt")
+hframes = 8
+vframes = 10
+
+[node name="BATTLE_LAUNCH" parent="SubViewportContainer/SubViewport/CHARACTERS" unique_id=1204224578 instance=ExtResource("4_y7c5g")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.67561346, -0.4513217, -4.4533453)
+NpcName = "Marchand"
+SpriteTexture = ExtResource("9_ifhrt")
+StartDialogueId = "TEST_BATTLE"
+
+[node name="Sprite3D" parent="SubViewportContainer/SubViewport/CHARACTERS/BATTLE_LAUNCH/Node3D" parent_id_path=PackedInt32Array(1204224578, 1928349061) index="0" unique_id=2017281585]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
+texture = ExtResource("9_ifhrt")
+hframes = 8
+vframes = 10
+
+[node name="LEVELUP" parent="SubViewportContainer/SubViewport/CHARACTERS" unique_id=1151338402 instance=ExtResource("4_y7c5g")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7837762, -0.19476232, -2.197381)
+NpcName = "Marchand"
+SpriteTexture = ExtResource("9_ifhrt")
+StartDialogueId = "PNJ_TEST_LEVEL"
+
+[node name="Sprite3D" parent="SubViewportContainer/SubViewport/CHARACTERS/LEVELUP/Node3D" parent_id_path=PackedInt32Array(1151338402, 1928349061) index="0" unique_id=2017281585]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
+texture = ExtResource("9_ifhrt")
+hframes = 8
+vframes = 10
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="SubViewportContainer/SubViewport" unique_id=1849374619]
 transform = Transform3D(1, 0, 0, 0, -0.36315373, 0.93172926, 0, -0.93172926, -0.36315373, 0, 13.080275, -14.451)
+light_energy = 0.2
 shadow_enabled = true
 shadow_opacity = 0.5
 
-[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1868278392]
+[node name="CanvasLayer" type="CanvasLayer" parent="SubViewportContainer/SubViewport" unique_id=1868278392]
 
-[node name="Root" type="Control" parent="CanvasLayer" unique_id=411992830]
+[node name="Root" type="Control" parent="SubViewportContainer/SubViewport/CanvasLayer" unique_id=411992830]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+metadata/_edit_use_anchors_ = true
 
-[node name="DialogueUI" parent="CanvasLayer/Root" unique_id=394009753 instance=ExtResource("6_2whbv")]
+[node name="DialogueUI" parent="SubViewportContainer/SubViewport/CanvasLayer/Root" unique_id=394009753 instance=ExtResource("6_2whbv")]
 layout_mode = 1
+metadata/_edit_use_anchors_ = true
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1455370088]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="SubViewportContainer/SubViewport" unique_id=1455370088]
 environment = SubResource("Environment_me1ua")
+
+[editable path="SubViewportContainer/SubViewport/-- WORLD/Road"]
+[editable path="SubViewportContainer/SubViewport/-- WORLD/Road/CampainMap2"]
+[editable path="SubViewportContainer/SubViewport/CHARACTERS/Player"]
+[editable path="SubViewportContainer/SubViewport/CHARACTERS/Marchand"]
+[editable path="SubViewportContainer/SubViewport/CHARACTERS/BATTLE_LAUNCH"]
+[editable path="SubViewportContainer/SubViewport/CHARACTERS/LEVELUP"]

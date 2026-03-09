@@ -1,13 +1,29 @@
 [gd_scene format=3 uid="uid://bytrlpkuio8lg"]
 
-[sub_resource type="BoxMesh" id="BoxMesh_26d6n"]
+[ext_resource type="PackedScene" uid="uid://1fwr0bn7k6mt" path="res://Assets/World/Props/Models/CampainMap/CampainMap.glb" id="2_f2dg0"]
+[ext_resource type="Script" uid="uid://d4fpx7o0rgx3d" path="res://Scripts/World/GrassSpawner.cs" id="2_l08hp"]
+[ext_resource type="MultiMesh" uid="uid://ylymaxwtkheq" path="res://Resources/MultiMesh/grass.tres" id="2_wta73"]
+[ext_resource type="Script" uid="uid://bsnuwurhphojl" path="res://Scripts/World/PropSpawner.cs" id="3_f2dg0"]
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_26d6n"]
-albedo_color = Color(1.7056335e-06, 0.26247132, 0.005713385, 1)
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_l08hp"]
+cull_mode = 2
+shading_mode = 0
+vertex_color_use_as_albedo = true
+billboard_mode = 1
 
 [node name="Road" type="Node3D" unique_id=917559144]
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1482511402]
-transform = Transform3D(20, 0, 0, 0, 1, 0, 0, 0, 20, 0, -0.5, 0)
-mesh = SubResource("BoxMesh_26d6n")
-surface_material_override/0 = SubResource("StandardMaterial3D_26d6n")
+[node name="GrassSpawner" type="Node3D" parent="." unique_id=962071211]
+script = ExtResource("2_l08hp")
+
+[node name="MultiMeshInstance3D" type="MultiMeshInstance3D" parent="GrassSpawner" unique_id=1390237249]
+material_override = SubResource("StandardMaterial3D_l08hp")
+multimesh = ExtResource("2_wta73")
+
+[node name="CampainMap2" parent="." unique_id=164181178 instance=ExtResource("2_f2dg0")]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0)
+
+[node name="PropSpawner" type="Node3D" parent="." unique_id=29801914]
+script = ExtResource("3_f2dg0")
+
+[editable path="CampainMap2"]

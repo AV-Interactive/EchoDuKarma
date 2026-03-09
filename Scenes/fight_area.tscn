@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://dw5jrfcorlksg"]
+
+[ext_resource type="PackedScene" uid="uid://bhogqtgg32ymf" path="res://Assets/World/Props/Models/BattleAreas/Intro/fight_area.glb" id="1_tabir"]
+[ext_resource type="Script" uid="uid://d4fpx7o0rgx3d" path="res://Scripts/World/GrassSpawner.cs" id="2_ajuog"]
+[ext_resource type="MultiMesh" uid="uid://ylymaxwtkheq" path="res://Resources/MultiMesh/grass.tres" id="5_tabir"]
+[ext_resource type="Texture2D" uid="uid://bbgcj52qw3qgn" path="res://Assets/World/Props/Models/BattleAreas/Intro/fight_area_Fight_Area_ALBEDO.jpg" id="6_ibjii"]
+
+[node name="Fight_AREA" type="Node3D" unique_id=1007950289]
+
+[node name="fight_area" parent="." unique_id=1541155117 instance=ExtResource("1_tabir")]
+
+[node name="GrassSpawner" type="Node3D" parent="." unique_id=1054225695]
+script = ExtResource("2_ajuog")
+TerrainPath = NodePath("../fight_area/Plane")
+TerrainAlbedo = ExtResource("6_ibjii")
+MultiMeshPath = NodePath("MultiMeshInstance3D")
+
+[node name="MultiMeshInstance3D" type="MultiMeshInstance3D" parent="GrassSpawner" unique_id=374435946]
+multimesh = ExtResource("5_tabir")
+
+[editable path="fight_area"]

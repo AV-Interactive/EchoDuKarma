@@ -38,12 +38,16 @@ public partial class BattleManager : Node
     #region --- Fields & Properties ---
 
     [ExportGroup("Nodes & Scenes")]
-    [Export] private BattleHud _hud;
+    [Export] public BattleHud _hud;
     [Export] public PackedScene EnemyScene { get; set; }
-    [Export] public NodePath PlayerPath { get; set; }
+    [Export] CameraDirector _cameraDirector;
+    [Export] PackedScene BattleActorScene { get; set; }
 
     [ExportGroup("Combatants")]
-    private Player _player;
+    private Player _player;                          // source de vérité des stats
+    private BattleActor _playerActor;               // coquille visuelle joueur
+    private Node3D _playerAnchor;                   // point de spawn joueur
+    private Node3D _enemiesAnchor;                  // point de spawn ennemis
     private readonly List<Enemy> _enemies = new List<Enemy>();
     private List<EnemyStats> _enemyStatsSource = new List<EnemyStats>();
 
@@ -57,6 +61,10 @@ public partial class BattleManager : Node
     private int _targetIndex = 0;
     private bool _isSelectingTarget = false;
     private Skill _selectedSkill;
+    private bool _isActionRunning = false;
+    
+    private int _retryCount = 0;
+    private bool _isReady = false;
 
     #endregion
 
@@ -64,7 +72,7 @@ public partial class BattleManager : Node
 
     public override void _Ready()
     {
-        InitializeBattle();
+        CallDeferred(nameof(InitializeBattle));
     }
 
     private void InitializeBattle()
@@ -80,9 +88,6 @@ public partial class BattleManager : Node
         _enemyStatsSource = GameManager.Instance.ListEnemiesBattle;
 
         // Auto-link HUD if not assigned
-        if (_hud == null)
-            _hud = GetTree().Root.FindChild("BattleHUD", true, false) as BattleHud;
-
         if (_hud != null)
         {
             _hud.ActionSelected += OnPlayerActionSelected;
@@ -91,7 +96,17 @@ public partial class BattleManager : Node
         {
             GD.PrintErr("[BattleManager] WARNING: BattleHud not found.");
         }
+        
+        // AUTO LINK des acteurs
+        _playerAnchor  = GetTree().Root.FindChild("PlayerAnchor",  true, false) as Node3D;
+        _enemiesAnchor = GetTree().Root.FindChild("EnemiesAnchor", true, false) as Node3D;
 
+        if (_playerAnchor == null)
+            GD.PrintErr("[BattleManager] WARNING: PlayerAnchor not found.");
+        if (_enemiesAnchor == null)
+            GD.PrintErr("[BattleManager] WARNING: EnemiesAnchor not found.");
+
+        _isReady = true;
         ChangeState(BattleState.Setup);
     }
 
@@ -120,6 +135,7 @@ public partial class BattleManager : Node
 
     private void HandleSetupState()
     {
+        SpawnPlayer();
         SpawnEnemies();
         DetermineTurnOrder();
     }
@@ -141,6 +157,7 @@ public partial class BattleManager : Node
 
         if (activeUnit is Player)
         {
+            _isPlayerDefending = false;
             _hud?.ShowMenu();
         }
         else
@@ -150,20 +167,9 @@ public partial class BattleManager : Node
         }
     }
 
-    private void HandleActionState()
-    {
-        ExecuteCurrentTurn();
-    }
-
-    private void HandleEvaluationState()
-    {
-        CheckBattleStatus();
-    }
-
-    private void HandleVictoryState()
-    {
-        HandleVictory();
-    }
+    private void HandleActionState() => ExecuteCurrentTurn();
+    private void HandleEvaluationState() => CheckBattleStatus();
+    private void HandleVictoryState() => HandleVictory();
 
     private void HandleDefeatState()
     {
@@ -229,16 +235,17 @@ public partial class BattleManager : Node
 
     public override void _Input(InputEvent @event)
     {
+        if(!_isReady) return;
         if (!_isSelectingTarget) return;
 
         if (@event.IsActionPressed("ui_right"))
         {
-            _targetIndex = (_targetIndex + 1) % _enemies.Count;
+            _targetIndex = GetNextEnemyIndex(1);
             UpdateTargetCursor();
         }
         else if (@event.IsActionPressed("ui_left"))
         {
-            _targetIndex = (_targetIndex - 1 + _enemies.Count) % _enemies.Count;
+            _targetIndex = GetNextEnemyIndex(-1);
             UpdateTargetCursor();
         }
         else if (@event.IsActionPressed("ui_accept"))
@@ -249,6 +256,25 @@ public partial class BattleManager : Node
         {
             CancelTargetSelection();
         }
+    }
+    
+    private int GetNextEnemyIndex(int direction)
+    {
+        var camera = GetViewport().GetCamera3D();
+        if (camera == null)
+            return (_targetIndex + direction + _enemies.Count) % _enemies.Count;
+
+        // On projette chaque ennemi en espace écran et on trie par X écran
+        var sorted = _enemies
+            .Select((e, i) => new { Index = i, ScreenX = camera.UnprojectPosition(e.GlobalPosition).X })
+            .OrderBy(e => e.ScreenX)
+            .ToList();
+
+        // Position du currentTarget dans la liste triée
+        int sortedPos = sorted.FindIndex(e => e.Index == _targetIndex);
+        int nextSortedPos = (sortedPos + direction + sorted.Count) % sorted.Count;
+
+        return sorted[nextSortedPos].Index;
     }
 
     private void StartTargetSelection()
@@ -300,6 +326,9 @@ public partial class BattleManager : Node
 
     private async void ExecutePhysicalAttack(Enemy target)
     {
+        if (_isActionRunning) return;
+        _isActionRunning = true;
+
         if (_player == null || target == null)
         {
             ChangeState(BattleState.Evaluation);
@@ -307,6 +336,10 @@ public partial class BattleManager : Node
         }
 
         ChangeState(BattleState.Action);
+
+        // CHANGEMENT ANGLE CAMERA
+        await _cameraDirector.CutTo(CameraDirector.CameraShot.PlayerAttack);
+        _playerActor?.OnCameraChanged(CameraDirector.CameraShot.PlayerAttack);
 
         int damage = CalculatePhysicalDamage(_player.Strength, target.Defense);
         target.CurrentPv -= damage;
@@ -320,11 +353,21 @@ public partial class BattleManager : Node
         target.PlayHitEffect();
 
         await ToSignal(GetTree().CreateTimer(1.0f), "timeout");
+        
+        // RETOUR PLAN NEUTRE
+        await _cameraDirector.CutTo(CameraDirector.CameraShot.Neutral);
+        _playerActor?.OnCameraChanged(CameraDirector.CameraShot.Neutral);
+        
+        _isActionRunning = false;
+        
         ChangeState(BattleState.Evaluation);
     }
 
     private async void ExecuteMagicAction(IBattler target, Skill skill)
     {
+        if (_isActionRunning) return;
+        _isActionRunning = true;
+
         if (_player.CurrentMp < skill.Cost)
         {
             _hud?.ShowLogs($"{_player.Name} n'a pas assez de MP pour utiliser {skill.Name} !");
@@ -343,6 +386,9 @@ public partial class BattleManager : Node
             ApplyMagicDamage(target, skill);
 
         await ToSignal(GetTree().CreateTimer(1.0f), "timeout");
+
+        _isActionRunning = false;
+        
         ChangeState(BattleState.Evaluation);
     }
 
@@ -359,7 +405,7 @@ public partial class BattleManager : Node
     private void ApplyMagicDamage(IBattler target, Skill skill)
     {
         _hud?.ShowLogs($"{_player.Name} lance {skill.Name} sur {target.Name} !");
-        int damage = CalculateMagicDamage(target, skill);
+        int damage = CalculateMagicDamage(_player, target, skill);
 
         if (target is Enemy e)
         {
@@ -421,6 +467,10 @@ public partial class BattleManager : Node
             return;
         }
 
+        // CHANGEMENT ANGLE CAMERA
+        await _cameraDirector.CutTo(CameraDirector.CameraShot.EnemyAttack);
+        _playerActor?.OnCameraChanged(CameraDirector.CameraShot.EnemyAttack);
+        
         _hud?.ShowLogs($"{enemy.EnemyName} prépare son attaque...");
         await ToSignal(GetTree().CreateTimer(1.0f), "timeout");
 
@@ -441,6 +491,11 @@ public partial class BattleManager : Node
         EmitSignal(SignalName.PlayerDamage, damage);
 
         await ToSignal(GetTree().CreateTimer(1.0f), "timeout");
+        
+        // RETOUR PLAN NEUTRE
+        await _cameraDirector.CutTo(CameraDirector.CameraShot.Neutral);
+        _playerActor?.OnCameraChanged(CameraDirector.CameraShot.Neutral);
+        
         ChangeState(BattleState.Evaluation);
     }
 
@@ -495,7 +550,7 @@ public partial class BattleManager : Node
 
                 var tween = CreateTween();
                 tween.TweenProperty(dead, "modulate:a", 0, 0.5f);
-                tween.Parallel().TweenProperty(dead, "scale", Vector2.Zero, 0.5f);
+                tween.Parallel().TweenProperty(dead, "scale", Vector3.Zero, 0.5f);
 
                 _enemies.RemoveAt(i);
                 _turnOrder.Remove(dead);
@@ -545,10 +600,10 @@ public partial class BattleManager : Node
         return Math.Max(1, Mathf.RoundToInt(baseDamage * variance));
     }
 
-    private int CalculateMagicDamage(IBattler target, Skill skill)
+    private int CalculateMagicDamage(IBattler attacker, IBattler target, Skill skill)
     {
         // Formula: (Power * (Spirit / 5)) - (Target Spirit / 4)
-        float baseDamage = (skill.Power * (_player.Spirit / 5.0f)) - (target.Spirit / 4.0f);
+        float baseDamage = (skill.Power * (attacker.Spirit / 5.0f)) - (target.Spirit / 4.0f);
         float variance = (float)GD.RandRange(0.9, 1.1);
         return Math.Max(1, Mathf.RoundToInt(baseDamage * variance));
     }
@@ -565,6 +620,28 @@ public partial class BattleManager : Node
 
     #region --- Helpers: Spawning & VFX ---
 
+    private void SpawnPlayer()
+    {
+        if (BattleActorScene == null)
+        {
+            GD.PrintErr("[BattleManager] BattleActor non assigné");
+            return;
+        }
+        
+        _playerActor = BattleActorScene.Instantiate<BattleActor>();
+
+        if (_playerActor != null)
+        {
+            _playerAnchor.AddChild(_playerActor);
+            _playerActor.Position = Vector3.Zero;
+        }
+        else
+        {
+            AddChild(_playerAnchor);
+            _playerAnchor.Position = new Vector3(2.6f, .05f, 0);
+        }
+    }
+
     private void SpawnEnemies()
     {
         if (_enemyStatsSource == null || _enemyStatsSource.Count == 0)
@@ -580,8 +657,12 @@ public partial class BattleManager : Node
         }
 
         _enemies.Clear();
-        float startX = 0;
-        float spacing = 1;
+        
+        float spacing = 1.2f;
+        float totalWidth = (_enemyStatsSource.Count -1) * spacing;
+        float startX = -totalWidth / 2.0f;
+        
+        Vector3 anchorPos = _enemiesAnchor?.GlobalPosition ?? Vector3.Zero;
 
         for (int i = 0; i < _enemyStatsSource.Count; i++)
         {
@@ -589,9 +670,24 @@ public partial class BattleManager : Node
             var enemy = EnemyScene.Instantiate<Enemy>();
 
             enemy.EnemyName = stats.EnemyName;
-            enemy.Position = new Vector3(startX + i * spacing, 1, 2);
-
-            AddChild(enemy);
+            
+            if (_enemiesAnchor != null)
+            {
+                GD.Print("[BattleManager] On utilise l'anchor pour les ennemis:");
+                _enemiesAnchor.AddChild(enemy);
+                enemy.Position = new Vector3(2, 0, startX + i * spacing);
+                enemy.LookAtTarget(_playerAnchor.GlobalPosition);
+            }
+            else
+            {
+                GD.Print("[BattleManager] On créer une ancre pour les ennemis:");
+                AddChild(enemy);
+                enemy.GlobalPosition = new Vector3(anchorPos.X + startX + i * spacing,
+                    anchorPos.Y,
+                    anchorPos.Z);
+            }
+            
+            
             _enemies.Add(enemy);
         }
     }
@@ -654,7 +750,7 @@ public partial class BattleManager : Node
 
         _isSelectingTarget = false; // stoppe la capture d’input locale
 
-        EmitSignalBattleEnded(reason);
+        EmitSignal(SignalName.BattleEnded, (int)reason);
         
         // Laisse l’orchestrateur changer de scène; le combat se libère proprement
         CallDeferred(MethodName.QueueFree);

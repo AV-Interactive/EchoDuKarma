@@ -1,0 +1,293 @@
+[gd_scene format=3 uid="uid://coywilhtcj82i"]
+
+[ext_resource type="Script" uid="uid://dt0p4d6mn47ee" path="res://Scripts/Battle/CameraDirector.cs" id="1_b758f"]
+[ext_resource type="Script" uid="uid://c2ln5w8e7jnn3" path="res://Scripts/Battle/BattleManager.cs" id="1_rni72"]
+[ext_resource type="PackedScene" uid="uid://dtwuv7yk21542" path="res://Scripts/Entities/Enemy/enemy.tscn" id="2_242ss"]
+[ext_resource type="PackedScene" uid="uid://d3eqkwg770s7m" path="res://UI/PlayerStat.tscn" id="2_y5qje"]
+[ext_resource type="Texture2D" uid="uid://bpjrpwssi8wmw" path="res://Assets/UI/arrow.png" id="3_rni72"]
+[ext_resource type="PackedScene" uid="uid://b7uelrejmrkal" path="res://Scenes/battle_actor.tscn" id="3_vcv5u"]
+[ext_resource type="PackedScene" uid="uid://dw5jrfcorlksg" path="res://Scenes/fight_area.tscn" id="4_22iq2"]
+[ext_resource type="PackedScene" uid="uid://kqhj7bngint6" path="res://Scenes/tree.tscn" id="5_pu1y3"]
+[ext_resource type="Script" uid="uid://ef736oyqrbw3" path="res://Scripts/UI/BattleHud.cs" id="5_vcv5u"]
+[ext_resource type="PackedScene" uid="uid://k8vub3w4frn8" path="res://Scenes/cart.tscn" id="6_bu3k3"]
+[ext_resource type="PackedScene" uid="uid://dg3wvkgnaaui0" path="res://Scenes/crate.tscn" id="7_laytn"]
+
+[sub_resource type="Gradient" id="Gradient_vcv5u"]
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_ne6lv"]
+gradient = SubResource("Gradient_vcv5u")
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_22iq2"]
+sky_top_color = Color(0.22745098, 0.48235294, 0.8352941, 1)
+sky_horizon_color = Color(0.5294118, 0.80784315, 0.92156863, 1)
+ground_bottom_color = Color(0.15900809, 0.2555741, 0.07281049, 1)
+ground_horizon_color = Color(0.15594476, 0.28448847, 0.07242776, 1)
+
+[sub_resource type="Sky" id="Sky_t4cgs"]
+sky_material = SubResource("ProceduralSkyMaterial_22iq2")
+
+[sub_resource type="Environment" id="Environment_pu1y3"]
+background_mode = 2
+background_color = Color(0.010280861, 0.08815598, 0.2882901, 1)
+background_energy_multiplier = 0.6
+sky = SubResource("Sky_t4cgs")
+ambient_light_source = 2
+ambient_light_color = Color(0.55630004, 0.8294431, 0.8848624, 1)
+ambient_light_sky_contribution = 0.0
+ambient_light_energy = 0.5
+tonemap_mode = 3
+glow_enabled = true
+glow_intensity = 0.7
+glow_bloom = 0.2
+glow_blend_mode = 2
+fog_enabled = true
+fog_mode = 1
+fog_density = 0.02
+adjustment_enabled = true
+adjustment_contrast = 1.1
+adjustment_saturation = 0.9
+adjustment_color_correction = SubResource("GradientTexture2D_ne6lv")
+
+[node name="BattleScene" type="Node3D" unique_id=1723340082]
+
+[node name="BattleManager" type="Node" parent="." unique_id=627340125 node_paths=PackedStringArray("_hud", "_cameraDirector")]
+script = ExtResource("1_rni72")
+_hud = NodePath("../BattleHUD")
+EnemyScene = ExtResource("2_242ss")
+_cameraDirector = NodePath("../CameraDirector")
+BattleActorScene = ExtResource("3_vcv5u")
+
+[node name="Arena" type="Node3D" parent="." unique_id=1719267420]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="Arena" unique_id=616694054]
+transform = Transform3D(1, 0, 0, 0, -0.36315373, 0.93172926, 0, -0.93172926, -0.36315373, 0, 13.080275, -14.451)
+light_energy = 0.2
+shadow_enabled = true
+shadow_opacity = 0.5
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="Arena" unique_id=595572570]
+environment = SubResource("Environment_pu1y3")
+
+[node name="Fight_AREA" parent="Arena" unique_id=1007950289 instance=ExtResource("4_22iq2")]
+
+[node name="GrassSpawner" parent="Arena/Fight_AREA" index="1" unique_id=1054225695]
+ChunkSize = 1.0
+ChunkRadius = 1
+
+[node name="Tree" parent="Arena/Fight_AREA" unique_id=956844646 instance=ExtResource("5_pu1y3")]
+transform = Transform3D(-0.0018674906, 0, -0.4999965, 0, 0.5, 0, 0.4999965, 0, -0.0018674906, -4.434389, 0, -6.5604863)
+
+[node name="Tree2" parent="Arena/Fight_AREA" unique_id=238521819 instance=ExtResource("5_pu1y3")]
+transform = Transform3D(-0.0018674906, 0, -0.4999965, 0, 0.5, 0, 0.4999965, 0, -0.0018674906, -5.2234883, 0, 4.313095)
+
+[node name="Tree3" parent="Arena/Fight_AREA" unique_id=1418277795 instance=ExtResource("5_pu1y3")]
+transform = Transform3D(-0.0018674906, 0, -0.4999965, 0, 0.5, 0, 0.4999965, 0, -0.0018674906, -5.6094317, 0, -4.7266045)
+
+[node name="Tree4" parent="Arena/Fight_AREA" unique_id=872230063 instance=ExtResource("5_pu1y3")]
+transform = Transform3D(-0.0018674906, 0, -0.4999965, 0, 0.5, 0, 0.4999965, 0, -0.0018674906, -4.2619276, 0, -0.29841614)
+
+[node name="Tree5" parent="Arena/Fight_AREA" unique_id=414299259 instance=ExtResource("5_pu1y3")]
+transform = Transform3D(-0.0018674906, 0, -0.4999965, 0, 0.5, 0, 0.4999965, 0, -0.0018674906, -7.0217133, 0, 3.3577604)
+
+[node name="Tree6" parent="Arena/Fight_AREA" unique_id=286204138 instance=ExtResource("5_pu1y3")]
+transform = Transform3D(-0.0018674906, 0, -0.4999965, 0, 0.5, 0, 0.4999965, 0, -0.0018674906, -5.837599, 0, 8.203295)
+
+[node name="Tree7" parent="Arena/Fight_AREA" unique_id=119743109 instance=ExtResource("5_pu1y3")]
+transform = Transform3D(-0.0018674906, 0, -0.4999965, 0, 0.5, 0, 0.4999965, 0, -0.0018674906, -7.8759556, 0, 5.887088)
+
+[node name="Tree8" parent="Arena/Fight_AREA" unique_id=347010386 instance=ExtResource("5_pu1y3")]
+transform = Transform3D(-0.0018674906, 0, -0.4999965, 0, 0.5, 0, 0.4999965, 0, -0.0018674906, -7.4795027, 0, -1.6672006)
+
+[node name="Tree9" parent="Arena/Fight_AREA" unique_id=373063746 instance=ExtResource("5_pu1y3")]
+transform = Transform3D(-0.0018674906, 0, -0.4999965, 0, 0.5, 0, 0.4999965, 0, -0.0018674906, -6.92568, 0, -8.05973)
+
+[node name="Tree10" parent="Arena/Fight_AREA" unique_id=1786883787 instance=ExtResource("5_pu1y3")]
+transform = Transform3D(-0.0018674906, 0, -0.4999965, 0, 0.5, 0, 0.4999965, 0, -0.0018674906, -6.5968943, 0, 1.1541271)
+
+[node name="Cart" parent="Arena/Fight_AREA" unique_id=1237753171 instance=ExtResource("6_bu3k3")]
+transform = Transform3D(0.59542596, 0, -0.80341023, 0, 1, 0, 0.80341023, 0, 0.59542596, -3.19959, 0, -2.3951926)
+
+[node name="Crate" parent="Arena/Fight_AREA" unique_id=299936812 instance=ExtResource("7_laytn")]
+transform = Transform3D(-0.0037349812, 0, -0.999993, 0, 1, 0, 0.999993, 0, -0.0037349812, -1.1947565, -0.012112625, -2.2629313)
+
+[node name="Crate2" parent="Arena/Fight_AREA" unique_id=30340043 instance=ExtResource("7_laytn")]
+transform = Transform3D(0.4987449, 0, -0.8667488, 0, 1, 0, 0.8667488, 0, 0.4987449, -1.9616163, -0.012112625, -2.3827615)
+
+[node name="Crate3" parent="Arena/Fight_AREA" unique_id=1796985035 instance=ExtResource("7_laytn")]
+transform = Transform3D(-0.0037349812, 0, -0.999993, 0, 1, 0, 0.999993, 0, -0.0037349812, -1.4419255, -0.012112625, -2.6693344)
+
+[node name="Crate4" parent="Arena/Fight_AREA" unique_id=2134707217 instance=ExtResource("7_laytn")]
+transform = Transform3D(0.7988244, 0, -0.601564, 0, 1, 0, 0.601564, 0, 0.7988244, -1.4426627, 0.39121646, -2.4719815)
+
+[node name="Actors" type="Node3D" parent="." unique_id=1696909372]
+transform = Transform3D(0.9999619, 0, 0.008726535, 0, 1, 0, -0.008726535, 0, 0.9999619, 0, 0.5, 4.5530214)
+
+[node name="PlayerAnchor" type="Node3D" parent="Actors" unique_id=166368725]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.663, 0.05, 0)
+
+[node name="EnemiesAnchor" type="Node3D" parent="Actors" unique_id=1925487448]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8593576, 0, 0)
+
+[node name="CameraDirector" type="Node3D" parent="." unique_id=1234329471 node_paths=PackedStringArray("_fadeOverlay")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 4.5530214)
+script = ExtResource("1_b758f")
+_fadeOverlay = NodePath("../BattleHUD/ColorRect")
+
+[node name="ShotNeutral" type="Camera3D" parent="CameraDirector" unique_id=426885374]
+transform = Transform3D(0.7071067, -0.29883623, 0.6408563, 0, 0.90630776, 0.42261827, -0.7071067, -0.29883623, 0.6408563, 3.4794166, 1.9559089, 3.4824765)
+fov = 50.0
+
+[node name="ShotPlayerAttack" type="Camera3D" parent="CameraDirector" unique_id=946490947]
+transform = Transform3D(-0.13536698, -0.23194842, 0.96326315, -0.012798939, 0.97254, 0.23238362, -0.990713, 0.019128326, -0.13461855, 3.1272736, 1.2134428, -0.8810329)
+fov = 50.0
+
+[node name="ShotEnemyAttack" type="Camera3D" parent="CameraDirector" unique_id=2120608284]
+transform = Transform3D(0.463296, -0.077237725, -0.88283134, 0, 0.9961947, -0.08715574, 0.8862035, 0.040378906, 0.46153307, -0.5474906, 0.3243612, 1.1476686)
+fov = 50.0
+
+[node name="BattleHUD" type="CanvasLayer" parent="." unique_id=446071286 node_paths=PackedStringArray("_playerHpLabel", "_playerMpLabel", "_logs")]
+script = ExtResource("5_vcv5u")
+_playerHpLabel = NodePath("Scene/StatPanel/Panel/VBoxContainer/Control/HBoxContainer/VBoxContainer/HBoxContainer/NB_HP")
+_playerMpLabel = NodePath("Scene/StatPanel/Panel/VBoxContainer/Control/HBoxContainer/VBoxContainer/HBoxContainer/NB_MP")
+_logs = NodePath("Scene/LogPanel/RichTextLabel")
+
+[node name="ColorRect" type="ColorRect" parent="BattleHUD" unique_id=721218906]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0)
+
+[node name="Scene" type="Control" parent="BattleHUD" unique_id=249661298]
+custom_minimum_size = Vector2(640, 360)
+layout_mode = 3
+anchor_top = 0.013888889
+anchor_right = 1.0
+anchor_bottom = 1.014
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="StatPanel" type="HBoxContainer" parent="BattleHUD/Scene" unique_id=550571324]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.397
+anchor_top = 0.809
+anchor_right = 0.70900005
+anchor_bottom = 0.96900004
+grow_vertical = 0
+
+[node name="Panel" type="Panel" parent="BattleHUD/Scene/StatPanel" unique_id=1521936620]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="BattleHUD/Scene/StatPanel/Panel" unique_id=87750797]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="BattleHUD/Scene/StatPanel/Panel/VBoxContainer" unique_id=263166932]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "Stats"
+horizontal_alignment = 1
+
+[node name="Control" parent="BattleHUD/Scene/StatPanel/Panel/VBoxContainer" unique_id=2121822298 instance=ExtResource("2_y5qje")]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+size_flags_vertical = 1
+
+[node name="Actions" type="HBoxContainer" parent="BattleHUD/Scene" unique_id=1163939755]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.786
+anchor_top = 0.606
+anchor_right = 0.99300003
+anchor_bottom = 0.96900004
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="Panel" type="Panel" parent="BattleHUD/Scene/Actions" unique_id=1192576852]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ActionMenu" type="VBoxContainer" parent="BattleHUD/Scene/Actions/Panel" unique_id=1555415626]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="BattleHUD/Scene/Actions/Panel/ActionMenu" unique_id=1493912551]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Actions"
+horizontal_alignment = 1
+
+[node name="BtnAttack" type="Button" parent="BattleHUD/Scene/Actions/Panel/ActionMenu" unique_id=1016183984]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 12
+text = "ATTAQUER"
+
+[node name="BtnMagic" type="Button" parent="BattleHUD/Scene/Actions/Panel/ActionMenu" unique_id=1128865345]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Magie
+"
+
+[node name="BtnDefense" type="Button" parent="BattleHUD/Scene/Actions/Panel/ActionMenu" unique_id=1368066756]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Defense"
+
+[node name="BtnEscape" type="Button" parent="BattleHUD/Scene/Actions/Panel/ActionMenu" unique_id=1959357995]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Fuite"
+
+[node name="SkillsList" type="VBoxContainer" parent="BattleHUD/Scene/Actions/Panel" unique_id=1633196909]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="LogPanel" type="Panel" parent="BattleHUD/Scene" unique_id=2043367047]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.109000005
+anchor_top = 0.046000004
+anchor_right = 0.89100003
+anchor_bottom = 0.133
+grow_horizontal = 2
+
+[node name="RichTextLabel" type="RichTextLabel" parent="BattleHUD/Scene/LogPanel" unique_id=810230257]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/normal_font_size = 14
+theme_override_font_sizes/bold_font_size = 14
+theme_override_font_sizes/bold_italics_font_size = 14
+theme_override_font_sizes/italics_font_size = 14
+theme_override_font_sizes/mono_font_size = 14
+bbcode_enabled = true
+text = "Je suis un log du style \"Rat 1 apparait !"
+vertical_alignment = 1
+
+[node name="TargetCursor" type="Sprite2D" parent="BattleHUD/Scene" unique_id=1243054023]
+texture = ExtResource("3_rni72")
+
+[editable path="Arena/Fight_AREA"]
+[editable path="Arena/Fight_AREA/fight_area"]
+[editable path="BattleHUD/Scene/StatPanel/Panel/VBoxContainer/Control"]

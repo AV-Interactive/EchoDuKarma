@@ -165,7 +165,7 @@ script = ExtResource("3_oai4o")
 _animPlayer = NodePath("../AnimationPlayer")
 
 [node name="Shadow" type="Sprite3D" parent="Node3D" unique_id=1084570940 node_paths=PackedStringArray("PlayerBody")]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0.01, 0.255)
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0.002, 0.255)
 cast_shadow = 0
 modulate = Color(1, 1, 1, 0.5882353)
 no_depth_test = true

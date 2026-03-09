@@ -8,6 +8,10 @@ using EchoduKarma.Scripts.Data;
 /// </summary>
 public partial class CameraFollow3D : Camera3D
 {
+    [Export] public bool UseCameraLimits = true;
+    [Export] public NodePath TerrainPath;
+    [Export] public float BorderMargin = 5f; // Marge avant le bord
+    
     [Export] public Node3D Target;
     [Export] public float TargetFov = 40.0f;
     
@@ -30,8 +34,30 @@ public partial class CameraFollow3D : Camera3D
     private float _targetRotationDegrees = 45.0f;
     private float _distanceToTarget;
 
+    private Vector2 _mapMin, _mapMax;
+    public Vector2 MapMin => _mapMin;
+    public Vector2 MapMax => _mapMax;
+
+    
     public override void _Ready()
     {
+        // Auto détection du terrain pour le calcul de la distance
+        if (!string.IsNullOrEmpty(TerrainPath.ToString()))
+        {
+            var terrain = GetNode<MeshInstance3D>(TerrainPath);
+    
+            // GetAabb() tient compte du transform global → plus fiable
+            Aabb worldAabb = terrain.GlobalTransform * terrain.GetAabb();
+    
+            _mapMin = new Vector2(worldAabb.Position.X + BorderMargin, worldAabb.Position.Z + BorderMargin);
+            _mapMax = new Vector2(worldAabb.End.X - BorderMargin, worldAabb.End.Z - BorderMargin);
+    
+            // Debug pour vérifier les valeurs
+            GD.Print($"MapMin: {_mapMin} | MapMax: {_mapMax}");
+            // Temporaire, juste pour debug
+            GD.Print($"Player pos: {Target.GlobalPosition} | Cam pos: {GlobalPosition}");
+        }
+        
         // Try to find player if not assigned in Inspector
         if (Target == null && GameManager.Instance != null)
         {
@@ -89,11 +115,21 @@ public partial class CameraFollow3D : Camera3D
         // 2. Calculate the target position with the rotated offset
         Vector3 rotatedOffset = CalculateRotatedOffset();
         Vector3 targetPos = Target.GlobalPosition + rotatedOffset;
-    
-        // 3. Smoothly interpolate to the target position
+
+        // 3. Clamp le targetPos AVANT le Lerp
+        if (UseCameraLimits && _mapMax != Vector2.Zero)
+        {
+            targetPos = new Vector3(
+                Mathf.Clamp(targetPos.X, _mapMin.X, _mapMax.X),
+                targetPos.Y,
+                Mathf.Clamp(targetPos.Z, _mapMin.Y, _mapMax.Y)
+            );
+        }
+
+        // 4. Smoothly interpolate to the target position (clampée)
         GlobalPosition = GlobalPosition.Lerp(targetPos, (float)delta * SmoothSpeed);
-    
-        // 4. Handle rotation
+
+        // 5. Handle rotation
         ApplyRotation();
     }
 

@@ -8,6 +8,11 @@ public partial class Player : CharacterBody3D, IBattler
 { 
 	[Export] public float Speed = 5.0f;
 	[Export] public Sprite3D Sprite;
+	[Export] public NodePath TerrainPath;
+	[Export] public float BorderMargin = 2f;
+	
+	private Vector2 _mapMin = new Vector2(-100f, -100f);
+	private Vector2 _mapMax = new Vector2(100f, 100f);
 	
 	StatHandler _stats;
 	
@@ -67,6 +72,17 @@ public partial class Player : CharacterBody3D, IBattler
 		}
 		
 		_visuals = GetNode<PlayerVisuals>("Node3D/Sprite3D");
+		
+		// Auto-détection des limites terrain
+		if (!string.IsNullOrEmpty(TerrainPath.ToString()))
+		{
+			var terrain = GetNode<MeshInstance3D>(TerrainPath);
+			Aabb worldAabb = terrain.GlobalTransform * terrain.GetAabb();
+			_mapMin = new Vector2(worldAabb.Position.X + BorderMargin, worldAabb.Position.Z + BorderMargin);
+			_mapMax = new Vector2(worldAabb.End.X - BorderMargin, worldAabb.End.Z - BorderMargin);
+			GD.Print($"Player limits: {_mapMin} | {_mapMax}");
+		}
+
 	}
 
 	void OnPlayerLevelUp(int levelUpAmount)
@@ -83,7 +99,7 @@ public partial class Player : CharacterBody3D, IBattler
 		Vector2 inputDir = Input.GetVector("left", "right", "up", "down");
 	
 		// 2. Récupération de la caméra active
-		var camera = GetViewport().GetCamera3D();
+		var camera = GetViewport().GetCamera3D() as CameraFollow3D;
 	
 		// 3. Calcul des vecteurs de direction relatifs à la caméra
 		// On récupère la base de la caméra (son orientation)
@@ -117,6 +133,17 @@ public partial class Player : CharacterBody3D, IBattler
 
 		Velocity = velocity;
 		MoveAndSlide();
+		
+		// Clamp position joueur dans les limites de la map
+		if (camera != null)
+		{
+			GlobalPosition = new Vector3(
+				Mathf.Clamp(GlobalPosition.X, camera.MapMin.X + camera.BorderMargin, camera.MapMax.X - camera.BorderMargin),
+				GlobalPosition.Y,
+				Mathf.Clamp(GlobalPosition.Z, camera.MapMin.Y + camera.BorderMargin, camera.MapMax.Y - camera.BorderMargin)
+			);
+		}
+		
 		_visuals.UpdateFrame(Velocity);
 	}
 

@@ -13,6 +13,7 @@ public partial class Enemy : CharacterBody3D, IBattler
     public int Pv => Stats?.Pv ?? 0;
     public int CurrentPv { get; set; }
     public int Mp => Stats?.Mp ?? 0;
+    public int CurrentMp { get; set; }
     public int Strength => Stats?.Strength ?? 0;
     public int Dexterity => Stats?.Dexterity ?? 0;
     public int Spirit => Stats?.Spirit ?? 0;
@@ -29,12 +30,6 @@ public partial class Enemy : CharacterBody3D, IBattler
         {
             CurrentPv = Stats.Pv;
             LoadTexture();
-        }
-
-        // Configuration du Billboard pour le combat
-        if (_sprite != null)
-        {
-            _sprite.Billboard = BaseMaterial3D.BillboardModeEnum.Enabled;
         }
     }
 
@@ -84,5 +79,21 @@ public partial class Enemy : CharacterBody3D, IBattler
         tween.TweenProperty(this, "position", originalPos, 0.2f).SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.In);
         
         await ToSignal(tween, "finished");
+    }
+    
+    public void LookAtTarget(Vector3 targetPosition)
+    {
+        var node3D = GetNodeOrNull<Node3D>("Node3D/Sprite3D");
+        if (node3D == null) return;
+
+        // On regarde la cible mais on verrouille l'axe Y pour rester vertical
+        Vector3 dir = (targetPosition - node3D.GlobalPosition).Normalized();
+        dir.Y = 0; // on ignore la hauteur
+    
+        if (dir != Vector3.Zero)
+        {
+            node3D.LookAt(node3D.GlobalPosition + dir, Vector3.Up);
+            node3D.RotateObjectLocal(Vector3.Up, Mathf.Pi); // 180° car Sprite3D face arrière
+        }
     }
 }

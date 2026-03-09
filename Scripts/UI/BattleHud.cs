@@ -51,15 +51,7 @@ public partial class BattleHud : CanvasLayer
 
         var battleManager = GetTree().Root.FindChild("BattleManager", true, false) as BattleManager;
         if (battleManager != null) battleManager.PlayerDamage += OnPlayerDamageReceived;
-        
-        // On empêche la perte du focus
-        GetViewport().GuiFocusChanged += (node) =>
-        {
-            if (node == null)
-            {
-                _actionMenu.GetNode<Button>("Scene/Actions/Panel/ActionMenu/BtnAttack").GrabFocus();
-            }
-        };
+        if (battleManager != null) battleManager.PlayerDamage += OnPlayerDamageReceived;
         
         StartCursorAnim();
     }
@@ -67,9 +59,10 @@ public partial class BattleHud : CanvasLayer
     public void ShowMenu()
     {
         _actionMenu.Show();
-        var btnAttack = _actionMenu.GetNode<Button>("BtnAttack");
+        var btnAttack = _actionMenu.GetNodeOrNull<Button>("BtnAttack");
     
-        btnAttack?.GrabFocus();
+        if (btnAttack != null && btnAttack.IsInsideTree())
+            btnAttack.GrabFocus();
     }
 
     public void HideMenu()
@@ -87,8 +80,8 @@ public partial class BattleHud : CanvasLayer
 
     void OnPlayerDamageReceived(int damage)
     {
-        GD.Print($"Player HP : {damage}");
-        _playerHpLabel.Text = $"{(GameManager.Instance.CurrentPlayer.CurrentPv - damage).ToString()}/{GameManager.Instance.CurrentPlayer.Pv.ToString()} HP";
+        var player = GameManager.Instance.CurrentPlayer;
+        _playerHpLabel.Text = $"{player.CurrentPv}/{player.Pv} HP";
     }
     
     public void UpdatePlayerStats(Player player)
