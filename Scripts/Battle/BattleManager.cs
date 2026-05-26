@@ -738,8 +738,18 @@ public partial class BattleManager : Node
         await ToSignal(GetTree().CreateTimer(2.0f), "timeout");
 
         int totalXp = _enemyStatsSource.Sum(e => e.XpValue);
-        _hud?.ShowLogs($"{totalXp} XP Gagnés !");
-        
+        int levelsGained = GameManager.Instance.GrantBattleExperience(totalXp);
+
+        _hud?.ShowLogs($"+{totalXp} XP");
+        await ToSignal(GetTree().CreateTimer(1.0f), "timeout");
+
+        if (levelsGained > 0)
+        {
+            _hud?.ShowLogs($"Niveau {_playerBattler.Level} !");
+            _hud?.UpdatePlayerStats(_playerBattler);
+            await ToSignal(GetTree().CreateTimer(1.5f), "timeout");
+        }
+
         ExitBattleSequence();
     }
 

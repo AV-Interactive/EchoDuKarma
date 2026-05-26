@@ -20,10 +20,13 @@ public class PlayerBattleSnapshot : IBattler
     public int Dexterity { get; set; }
     public int Spirit { get; set; }
     public int Defense { get; set; }
+    public int CurrentExperience { get; set; }
     public List<Skill> LearnedSkills { get; set; } = new();
 
     public static PlayerBattleSnapshot FromPlayer(Player player)
     {
+        var statHandler = player.GetNodeOrNull<StatHandler>("PlayerStats");
+
         return new PlayerBattleSnapshot
         {
             Name = player.Name,
@@ -37,8 +40,46 @@ public class PlayerBattleSnapshot : IBattler
             Dexterity = player.Dexterity,
             Spirit = player.Spirit,
             Defense = player.Defense,
+            CurrentExperience = statHandler?.CurrentExperience ?? 0,
             LearnedSkills = new List<Skill>(player.LearnedSkills),
         };
+    }
+
+    /// <summary>
+    /// Ajoute de l'XP et applique les montées de niveau selon la table de progression.
+    /// </summary>
+    public int AddExperience(int amount, IReadOnlyDictionary<int, Stats> progressionByLevel)
+    {
+        if (amount <= 0 || progressionByLevel == null) return 0;
+
+        CurrentExperience += amount;
+        int levelsGained = 0;
+
+        while (TryLevelUp(progressionByLevel))
+            levelsGained++;
+
+        return levelsGained;
+    }
+
+    bool TryLevelUp(IReadOnlyDictionary<int, Stats> progressionByLevel)
+    {
+        int nextLevel = Level + 1;
+        if (!progressionByLevel.TryGetValue(nextLevel, out Stats next))
+            return false;
+
+        if (CurrentExperience < next.XPForNextLevel)
+            return false;
+
+        Level = nextLevel;
+        Pv = next.Pv;
+        Mp = next.Mp;
+        Strength = next.Strength;
+        Dexterity = next.Dexterity;
+        Spirit = next.Spirit;
+        Defense = next.Defense;
+        CurrentPv = Pv;
+        CurrentMp = Mp;
+        return true;
     }
 
     public void ApplyToPlayer(Player player)
@@ -53,6 +94,7 @@ public class PlayerBattleSnapshot : IBattler
         if (stats != null)
         {
             stats.CurrentLevel = Level;
+            stats.CurrentExperience = CurrentExperience;
             stats.CurrentPv = CurrentPv;
             stats.CurrentMp = CurrentMp;
             stats.PvMax = Pv;

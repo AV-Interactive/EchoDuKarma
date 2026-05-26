@@ -122,6 +122,44 @@ public partial class StatHandler : Node2D
         }
         return null;
     }
+
+    public IReadOnlyDictionary<int, Stats> GetProgressionTable() => _baseStats;
+
+    /// <summary>
+    /// Ajoute de l'XP (totale cumulée, seuils dans le CSV) et monte de niveau si les seuils sont atteints.
+    /// </summary>
+    /// <returns>Nombre de montées de niveau effectuées.</returns>
+    public int AddExperience(int amount)
+    {
+        if (amount <= 0) return 0;
+
+        CurrentExperience += amount;
+        int levelsGained = 0;
+
+        while (TryLevelUpFromExperience())
+            levelsGained++;
+
+        return levelsGained;
+    }
+
+    bool TryLevelUpFromExperience()
+    {
+        int nextLevel = CurrentLevel + 1;
+        Stats next = GetStatsForLevel(nextLevel);
+        if (next == null || CurrentExperience < next.XPForNextLevel)
+            return false;
+
+        CurrentLevel = nextLevel;
+        PvMax = next.Pv;
+        MpMax = next.Mp;
+        Strength = next.Strength;
+        Dexterity = next.Dexterity;
+        Spirit = next.Spirit;
+        Defense = next.Defense;
+        CurrentPv = PvMax;
+        CurrentMp = MpMax;
+        return true;
+    }
     
     void UpdateCurrentStats(int level)
     {

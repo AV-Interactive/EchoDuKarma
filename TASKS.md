@@ -121,10 +121,12 @@ Le combat n’avance pas la progression ; le pourcentage « gameplay RPG » rest
 
 **Critères d’acceptation**
 
-- [ ] Vaincre 2 Rats : `CurrentExperience` augmente ; logs / HUD cohérents.
-- [ ] Si le seuil est dépassé : niveau + PV/PM max mis à jour (via `StatHandler.LevelUp`).
+- [x] Vaincre 2 Rats : `CurrentExperience` augmente ; logs / HUD cohérents.
+- [x] Si le seuil est dépassé : niveau + PV/PM max mis à jour (snapshot + `ApplyToPlayer`).
 
-**Référence** : `Scripts/Battle/BattleManager.cs` `HandleVictory` ; `Scripts/Data/StatHandler.cs`.
+**Statut** : fait (`StatHandler.AddExperience`, `GrantBattleExperience`, HUD victoire).
+
+**Référence** : `Scripts/Battle/BattleManager.cs` `HandleVictory` ; `Scripts/Data/StatHandler.cs` ; `Global/PlayerBattleSnapshot.cs` ; `Global/GameManager.cs`.
 
 ---
 

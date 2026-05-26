@@ -21,6 +21,7 @@ public partial class GameManager: Node
     BattleManager _subscribedBattleManager;
 
     PlayerBattleSnapshot _battleSnapshot;
+    Dictionary<int, Stats> _progressionTable;
     string _pendingBattleEnemies;
     string _pendingBattleQuantity;
 
@@ -44,9 +45,31 @@ public partial class GameManager: Node
     public void PersistPlayerForBattle()
     {
         if (CurrentPlayer != null && GodotObject.IsInstanceValid(CurrentPlayer))
+        {
+            var statHandler = CurrentPlayer.GetNodeOrNull<StatHandler>("PlayerStats");
             _battleSnapshot = PlayerBattleSnapshot.FromPlayer(CurrentPlayer);
+            _progressionTable = statHandler != null
+                ? new Dictionary<int, Stats>(statHandler.GetProgressionTable())
+                : null;
+        }
         else if (_battleSnapshot == null)
+        {
             GD.PrintErr("[GameManager] Impossible de sauvegarder le joueur avant combat.");
+        }
+    }
+
+    /// <summary>
+    /// Applique l'XP de victoire sur le snapshot de combat. Retourne le nombre de niveaux gagnés.
+    /// </summary>
+    public int GrantBattleExperience(int amount)
+    {
+        if (_battleSnapshot == null || _progressionTable == null)
+        {
+            GD.PrintErr("[GameManager] GrantBattleExperience : snapshot ou progression manquants.");
+            return 0;
+        }
+
+        return _battleSnapshot.AddExperience(amount, _progressionTable);
     }
 
     public void ApplyBattleSnapshotToPlayer(Player player)
