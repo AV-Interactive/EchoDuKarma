@@ -35,9 +35,9 @@ public partial class BattleActor : Node3D
         tween.Parallel().TweenProperty(_sprite, "position:x", _sprite.Position.X, 0.1f);
     }
 
+    // TODO: implémenter l'animation d'attaque joueur (bond en avant + retour)
     public Task PlayAttackAnimation()
     {
-        // TODO: implémenter l'animation d'attaque joueur
         return Task.CompletedTask;
     }
     

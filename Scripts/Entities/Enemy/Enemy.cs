@@ -67,9 +67,9 @@ public partial class Enemy : CharacterBody3D, IBattler
         tween.Parallel().TweenProperty(_sprite, "position", _sprite.Position, 0.05f);
     }
 
+    // TODO: implémenter l'animation d'attaque ennemi (bond vers le joueur + retour)
     public Task PlayAttackAnimation()
     {
-        // TODO: implémenter l'animation d'attaque ennemi
         return Task.CompletedTask;
     }
     
