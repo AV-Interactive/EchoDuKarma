@@ -59,7 +59,7 @@ public partial class DialogueSystem: Node
 
         while (!file.EofReached())
         {
-            var fields = file.GetCsvLine(",");
+            var fields = file.GetCsvLine(";");
             if (fields == null || fields.Length == 0)
                 continue;
 

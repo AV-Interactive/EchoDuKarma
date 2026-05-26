@@ -79,6 +79,8 @@ public partial class BattleManager : Node
     private readonly HashSet<Enemy> _defendingEnemies = new();
 
     private bool _isReady = false;
+    private int _zoneKarma;
+    private KarmaCombatModifiers.CombatBonuses _karmaBonuses;
 
     #endregion
 
@@ -100,6 +102,8 @@ public partial class BattleManager : Node
 
         _playerBattler = snapshot;
         _playerSkills = snapshot.LearnedSkills;
+
+        InitializeKarmaForBattle();
 
         _enemyStatsSource = GameManager.Instance.ListEnemiesBattle;
 
@@ -125,6 +129,32 @@ public partial class BattleManager : Node
         _isReady = true;
         ChangeState(BattleState.Setup);
     }
+
+    public override void _Process(double delta)
+    {
+        if (!_isReady || _hud == null || _enemies.Count == 0) return;
+
+        foreach (Enemy enemy in _enemies)
+        {
+            if (!IsInstanceValid(enemy)) continue;
+            _hud.SetEnemyWidgetPosition(enemy, GetScreenPositionOfNode(enemy));
+        }
+    }
+
+    void InitializeKarmaForBattle()
+    {
+        string zone = GameManager.Instance.ReturnZoneName;
+        _zoneKarma = KarmaManager.Instance?.GetZoneKarma(zone) ?? 0;
+        _karmaBonuses = KarmaCombatModifiers.GetCombatBonuses(_zoneKarma);
+
+        KarmaManager.Instance?.SetCurrentZone(zone);
+
+        GD.Print($"[BattleManager] Karma zone '{zone}' : {_zoneKarma} ({_karmaBonuses.StateLabel}) — " +
+                 $"dégâts subis ×{_karmaBonuses.DamageTakenMultiplier:0.##}, soins ×{_karmaBonuses.HealMultiplier:0.##}");
+    }
+
+    int GetPlayerEffectiveStat(int baseStat, KarmaCombatModifiers.StatKind kind)
+        => KarmaCombatModifiers.GetEffectiveStat(baseStat, kind, _zoneKarma);
 
     #endregion
 
@@ -154,7 +184,7 @@ public partial class BattleManager : Node
         SpawnPlayer();
         SpawnEnemies();
         _hud?.SetupEnemies(_enemies);
-        _hud?.ShowLogs("Un combat commence !");
+        LogKarmaCombatStart();
         DetermineTurnOrder();
     }
 
@@ -321,11 +351,13 @@ public partial class BattleManager : Node
         if (_enemies == null || _targetIndex < 0 || _targetIndex >= _enemies.Count)
         {
             _hud?.HideTargetCursor();
+            _hud?.HideAllEnemyInfo();
             return;
         }
-        
-        // Lead Dev Tip: On utilise GetScreenPositionOfNode car le curseur est un Sprite2D dans l'UI
-        _hud?.UpdateTargetCursor(GetScreenPositionOfNode(_enemies[_targetIndex]));
+
+        var target = _enemies[_targetIndex];
+        _hud?.UpdateTargetCursor(GetScreenPositionOfNode(target));
+        _hud?.ShowEnemyInfo(target);
     }
 
     private void ConfirmTargetSelection()
@@ -383,7 +415,8 @@ public partial class BattleManager : Node
         if (_playerActor != null)
             await _playerActor.PlayAttackAnimation();
 
-        int damage = CalculatePhysicalDamage(_playerBattler.Strength, target.Defense);
+        int playerStr = GetPlayerEffectiveStat(_playerBattler.Strength, KarmaCombatModifiers.StatKind.Force);
+        int damage = CalculatePhysicalDamage(playerStr, target.Defense);
 
         if (_defendingEnemies.Remove(target))
         {
@@ -457,6 +490,12 @@ public partial class BattleManager : Node
     {
         _hud?.ShowLogs($"{_playerBattler.Name} utilise {skill.Name} !");
         int healAmount = CalculateHealAmount(skill);
+
+        if (healAmount <= 0)
+        {
+            _hud?.ShowLogs("Le Karma du monde neutralise les soins !");
+            return;
+        }
 
         _playerBattler.CurrentPv = Math.Min(_playerBattler.Pv, _playerBattler.CurrentPv + healAmount);
         _hud?.UpdatePlayerStats(_playerBattler);
@@ -572,7 +611,9 @@ public partial class BattleManager : Node
         await enemy.PlayAttackAnimation();
 
         int baseStrength = aggressiveBonus ? Mathf.RoundToInt(enemy.Stats.Strength * 1.2f) : enemy.Stats.Strength;
-        int damage = CalculatePhysicalDamage(baseStrength, _playerBattler.Defense);
+        int playerDef = GetPlayerEffectiveStat(_playerBattler.Defense, KarmaCombatModifiers.StatKind.Defense);
+        int damage = CalculatePhysicalDamage(baseStrength, playerDef);
+        damage = KarmaCombatModifiers.ApplyDamageTaken(damage, _zoneKarma);
 
         if (_isPlayerDefending)
         {
@@ -629,8 +670,7 @@ public partial class BattleManager : Node
         if (_playerBattler != null) _turnOrder.Add(_playerBattler);
         _turnOrder.AddRange(_enemies);
 
-        // Turn order based on Dexterity
-        _turnOrder = _turnOrder.OrderByDescending(x => x.Dexterity).ToList();
+        _turnOrder = _turnOrder.OrderByDescending(GetBattlerInitiative).ToList();
         _currentTurnIndex = 0;
         
         ChangeState(BattleState.Selection);
@@ -721,18 +761,60 @@ public partial class BattleManager : Node
 
     private int CalculateMagicDamage(IBattler attacker, IBattler target, Skill skill)
     {
-        // Formula: (Power * (Spirit / 5)) - (Target Spirit / 4)
-        float baseDamage = (skill.Power * (attacker.Spirit / 5.0f)) - (target.Spirit / 4.0f);
+        int attackerSpirit = attacker == _playerBattler
+            ? GetPlayerEffectiveStat(attacker.Spirit, KarmaCombatModifiers.StatKind.Spirit)
+            : attacker.Spirit;
+
+        float baseDamage = (skill.Power * (attackerSpirit / 5.0f)) - (target.Spirit / 4.0f);
         float variance = (float)GD.RandRange(0.9, 1.1);
         return Math.Max(1, Mathf.RoundToInt(baseDamage * variance));
     }
 
     private int CalculateHealAmount(Skill skill)
     {
-        // Formula: Power + (Spirit * 1.5)
-        float baseHeal = skill.Power + (_playerBattler.Spirit * 1.5f);
+        int playerSpirit = GetPlayerEffectiveStat(_playerBattler.Spirit, KarmaCombatModifiers.StatKind.Spirit);
+        float baseHeal = skill.Power + (playerSpirit * 1.5f);
         float variance = (float)GD.RandRange(0.9, 1.1);
-        return Mathf.RoundToInt(baseHeal * variance);
+        int rawHeal = Mathf.RoundToInt(baseHeal * variance);
+        return KarmaCombatModifiers.ApplyHealAmount(rawHeal, _zoneKarma);
+    }
+
+    int GetBattlerInitiative(IBattler battler)
+    {
+        if (battler == _playerBattler)
+            return GetPlayerEffectiveStat(battler.Dexterity, KarmaCombatModifiers.StatKind.Dexterity);
+
+        return battler.Dexterity;
+    }
+
+    void LogKarmaCombatStart()
+    {
+        _hud?.ShowLogs("Un combat commence !");
+
+        if (_playerBattler == null)
+            return;
+
+        string state = _karmaBonuses.StateLabel;
+        int str = GetPlayerEffectiveStat(_playerBattler.Strength, KarmaCombatModifiers.StatKind.Force);
+        int spr = GetPlayerEffectiveStat(_playerBattler.Spirit, KarmaCombatModifiers.StatKind.Spirit);
+
+        if (str != _playerBattler.Strength || spr != _playerBattler.Spirit)
+            _hud?.ShowLogs($"Karma ({state}) — Force {str}, Esprit {spr}.");
+
+        if (_karmaBonuses.DamageTakenMultiplier != 1f)
+        {
+            int pct = Mathf.RoundToInt((_karmaBonuses.DamageTakenMultiplier - 1f) * 100f);
+            string sign = pct > 0 ? "+" : "";
+            _hud?.ShowLogs($"Karma ({state}) — dégâts subis {sign}{pct}%.");
+        }
+
+        if (_karmaBonuses.HealMultiplier <= 0f)
+            _hud?.ShowLogs($"Karma ({state}) — les soins sont inefficaces.");
+        else if (_karmaBonuses.HealMultiplier != 1f)
+        {
+            int pct = Mathf.RoundToInt((_karmaBonuses.HealMultiplier - 1f) * 100f);
+            _hud?.ShowLogs($"Karma ({state}) — soins +{pct}%.");
+        }
     }
 
     #endregion

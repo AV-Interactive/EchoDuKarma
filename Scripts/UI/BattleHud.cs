@@ -10,15 +10,18 @@ public partial class BattleHud : CanvasLayer
     [Signal] public delegate void ActionSelectedEventHandler(string actionName);
 
     const string CombatantStatScenePath = "res://UI/BattleCombatantStat.tscn";
-    const int MaxLogLines = 8;
+    const int MaxLogLines = 1;
 
     Control _uiScene;
     Control _actionMenu;
     Control _playerPanel;
     VBoxContainer _skillsListPanel;
     Sprite2D _targetCursor;
-    VBoxContainer _enemyList;
+    Container _enemyList;
     Tween _cursorTween;
+
+    /// <summary>Décalage vertical (en unités design 640×360) pour placer les widgets au-dessus des sprites.</summary>
+    [Export] float EnemyStatYOffset = 85f;
 
     readonly Dictionary<Enemy, EnemyStatWidgets> _enemyWidgets = new();
     readonly List<string> _logHistory = new();
@@ -30,7 +33,7 @@ public partial class BattleHud : CanvasLayer
 
     struct EnemyStatWidgets
     {
-        public Control Root;
+        public Panel Root;
         public Label NameLabel;
         public TextureProgressBar HpBar;
         public Label HpLabel;
@@ -43,16 +46,32 @@ public partial class BattleHud : CanvasLayer
         _playerPanel = GetNode<Control>("Scene/CombatantsPanel/PlayerPanel");
         _skillsListPanel = GetNode<VBoxContainer>("Scene/Actions/Panel/SkillsList");
         _targetCursor = GetNode<Sprite2D>("Scene/TargetCursor");
-        _enemyList = GetNode<VBoxContainer>("Scene/CombatantsPanel/EnemyList");
+        _enemyList = GetNode<Container>("Scene/CombatantsPanel/EnemyList");
 
         _playerHpLabel = GetNodeOrNull<RichTextLabel>("Scene/CombatantsPanel/PlayerPanel/PlayerStat/HBoxContainer/VBoxContainer/HpRow/NB_HP");
         _playerMpLabel = GetNodeOrNull<RichTextLabel>("Scene/CombatantsPanel/PlayerPanel/PlayerStat/HBoxContainer/VBoxContainer/MpRow/NB_MP");
         _karmaBanner = GetNodeOrNull<KarmaBanner>("Scene/KarmaBanner");
 
         if (_logs != null)
+        {
             _logs.Text = "";
+            _logs.ScrollActive = false;
+        }
         else
             GD.PrintErr("[BattleHud] RichTextLabel de logs introuvable.");
+
+        // EnemyList est vide désormais (les widgets flottent au-dessus des sprites)
+        _enemyList.Hide();
+
+        // Panneau de log : une ligne, haut-gauche, marge droite pour la KarmaBanner (qui démarre à 0.76)
+        var logPanel = GetNodeOrNull<Control>("Scene/LogPanel");
+        if (logPanel != null)
+        {
+            logPanel.AnchorLeft   = 0.01f;
+            logPanel.AnchorTop    = 0.01f;
+            logPanel.AnchorRight  = 0.73f;
+            logPanel.AnchorBottom = 0.10f;
+        }
 
         _actionMenu.Hide();
         _skillsListPanel.Hide();
@@ -74,6 +93,15 @@ public partial class BattleHud : CanvasLayer
         StartCursorAnim();
     }
 
+    static readonly StyleBoxFlat _enemyPanelStyle = new()
+    {
+        BgColor = new Color(0f, 0f, 0f, 0.65f),
+        CornerRadiusTopLeft     = 3,
+        CornerRadiusTopRight    = 3,
+        CornerRadiusBottomLeft  = 3,
+        CornerRadiusBottomRight = 3,
+    };
+
     public void SetupEnemies(IReadOnlyList<Enemy> enemies)
     {
         ClearEnemyWidgets();
@@ -90,19 +118,46 @@ public partial class BattleHud : CanvasLayer
             if (enemy == null || !GodotObject.IsInstanceValid(enemy))
                 continue;
 
-            var root = statScene.Instantiate<Control>();
-            _enemyList.AddChild(root);
+            var root = statScene.Instantiate<Panel>();
+            root.AddThemeStyleboxOverride("panel", _enemyPanelStyle);
+            root.AnchorLeft   = 0;
+            root.AnchorTop    = 0;
+            root.AnchorRight  = 0;
+            root.AnchorBottom = 0;
+            root.Hide();
+            _uiScene.AddChild(root);
 
             var widgets = new EnemyStatWidgets
             {
-                Root = root,
-                NameLabel = root.GetNode<Label>("NameLabel"),
-                HpBar = root.GetNode<TextureProgressBar>("HpBar"),
-                HpLabel = root.GetNode<Label>("HpLabel"),
+                Root      = root,
+                NameLabel = root.GetNode<Label>("VBox/NameLabel"),
+                HpBar     = root.GetNode<TextureProgressBar>("VBox/HpBar"),
+                HpLabel   = root.GetNode<Label>("VBox/HpLabel"),
             };
 
             _enemyWidgets[enemy] = widgets;
             RefreshEnemy(enemy);
+        }
+    }
+
+    /// <summary>Affiche le widget de l'ennemi ciblé, masque les autres.</summary>
+    public void ShowEnemyInfo(Enemy enemy)
+    {
+        foreach (var pair in _enemyWidgets)
+        {
+            bool isTarget = pair.Key == enemy && GodotObject.IsInstanceValid(pair.Value.Root);
+            if (GodotObject.IsInstanceValid(pair.Value.Root))
+                pair.Value.Root.Visible = isTarget;
+        }
+    }
+
+    /// <summary>Masque tous les widgets ennemis (curseur caché, hors sélection).</summary>
+    public void HideAllEnemyInfo()
+    {
+        foreach (var pair in _enemyWidgets)
+        {
+            if (GodotObject.IsInstanceValid(pair.Value.Root))
+                pair.Value.Root.Hide();
         }
     }
 
@@ -162,6 +217,21 @@ public partial class BattleHud : CanvasLayer
             pair.Value.Root.QueueFree();
 
         _enemyWidgets.Clear();
+    }
+
+    /// <summary>
+    /// Appelée depuis BattleManager._Process avec la position viewport déjà projetée
+    /// (BattleManager a accès à la Camera3D, pas le CanvasLayer).
+    /// </summary>
+    public void SetEnemyWidgetPosition(Enemy enemy, Vector2 viewportPos)
+    {
+        if (!_enemyWidgets.TryGetValue(enemy, out var widgets)) return;
+        if (!GodotObject.IsInstanceValid(widgets.Root)) return;
+
+        Vector2 uiPos     = ViewportToUiScene(viewportPos);
+        float   halfWidth = Mathf.Max(widgets.Root.Size.X, widgets.Root.GetCombinedMinimumSize().X) / 2f;
+
+        widgets.Root.Position = new Vector2(uiPos.X - halfWidth, uiPos.Y - EnemyStatYOffset);
     }
 
     Vector2 ViewportToUiScene(Vector2 viewportPos)
@@ -271,16 +341,7 @@ public partial class BattleHud : CanvasLayer
         while (_logHistory.Count > MaxLogLines)
             _logHistory.RemoveAt(0);
 
-        _logs.Text = string.Join("\n", _logHistory);
-        CallDeferred(MethodName.ScrollLogToBottom);
-    }
-
-    void ScrollLogToBottom()
-    {
-        if (_logs == null)
-            return;
-
-        _logs.ScrollToLine(Mathf.Max(0, _logs.GetLineCount() - 1));
+        _logs.Text = _logHistory[^1];
     }
 
     void StartCursorAnim()
@@ -321,5 +382,9 @@ public partial class BattleHud : CanvasLayer
             _skillsListPanel.GetChild<Button>(0).GrabFocus();
     }
 
-    public void HideTargetCursor() => _targetCursor.Hide();
+    public void HideTargetCursor()
+    {
+        _targetCursor.Hide();
+        HideAllEnemyInfo();
+    }
 }

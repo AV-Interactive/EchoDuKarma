@@ -75,6 +75,10 @@ nine_patch_stretch = true
 texture_progress = ExtResource("2_rlcie")
 show_percentage = false
 
+[node name="MarginR" type="Control" parent="HBoxContainer/VBoxContainer/HpRow"]
+custom_minimum_size = Vector2(6, 0)
+layout_mode = 2
+
 [node name="MpRow" type="HBoxContainer" parent="HBoxContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 4
@@ -101,3 +105,7 @@ value = 100.0
 nine_patch_stretch = true
 texture_progress = ExtResource("3_loee7")
 show_percentage = false
+
+[node name="MarginR" type="Control" parent="HBoxContainer/VBoxContainer/MpRow"]
+custom_minimum_size = Vector2(6, 0)
+layout_mode = 2

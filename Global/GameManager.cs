@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using Godot;
 
 namespace EchoduKarma.Scripts.Data;
@@ -107,6 +108,37 @@ public partial class GameManager: Node
         _eventLibrary.Add("GOLD", (args) => GainGold(int.Parse(args[0])));
         _eventLibrary.Add("ITEM", (args) => GainItem(args[0]));
         _eventLibrary.Add("LEVEL_UP", (args) => LevelUp(args[0]));
+        _eventLibrary.Add("KARMA", ApplyKarmaImpact);
+    }
+
+    /// <summary>
+    /// ACTION_POST_DIALOGUE : KARMA:delta (zone courante) ou KARMA:ZoneName:delta.
+    /// Ex. KARMA:+10, KARMA:-10, KARMA:Introduction:-5
+    /// </summary>
+    void ApplyKarmaImpact(string[] args)
+    {
+        if (args.Length < 1)
+        {
+            GD.PrintErr("[GameManager] Action KARMA invalide (format: KARMA:delta ou KARMA:zone:delta).");
+            return;
+        }
+
+        string zone = ReturnZoneName;
+        string deltaRaw = args[0];
+
+        if (args.Length >= 2)
+        {
+            zone = args[0].Trim();
+            deltaRaw = args[1];
+        }
+
+        if (!int.TryParse(deltaRaw, NumberStyles.Integer, CultureInfo.InvariantCulture, out int delta))
+        {
+            GD.PrintErr($"[GameManager] Action KARMA : delta invalide '{deltaRaw}'.");
+            return;
+        }
+
+        KarmaManager.Instance?.ApplyKarmaImpact(zone, delta);
     }
     
     void LevelUp(string level)

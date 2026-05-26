@@ -2,20 +2,20 @@
 
 [ext_resource type="PackedScene" uid="uid://bytrlpkuio8lg" path="res://Maps/Intro/Road.tscn" id="1_gyees"]
 [ext_resource type="Script" uid="uid://bggl6eh4yrnq2" path="res://Scripts/Data/MapLoader.cs" id="1_jsb3r"]
-[ext_resource type="Script" uid="uid://cmapviewportlayout01" path="res://Scripts/World/MapViewportLayout.cs" id="1_viewport"]
-[ext_resource type="Script" uid="uid://cuipixelroot0001" path="res://Scripts/UI/UiPixelRoot.cs" id="1_uipixel"]
+[ext_resource type="Script" uid="uid://f32bu3npmdam" path="res://Scripts/UI/UiPixelRoot.cs" id="1_uipixel"]
+[ext_resource type="Script" uid="uid://bnxj8gjjthpye" path="res://Scripts/World/MapViewportLayout.cs" id="1_viewport"]
 [ext_resource type="PackedScene" uid="uid://deitf4m52htu0" path="res://Scripts/Entities/Player/player.tscn" id="2_axsiu"]
 [ext_resource type="PackedScene" uid="uid://k8vub3w4frn8" path="res://Scenes/cart.tscn" id="2_t4cgs"]
 [ext_resource type="PackedScene" uid="uid://bqdkqqak5optc" path="res://Scripts/Entities/Npcs/npc.tscn" id="4_y7c5g"]
 [ext_resource type="Texture2D" uid="uid://cde3ducm2ro8v" path="res://Assets/World/Textures/GrassMask.png" id="5_ne6lv"]
 [ext_resource type="PackedScene" uid="uid://df5ufudng06yc" path="res://UI/dialogue.tscn" id="6_2whbv"]
-[ext_resource type="PackedScene" uid="uid://cstats7page001" path="res://UI/player_stats_page.tscn" id="7_stats"]
-[ext_resource type="PackedScene" uid="uid://cquestjournal01" path="res://UI/quest_journal_page.tscn" id="8_quests"]
-[ext_resource type="PackedScene" uid="uid://ckarmabanner01" path="res://UI/KarmaBanner.tscn" id="9_karma"]
-[ext_resource type="PackedScene" uid="uid://bquesttrigger01" path="res://Scenes/quest_trigger.tscn" id="10_qtrigger"]
 [ext_resource type="PackedScene" uid="uid://kqhj7bngint6" path="res://Scenes/tree.tscn" id="6_t4cgs"]
+[ext_resource type="PackedScene" uid="uid://bsbotyhp0xrc7" path="res://UI/player_stats_page.tscn" id="7_stats"]
 [ext_resource type="PackedScene" uid="uid://dg3wvkgnaaui0" path="res://Scenes/crate.tscn" id="7_t4cgs"]
+[ext_resource type="PackedScene" uid="uid://vbcno0dgtf73" path="res://UI/quest_journal_page.tscn" id="8_quests"]
 [ext_resource type="Texture2D" uid="uid://bxmu5hk73bkey" path="res://Assets/Actors/Npcs/Generic Male NPCs A.png" id="9_ifhrt"]
+[ext_resource type="PackedScene" uid="uid://yl7g5vmddauq" path="res://UI/KarmaBanner.tscn" id="9_karma"]
+[ext_resource type="PackedScene" uid="uid://iakcnhc4fbsq" path="res://Scenes/quest_trigger.tscn" id="10_qtrigger"]
 
 [sub_resource type="Gradient" id="Gradient_me1ua"]
 
@@ -65,7 +65,7 @@ script = ExtResource("1_viewport")
 
 [node name="SubViewport" type="SubViewport" parent="SubViewportContainer" unique_id=1026714073]
 handle_input_locally = false
-size = Vector2i(640, 360)
+size = Vector2i(2, 2)
 render_target_update_mode = 4
 
 [node name="-- WORLD" type="Node3D" parent="SubViewportContainer/SubViewport" unique_id=1909004944]
@@ -149,12 +149,12 @@ visible = false
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.049902, -0.0021262765, -5.684823)
 TerrainPath = NodePath("../../-- WORLD/Road/CampainMap2/Plane")
 
-[node name="QuestIntroTrigger" parent="SubViewportContainer/SubViewport/CHARACTERS" instance=ExtResource("10_qtrigger")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.049902, 0, -5.684823)
-QuestId = "QUEST_INTRO"
-
 [node name="Camera3D" parent="SubViewportContainer/SubViewport/CHARACTERS/Player" index="3" unique_id=967178187]
 TerrainPath = NodePath("../../../-- WORLD/Road/CampainMap2/Plane")
+
+[node name="QuestIntroTrigger" parent="SubViewportContainer/SubViewport/CHARACTERS" unique_id=107843708 instance=ExtResource("10_qtrigger")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.049902, 0, -5.684823)
+QuestId = "QUEST_INTRO"
 
 [node name="Marchand" parent="SubViewportContainer/SubViewport/CHARACTERS" unique_id=943380825 instance=ExtResource("4_y7c5g")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.988659, 0.043306172, 0.6704476)
@@ -193,6 +193,18 @@ texture = ExtResource("9_ifhrt")
 hframes = 8
 vframes = 10
 
+[node name="KARMA -" parent="SubViewportContainer/SubViewport/CHARACTERS" unique_id=403699691 instance=ExtResource("4_y7c5g")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.3676074, 0.31443182, -0.66441894)
+NpcName = "Marchand"
+SpriteTexture = ExtResource("9_ifhrt")
+StartDialogueId = "PNJ_TEST_K_M"
+
+[node name="Sprite3D" parent="SubViewportContainer/SubViewport/CHARACTERS/KARMA -/Node3D" parent_id_path=PackedInt32Array(403699691, 1928349061) index="0" unique_id=2017281585]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
+texture = ExtResource("9_ifhrt")
+hframes = 8
+vframes = 10
+
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="SubViewportContainer/SubViewport" unique_id=1849374619]
 transform = Transform3D(1, 0, 0, 0, -0.36315373, 0.93172926, 0, -0.93172926, -0.36315373, 0, 13.080275, -14.451)
 light_energy = 0.2
@@ -206,13 +218,14 @@ environment = SubResource("Environment_me1ua")
 layer = 10
 
 [node name="Root" type="Control" parent="GameUI" unique_id=411992830]
-layout_mode = 0
+layout_mode = 3
+anchors_preset = 0
 mouse_filter = 2
 script = ExtResource("1_uipixel")
 
-[node name="KarmaBanner" parent="GameUI/Root" instance=ExtResource("9_karma")]
+[node name="KarmaBanner" parent="GameUI/Root" unique_id=1258477267 instance=ExtResource("9_karma")]
 layout_mode = 1
-anchors_preset = 0
+anchors_preset = -1
 anchor_left = 0.76
 anchor_top = 0.01
 anchor_right = 0.99
@@ -224,21 +237,11 @@ mouse_filter = 2
 [node name="DialogueUI" parent="GameUI/Root" unique_id=394009753 instance=ExtResource("6_2whbv")]
 layout_mode = 1
 
-[node name="PlayerStatsPage" parent="GameUI/Root" instance=ExtResource("7_stats")]
+[node name="PlayerStatsPage" parent="GameUI/Root" unique_id=2002023036 instance=ExtResource("7_stats")]
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
 
-[node name="QuestJournalPage" parent="GameUI/Root" instance=ExtResource("8_quests")]
+[node name="QuestJournalPage" parent="GameUI/Root" unique_id=412602038 instance=ExtResource("8_quests")]
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
 
 [editable path="SubViewportContainer/SubViewport/-- WORLD/Road"]
 [editable path="SubViewportContainer/SubViewport/-- WORLD/Road/CampainMap2"]
@@ -246,3 +249,4 @@ grow_vertical = 2
 [editable path="SubViewportContainer/SubViewport/CHARACTERS/Marchand"]
 [editable path="SubViewportContainer/SubViewport/CHARACTERS/BATTLE_LAUNCH"]
 [editable path="SubViewportContainer/SubViewport/CHARACTERS/LEVELUP"]
+[editable path="SubViewportContainer/SubViewport/CHARACTERS/KARMA -"]
