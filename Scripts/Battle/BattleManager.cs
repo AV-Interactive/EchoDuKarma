@@ -53,6 +53,16 @@ public partial class BattleManager : Node
     private readonly List<Enemy> _enemies = new List<Enemy>();
     private List<EnemyStats> _enemyStatsSource = new List<EnemyStats>();
 
+    [ExportGroup("Timing")]
+    [Export] float _actionResultDelay  = 1.5f; // pause après un résultat d'action (dégâts, log)
+    [Export] float _enemyPreAttackDelay = 1.0f; // anticipation avant le bond ennemi
+    [Export] float _defenseDelay       = 2.0f; // durée affichage posture défensive
+    [Export] float _fleeDelay          = 2.0f; // attente pendant tentative de fuite
+    [Export] float _victoryDelay       = 3.0f; // pause avant affichage XP
+    [Export] float _xpDisplayDelay     = 1.5f; // durée affichage message XP
+    [Export] float _levelUpDelay       = 2.0f; // durée affichage niveau gagné
+    [Export] float _exitBattleDelay    = 2.5f; // pause finale avant retour map
+
     [ExportGroup("Turn Management")]
     private BattleState _currentState;
     private List<IBattler> _turnOrder = new List<IBattler>();
@@ -385,7 +395,7 @@ public partial class BattleManager : Node
         
         target.PlayHitEffect();
 
-        await ToSignal(GetTree().CreateTimer(1.0f), "timeout");
+        await ToSignal(GetTree().CreateTimer(_actionResultDelay), "timeout");
         
         // RETOUR PLAN NEUTRE
         await _cameraDirector.CutTo(CameraDirector.CameraShot.Neutral);
@@ -403,7 +413,7 @@ public partial class BattleManager : Node
         if (_playerBattler.CurrentMp < skill.Cost)
         {
             _hud?.ShowLogs($"{_playerBattler.Name} n'a pas assez de MP pour utiliser {skill.Name} !");
-            await ToSignal(GetTree().CreateTimer(1.0f), "timeout");
+            await ToSignal(GetTree().CreateTimer(_actionResultDelay), "timeout");
             CancelPlayerActionAndShowMenu();
             return;
         }
@@ -428,7 +438,7 @@ public partial class BattleManager : Node
             ApplyHealEffect(skill);
         }
 
-        await ToSignal(GetTree().CreateTimer(1.0f), "timeout");
+        await ToSignal(GetTree().CreateTimer(_actionResultDelay), "timeout");
 
         await _cameraDirector.CutTo(CameraDirector.CameraShot.Neutral);
         _playerActor?.OnCameraChanged(CameraDirector.CameraShot.Neutral);
@@ -474,7 +484,7 @@ public partial class BattleManager : Node
         ChangeState(BattleState.Action);
         _isPlayerDefending = true;
         _hud?.ShowLogs($"{_playerBattler.Name} se prépare à encaisser !");
-        await ToSignal(GetTree().CreateTimer(1.5f), "timeout");
+        await ToSignal(GetTree().CreateTimer(_defenseDelay), "timeout");
         ChangeState(BattleState.Evaluation);
     }
 
@@ -482,18 +492,18 @@ public partial class BattleManager : Node
     {
         ChangeState(BattleState.Action);
         _hud?.ShowLogs($"{_playerBattler.Name} tente de fuir...");
-        await ToSignal(GetTree().CreateTimer(1.5f), "timeout");
+        await ToSignal(GetTree().CreateTimer(_fleeDelay), "timeout");
 
         if (GD.Randf() > 0.5f)
         {
             _hud?.ShowLogs("Fuite réussie !");
-            await ToSignal(GetTree().CreateTimer(1.0f), "timeout");
+            await ToSignal(GetTree().CreateTimer(_actionResultDelay), "timeout");
             EndBattle(BattleEndReason.Flee);
         }
         else
         {
             _hud?.ShowLogs("L'ennemi vous barre la route !");
-            await ToSignal(GetTree().CreateTimer(1.0f), "timeout");
+            await ToSignal(GetTree().CreateTimer(_actionResultDelay), "timeout");
             ChangeState(BattleState.Evaluation);
         }
     }
@@ -543,7 +553,7 @@ public partial class BattleManager : Node
         _playerActor?.OnCameraChanged(CameraDirector.CameraShot.EnemyAttack);
 
         _hud?.ShowLogs($"{enemy.EnemyName} prépare son attaque...");
-        await ToSignal(GetTree().CreateTimer(0.5f), "timeout");
+        await ToSignal(GetTree().CreateTimer(_enemyPreAttackDelay), "timeout");
         await enemy.PlayAttackAnimation();
 
         int baseStrength = aggressiveBonus ? Mathf.RoundToInt(enemy.Stats.Strength * 1.2f) : enemy.Stats.Strength;
@@ -566,7 +576,7 @@ public partial class BattleManager : Node
         _hud?.ShowLogs($"{enemy.EnemyName} inflige {damage} dégâts !");
         EmitSignal(SignalName.PlayerDamage, damage);
 
-        await ToSignal(GetTree().CreateTimer(1.0f), "timeout");
+        await ToSignal(GetTree().CreateTimer(_actionResultDelay), "timeout");
 
         await _cameraDirector.CutTo(CameraDirector.CameraShot.Neutral);
         _playerActor?.OnCameraChanged(CameraDirector.CameraShot.Neutral);
@@ -581,7 +591,7 @@ public partial class BattleManager : Node
 
         _defendingEnemies.Add(enemy);
         _hud?.ShowLogs($"{enemy.EnemyName} adopte une posture défensive !");
-        await ToSignal(GetTree().CreateTimer(1.5f), "timeout");
+        await ToSignal(GetTree().CreateTimer(_defenseDelay), "timeout");
 
         ChangeState(BattleState.Evaluation);
     }
@@ -806,19 +816,19 @@ public partial class BattleManager : Node
 
     private async void HandleVictory()
     {
-        await ToSignal(GetTree().CreateTimer(2.0f), "timeout");
+        await ToSignal(GetTree().CreateTimer(_victoryDelay), "timeout");
 
         int totalXp = _enemyStatsSource.Sum(e => e.XpValue);
         int levelsGained = GameManager.Instance.GrantBattleExperience(totalXp);
 
         _hud?.ShowLogs($"+{totalXp} XP");
-        await ToSignal(GetTree().CreateTimer(1.0f), "timeout");
+        await ToSignal(GetTree().CreateTimer(_xpDisplayDelay), "timeout");
 
         if (levelsGained > 0)
         {
             _hud?.ShowLogs($"Niveau {_playerBattler.Level} !");
             _hud?.UpdatePlayerStats(_playerBattler);
-            await ToSignal(GetTree().CreateTimer(1.5f), "timeout");
+            await ToSignal(GetTree().CreateTimer(_levelUpDelay), "timeout");
         }
 
         ExitBattleSequence();
@@ -826,7 +836,7 @@ public partial class BattleManager : Node
 
     private async void ExitBattleSequence()
     {
-        await ToSignal(GetTree().CreateTimer(2.0f), "timeout");
+        await ToSignal(GetTree().CreateTimer(_exitBattleDelay), "timeout");
         GD.Print("[BattleManager] Battle finished. Returning to map...");
         EndBattle(BattleEndReason.Victory);
     }
