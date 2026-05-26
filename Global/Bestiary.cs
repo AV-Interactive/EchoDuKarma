@@ -2,12 +2,34 @@ using Godot;
 using System;
 using System.Collections.Generic;
 
+public enum AiPattern
+{
+    Normal,      // Attaque physique basique chaque tour
+    Aggressive,  // Toujours attaque ; bonus Force quand PV < 30 %
+    Defensive,   // Attaque si PV > 50 % ; sinon 60 % de chances de passer en posture défensive
+}
+
 public class EnemyStats : Stats
 {
     public string EnemyName { get; set; }
     public int XpValue { get; set; }
     public string Loot { get; set; }
-    public string AiStyle { get; set; }
+    public AiPattern AiPattern { get; set; }
+
+    static readonly Dictionary<string, AiPattern> _patternMap = new(StringComparer.OrdinalIgnoreCase)
+    {
+        { "Normal",      AiPattern.Normal },
+        { "Aggressive",  AiPattern.Aggressive },
+        { "Defensive",   AiPattern.Defensive },
+    };
+
+    public static AiPattern ParsePattern(string raw)
+    {
+        if (!string.IsNullOrWhiteSpace(raw) && _patternMap.TryGetValue(raw.Trim(), out var p))
+            return p;
+        GD.PrintErr($"[Bestiary] AiPattern inconnu : '{raw}' → Normal par défaut.");
+        return AiPattern.Normal;
+    }
 }
 
 public partial class Bestiary : Node
@@ -63,7 +85,7 @@ public partial class Bestiary : Node
                     Spirit = int.Parse(columns[5]),
                     Dexterity = int.Parse(columns[6]),
                     Defense = int.Parse(columns[7]),
-                    AiStyle = columns[8].Trim()
+                    AiPattern = EnemyStats.ParsePattern(columns[8])
                 };
                 _bestiary[enemy.EnemyName] = enemy;
                 count++;

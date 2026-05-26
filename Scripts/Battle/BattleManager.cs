@@ -63,6 +63,8 @@ public partial class BattleManager : Node
     private bool _isSelectingTarget = false;
     private Skill _selectedSkill;
     private bool _isActionRunning = false;
+
+    private readonly HashSet<Enemy> _defendingEnemies = new();
     
     private int _retryCount = 0;
     private bool _isReady = false;
@@ -366,8 +368,14 @@ public partial class BattleManager : Node
             await _playerActor.PlayAttackAnimation();
 
         int damage = CalculatePhysicalDamage(_playerBattler.Strength, target.Defense);
-        target.CurrentPv -= damage;
 
+        if (_defendingEnemies.Remove(target))
+        {
+            damage = Math.Max(1, damage / 2);
+            _hud?.ShowLogs($"{target.EnemyName} bloque partiellement l'attaque !");
+        }
+
+        target.CurrentPv -= damage;
         _hud?.ShowLogs($"{_playerBattler.Name} attaque {target.EnemyName} pour {damage} dégâts !");
         
         // Lead Dev Tip: On utilise GetScreenPositionOfNode pour projeter la position 3D en 2D pour l'UI
@@ -446,6 +454,12 @@ public partial class BattleManager : Node
 
         if (target is Enemy e)
         {
+            if (_defendingEnemies.Remove(e))
+            {
+                damage = Math.Max(1, damage / 2);
+                _hud?.ShowLogs($"{e.EnemyName} bloque partiellement le sort !");
+            }
+
             e.CurrentPv -= damage;
             e.PlayHitEffect();
         }
@@ -504,15 +518,35 @@ public partial class BattleManager : Node
             return;
         }
 
-        // CHANGEMENT ANGLE CAMERA
+        switch (enemy.Stats.AiPattern)
+        {
+            case AiPattern.Aggressive:
+                await ExecuteEnemyAttack(enemy, aggressiveBonus: enemy.CurrentPv <= enemy.Stats.Pv * 0.3f);
+                break;
+            case AiPattern.Defensive:
+                bool lowHp = enemy.CurrentPv <= enemy.Stats.Pv * 0.5f;
+                if (lowHp && GD.Randf() < 0.6f)
+                    await ExecuteEnemyDefend(enemy);
+                else
+                    await ExecuteEnemyAttack(enemy);
+                break;
+            default: // Normal
+                await ExecuteEnemyAttack(enemy);
+                break;
+        }
+    }
+
+    private async Task ExecuteEnemyAttack(Enemy enemy, bool aggressiveBonus = false)
+    {
         await _cameraDirector.CutTo(CameraDirector.CameraShot.EnemyAttack);
         _playerActor?.OnCameraChanged(CameraDirector.CameraShot.EnemyAttack);
-        
+
         _hud?.ShowLogs($"{enemy.EnemyName} prépare son attaque...");
         await ToSignal(GetTree().CreateTimer(0.5f), "timeout");
         await enemy.PlayAttackAnimation();
 
-        int damage = CalculatePhysicalDamage(enemy.Stats.Strength, _playerBattler.Defense);
+        int baseStrength = aggressiveBonus ? Mathf.RoundToInt(enemy.Stats.Strength * 1.2f) : enemy.Stats.Strength;
+        int damage = CalculatePhysicalDamage(baseStrength, _playerBattler.Defense);
 
         if (_isPlayerDefending)
         {
@@ -520,20 +554,34 @@ public partial class BattleManager : Node
             _hud?.ShowLogs($"{_playerBattler.Name} bloque une partie de l'attaque !");
         }
 
+        if (aggressiveBonus)
+            _hud?.ShowLogs($"{enemy.EnemyName} attaque avec rage !");
+
         ShakeScreen();
         _playerBattler.CurrentPv -= damage;
         _hud?.UpdatePlayerStats(_playerBattler);
         _hud?.ShowDamage(GetPlayerUIPosition(), damage, Colors.Red);
-        
+
         _hud?.ShowLogs($"{enemy.EnemyName} inflige {damage} dégâts !");
         EmitSignal(SignalName.PlayerDamage, damage);
 
         await ToSignal(GetTree().CreateTimer(1.0f), "timeout");
-        
-        // RETOUR PLAN NEUTRE
+
         await _cameraDirector.CutTo(CameraDirector.CameraShot.Neutral);
         _playerActor?.OnCameraChanged(CameraDirector.CameraShot.Neutral);
-        
+
+        ChangeState(BattleState.Evaluation);
+    }
+
+    private async Task ExecuteEnemyDefend(Enemy enemy)
+    {
+        await _cameraDirector.CutTo(CameraDirector.CameraShot.Neutral);
+        _playerActor?.OnCameraChanged(CameraDirector.CameraShot.Neutral);
+
+        _defendingEnemies.Add(enemy);
+        _hud?.ShowLogs($"{enemy.EnemyName} adopte une posture défensive !");
+        await ToSignal(GetTree().CreateTimer(1.5f), "timeout");
+
         ChangeState(BattleState.Evaluation);
     }
 
@@ -587,6 +635,7 @@ public partial class BattleManager : Node
                 _hud?.ShowLogs($"{dead.EnemyName} est vaincu !");
                 dead.PlayDefeatAnimation();
 
+                _defendingEnemies.Remove(dead);
                 _enemies.RemoveAt(i);
                 _turnOrder.Remove(dead);
             }
