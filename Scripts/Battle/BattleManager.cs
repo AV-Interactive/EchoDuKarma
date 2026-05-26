@@ -401,12 +401,25 @@ public partial class BattleManager : Node
         _playerBattler.CurrentMp -= skill.Cost;
         _hud?.UpdatePlayerStats(_playerBattler);
 
-        if (skill.Type == SkillType.Support)
-            ApplyHealEffect(skill);
-        else
+        bool isOffensive = skill.Type != SkillType.Support;
+
+        if (isOffensive)
+        {
+            await _cameraDirector.CutTo(CameraDirector.CameraShot.PlayerAttack);
+            _playerActor?.OnCameraChanged(CameraDirector.CameraShot.PlayerAttack);
             ApplyMagicDamage(target, skill);
+        }
+        else
+        {
+            await _cameraDirector.CutTo(CameraDirector.CameraShot.Neutral);
+            _playerActor?.OnCameraChanged(CameraDirector.CameraShot.Neutral);
+            ApplyHealEffect(skill);
+        }
 
         await ToSignal(GetTree().CreateTimer(1.0f), "timeout");
+
+        await _cameraDirector.CutTo(CameraDirector.CameraShot.Neutral);
+        _playerActor?.OnCameraChanged(CameraDirector.CameraShot.Neutral);
 
         _isActionRunning = false;
         
