@@ -54,7 +54,6 @@ public partial class BattleHud : CanvasLayer
 
         var battleManager = GetTree().Root.FindChild("BattleManager", true, false) as BattleManager;
         if (battleManager != null) battleManager.PlayerDamage += OnPlayerDamageReceived;
-        if (battleManager != null) battleManager.PlayerDamage += OnPlayerDamageReceived;
         
         StartCursorAnim();
     }

@@ -180,6 +180,14 @@ public partial class GameManager: Node
         PlayerMoved = true;
         GetTree().Paused = false;
 
+        if (reason == BattleManager.BattleEndReason.Defeat && _battleSnapshot != null)
+        {
+            // Pas de sauvegarde pour l'instant : le joueur revient sur la map avec 1 PV et 0 PM.
+            _battleSnapshot.CurrentPv = 1;
+            _battleSnapshot.CurrentMp = 0;
+            GD.Print("[GameManager] Défaite — joueur restauré à 1 PV.");
+        }
+
         DialogueSystem.Instance?.RequestDialogue(null);
 
         Error err = GetTree().ChangeSceneToFile(ReturnScenePath);

@@ -174,9 +174,11 @@ public partial class BattleManager : Node
     private void HandleEvaluationState() => CheckBattleStatus();
     private void HandleVictoryState() => HandleVictory();
 
-    private void HandleDefeatState()
+    private async void HandleDefeatState()
     {
+        _hud?.HideMenu();
         _hud?.ShowLogs($"Défaite... {_playerBattler.Name} a succombé.");
+        await ToSignal(GetTree().CreateTimer(3.0f), "timeout");
         EndBattle(BattleEndReason.Defeat);
     }
 
@@ -651,8 +653,8 @@ public partial class BattleManager : Node
         }
         else
         {
-            AddChild(_playerAnchor);
-            _playerAnchor.Position = new Vector3(2.6f, .05f, 0);
+            GD.PrintErr("[BattleManager] CRITICAL: BattleActorScene.Instantiate<BattleActor>() a retourné null — spawn joueur annulé.");
+            return;
         }
     }
 
@@ -700,7 +702,9 @@ public partial class BattleManager : Node
                     anchorPos.Y,
                     anchorPos.Z);
             }
-            
+
+            // Copie explicite des PV depuis la liste de combat (indépendant d'un futur bestiaire modifié en runtime)
+            enemy.CurrentPv = stats.Pv;
             
             _enemies.Add(enemy);
         }
