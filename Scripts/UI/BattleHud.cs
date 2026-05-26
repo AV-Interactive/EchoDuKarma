@@ -18,6 +18,7 @@ public partial class BattleHud : CanvasLayer
     VBoxContainer _skillsListPanel;
     Sprite2D _targetCursor;
     Container _enemyList;
+    Control _damageLayer;
     Tween _cursorTween;
 
     /// <summary>Décalage vertical (en unités design 640×360) pour placer les widgets au-dessus des sprites.</summary>
@@ -47,6 +48,15 @@ public partial class BattleHud : CanvasLayer
         _skillsListPanel = GetNode<VBoxContainer>("Scene/Actions/Panel/SkillsList");
         _targetCursor = GetNode<Sprite2D>("Scene/TargetCursor");
         _enemyList = GetNode<Container>("Scene/CombatantsPanel/EnemyList");
+
+        _damageLayer = new Control
+        {
+            Name = "DamageLayer",
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+            ZIndex = 500,
+        };
+        _damageLayer.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+        _uiScene.AddChild(_damageLayer);
 
         _playerHpLabel = GetNodeOrNull<RichTextLabel>("Scene/CombatantsPanel/PlayerPanel/PlayerStat/HBoxContainer/VBoxContainer/HpRow/NB_HP");
         _playerMpLabel = GetNodeOrNull<RichTextLabel>("Scene/CombatantsPanel/PlayerPanel/PlayerStat/HBoxContainer/VBoxContainer/MpRow/NB_MP");
@@ -308,25 +318,11 @@ public partial class BattleHud : CanvasLayer
 
     public void ShowDamage(Vector2 viewportPosition, int amount, Color color)
     {
-        if (_uiScene == null)
+        if (_damageLayer == null)
             return;
 
         Vector2 localPos = ViewportToUiScene(viewportPosition);
-
-        var label = new Label
-        {
-            Text = amount.ToString(),
-            Modulate = color,
-            Position = localPos,
-        };
-        label.AddThemeFontSizeOverride("font_size", 22);
-
-        _uiScene.AddChild(label);
-
-        var tween = CreateTween();
-        tween.TweenProperty(label, "position:y", localPos.Y - 24f, 0.5f);
-        tween.Parallel().TweenProperty(label, "modulate:a", 0, 0.5f);
-        tween.Finished += () => label.QueueFree();
+        BattleDamagePopup.Spawn(_damageLayer, localPos, amount, color, this);
     }
 
     public void ShowLogs(string message)
