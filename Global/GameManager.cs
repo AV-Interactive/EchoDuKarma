@@ -38,6 +38,8 @@ public partial class GameManager: Node
 
         if (!string.IsNullOrWhiteSpace(scenePath))
             ReturnScenePath = scenePath;
+
+        KarmaManager.Instance?.SetCurrentZone(ReturnZoneName);
     }
 
     public PlayerBattleSnapshot GetBattleSnapshot() => _battleSnapshot;
@@ -90,10 +92,11 @@ public partial class GameManager: Node
 
     void ConnectToSignals()
     {
-        if (DialogueSystem.Instance != null)
-        {
+        if (DialogueSystem.Instance is not null)
             DialogueSystem.Instance.ActionTriggered += OnActionTriggered;
-        }
+
+        if (QuestManager.Instance is not null)
+            QuestManager.Instance.QuestCompleted += OnQuestCompleted;
     }
     
     public void RegisterEvents()
@@ -218,6 +221,23 @@ public partial class GameManager: Node
         }
 
         SetMapContext(ReturnZoneName, scenePath);
+    }
+
+    void OnQuestCompleted(string questId)
+    {
+        var quest = QuestManager.Instance?.GetQuest(questId);
+        if (quest == null) return;
+
+        GD.Print($"[GameManager] Récompenses quête {questId} : +{quest.RewardXp} XP, +{quest.RewardMoney} or");
+
+        if (quest.RewardXp > 0)
+            GrantBattleExperience(quest.RewardXp);
+
+        if (quest.RewardMoney > 0)
+            GainGold(quest.RewardMoney);
+
+        if (!string.IsNullOrWhiteSpace(quest.RewardObject))
+            GainItem(quest.RewardObject);
     }
 
     void OnActionTriggered(string fullActionRaw)

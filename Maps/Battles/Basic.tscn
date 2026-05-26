@@ -9,6 +9,8 @@
 [ext_resource type="PackedScene" uid="uid://dw5jrfcorlksg" path="res://Scenes/fight_area.tscn" id="4_22iq2"]
 [ext_resource type="PackedScene" uid="uid://kqhj7bngint6" path="res://Scenes/tree.tscn" id="5_pu1y3"]
 [ext_resource type="Script" uid="uid://ef736oyqrbw3" path="res://Scripts/UI/BattleHud.cs" id="5_vcv5u"]
+[ext_resource type="Script" uid="uid://cuipixelroot0001" path="res://Scripts/UI/UiPixelRoot.cs" id="6_uipixel"]
+[ext_resource type="PackedScene" uid="uid://ckarmabanner01" path="res://UI/KarmaBanner.tscn" id="8_karma"]
 [ext_resource type="PackedScene" uid="uid://k8vub3w4frn8" path="res://Scenes/cart.tscn" id="6_bu3k3"]
 [ext_resource type="PackedScene" uid="uid://dg3wvkgnaaui0" path="res://Scenes/crate.tscn" id="7_laytn"]
 
@@ -145,11 +147,12 @@ fov = 50.0
 transform = Transform3D(0.463296, -0.077237725, -0.88283134, 0, 0.9961947, -0.08715574, 0.8862035, 0.040378906, 0.46153307, -0.5474906, 0.3243612, 1.1476686)
 fov = 50.0
 
-[node name="BattleHUD" type="CanvasLayer" parent="." unique_id=446071286 node_paths=PackedStringArray("_playerHpLabel", "_playerMpLabel", "_logs")]
+[node name="BattleHUD" type="CanvasLayer" parent="." unique_id=446071286 node_paths=PackedStringArray("_playerHpLabel", "_playerMpLabel", "_logs", "_karmaBanner")]
 script = ExtResource("5_vcv5u")
-_playerHpLabel = NodePath("Scene/StatPanel/Panel/VBoxContainer/Control/HBoxContainer/VBoxContainer/HBoxContainer/NB_HP")
-_playerMpLabel = NodePath("Scene/StatPanel/Panel/VBoxContainer/Control/HBoxContainer/VBoxContainer/HBoxContainer/NB_MP")
+_playerHpLabel = NodePath("Scene/CombatantsPanel/PlayerPanel/PlayerStat/HBoxContainer/VBoxContainer/HpRow/NB_HP")
+_playerMpLabel = NodePath("Scene/CombatantsPanel/PlayerPanel/PlayerStat/HBoxContainer/VBoxContainer/MpRow/NB_MP")
 _logs = NodePath("Scene/LogPanel/RichTextLabel")
+_karmaBanner = NodePath("Scene/KarmaBanner")
 
 [node name="ColorRect" type="ColorRect" parent="BattleHUD" unique_id=721218906]
 anchors_preset = 15
@@ -160,30 +163,60 @@ grow_vertical = 2
 color = Color(0, 0, 0, 0)
 
 [node name="Scene" type="Control" parent="BattleHUD" unique_id=249661298]
-custom_minimum_size = Vector2(640, 360)
-layout_mode = 3
-anchor_top = 0.013888889
-anchor_right = 1.0
-anchor_bottom = 1.014
-grow_horizontal = 2
-grow_vertical = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
+layout_mode = 0
+script = ExtResource("6_uipixel")
 
-[node name="StatPanel" type="HBoxContainer" parent="BattleHUD/Scene" unique_id=550571324]
+[node name="KarmaBanner" parent="BattleHUD/Scene" instance=ExtResource("8_karma")]
 layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.397
-anchor_top = 0.809
-anchor_right = 0.70900005
-anchor_bottom = 0.96900004
+anchors_preset = 0
+anchor_left = 0.76
+anchor_top = 0.01
+anchor_right = 0.99
+anchor_bottom = 0.09
+grow_horizontal = 2
 grow_vertical = 0
 
-[node name="Panel" type="Panel" parent="BattleHUD/Scene/StatPanel" unique_id=1521936620]
-layout_mode = 2
-size_flags_horizontal = 3
+[node name="LogPanel" type="Panel" parent="BattleHUD/Scene" unique_id=2043367047]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.2
+anchor_top = 0.02
+anchor_right = 0.58
+anchor_bottom = 0.12
+grow_horizontal = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="BattleHUD/Scene/StatPanel/Panel" unique_id=87750797]
+[node name="RichTextLabel" type="RichTextLabel" parent="BattleHUD/Scene/LogPanel" unique_id=810230257]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/normal_font_size = 11
+theme_override_font_sizes/bold_font_size = 11
+theme_override_font_sizes/bold_italics_font_size = 11
+theme_override_font_sizes/italics_font_size = 11
+theme_override_font_sizes/mono_font_size = 11
+bbcode_enabled = true
+text = "Journal de combat"
+scroll_following = true
+scroll_active = true
+
+[node name="CombatantsPanel" type="VBoxContainer" parent="BattleHUD/Scene" unique_id=550571325]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.02
+anchor_top = 0.72
+anchor_right = 0.5
+anchor_bottom = 0.98
+grow_horizontal = 2
+theme_override_constants/separation = 4
+
+[node name="PlayerPanel" type="Panel" parent="BattleHUD/Scene/CombatantsPanel" unique_id=1521936620]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="PlayerStat" parent="BattleHUD/Scene/CombatantsPanel/PlayerPanel" unique_id=2121822298 instance=ExtResource("2_y5qje")]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -191,24 +224,18 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Label" type="Label" parent="BattleHUD/Scene/StatPanel/Panel/VBoxContainer" unique_id=263166932]
+[node name="EnemyList" type="HBoxContainer" parent="BattleHUD/Scene/CombatantsPanel" unique_id=550571326]
 layout_mode = 2
-theme_override_font_sizes/font_size = 30
-text = "Stats"
-horizontal_alignment = 1
-
-[node name="Control" parent="BattleHUD/Scene/StatPanel/Panel/VBoxContainer" unique_id=2121822298 instance=ExtResource("2_y5qje")]
-custom_minimum_size = Vector2(0, 100)
-layout_mode = 2
-size_flags_vertical = 1
+theme_override_constants/separation = 6
+alignment = 1
 
 [node name="Actions" type="HBoxContainer" parent="BattleHUD/Scene" unique_id=1163939755]
 layout_mode = 1
 anchors_preset = -1
-anchor_left = 0.786
-anchor_top = 0.606
-anchor_right = 0.99300003
-anchor_bottom = 0.96900004
+anchor_left = 0.52
+anchor_top = 0.66
+anchor_right = 0.98
+anchor_bottom = 0.98
 grow_horizontal = 2
 grow_vertical = 0
 
@@ -226,30 +253,29 @@ grow_vertical = 2
 
 [node name="Label" type="Label" parent="BattleHUD/Scene/Actions/Panel/ActionMenu" unique_id=1493912551]
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 14
 text = "Actions"
 horizontal_alignment = 1
 
 [node name="BtnAttack" type="Button" parent="BattleHUD/Scene/Actions/Panel/ActionMenu" unique_id=1016183984]
 layout_mode = 2
 size_flags_vertical = 4
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 11
 text = "ATTAQUER"
 
 [node name="BtnMagic" type="Button" parent="BattleHUD/Scene/Actions/Panel/ActionMenu" unique_id=1128865345]
 layout_mode = 2
-theme_override_font_sizes/font_size = 12
-text = "Magie
-"
+theme_override_font_sizes/font_size = 11
+text = "Magie"
 
 [node name="BtnDefense" type="Button" parent="BattleHUD/Scene/Actions/Panel/ActionMenu" unique_id=1368066756]
 layout_mode = 2
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 11
 text = "Defense"
 
 [node name="BtnEscape" type="Button" parent="BattleHUD/Scene/Actions/Panel/ActionMenu" unique_id=1959357995]
 layout_mode = 2
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 11
 text = "Fuite"
 
 [node name="SkillsList" type="VBoxContainer" parent="BattleHUD/Scene/Actions/Panel" unique_id=1633196909]
@@ -260,34 +286,10 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="LogPanel" type="Panel" parent="BattleHUD/Scene" unique_id=2043367047]
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.109000005
-anchor_top = 0.046000004
-anchor_right = 0.89100003
-anchor_bottom = 0.133
-grow_horizontal = 2
-
-[node name="RichTextLabel" type="RichTextLabel" parent="BattleHUD/Scene/LogPanel" unique_id=810230257]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_font_sizes/normal_font_size = 14
-theme_override_font_sizes/bold_font_size = 14
-theme_override_font_sizes/bold_italics_font_size = 14
-theme_override_font_sizes/italics_font_size = 14
-theme_override_font_sizes/mono_font_size = 14
-bbcode_enabled = true
-text = "Je suis un log du style \"Rat 1 apparait !"
-vertical_alignment = 1
-
 [node name="TargetCursor" type="Sprite2D" parent="BattleHUD/Scene" unique_id=1243054023]
+scale = Vector2(0.5, 0.5)
 texture = ExtResource("3_rni72")
 
 [editable path="Arena/Fight_AREA"]
 [editable path="Arena/Fight_AREA/fight_area"]
-[editable path="BattleHUD/Scene/StatPanel/Panel/VBoxContainer/Control"]
+[editable path="BattleHUD/Scene/CombatantsPanel/PlayerPanel/PlayerStat"]

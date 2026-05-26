@@ -1,0 +1,210 @@
+[gd_scene format=3 uid="uid://dotjgmiyyrm3y"]
+
+[ext_resource type="Script" uid="uid://dqueststatrow01" path="res://Scripts/UI/QuestStatRow.cs" id="1_row"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_normal"]
+bg_color = Color(0.1, 0.13, 0.2, 0.95)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.22, 0.32, 0.42, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hover"]
+bg_color = Color(0.13, 0.17, 0.26, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.38, 0.55, 0.68, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pressed"]
+bg_color = Color(0.15, 0.2, 0.3, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.5, 0.72, 0.88, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_focus"]
+bg_color = Color(0.14, 0.19, 0.29, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.65, 0.82, 0.96, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_progress_bg"]
+bg_color = Color(0.08, 0.1, 0.15, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_progress_fill"]
+bg_color = Color(1, 0.81960785, 0.4, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[node name="QuestStatRow" type="Button" node_paths=PackedStringArray("_accentBar", "_nameLabel", "_typeBadge", "_zoneLabel", "_statusLabel", "_stepLabel", "_stepBar")]
+custom_minimum_size = Vector2(0, 58)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_focus")
+script = ExtResource("1_row")
+_accentBar = NodePath("RowMargin/RowHBox/AccentBar")
+_nameLabel = NodePath("RowMargin/RowHBox/ContentVBox/HeaderRow/NameLabel")
+_typeBadge = NodePath("RowMargin/RowHBox/ContentVBox/HeaderRow/TypeBadge")
+_zoneLabel = NodePath("RowMargin/RowHBox/ContentVBox/MetaRow/ZoneLabel")
+_statusLabel = NodePath("RowMargin/RowHBox/ContentVBox/MetaRow/StatusLabel")
+_stepLabel = NodePath("RowMargin/RowHBox/ContentVBox/ProgressRow/StepLabel")
+_stepBar = NodePath("RowMargin/RowHBox/ContentVBox/ProgressRow/StepBar")
+
+[node name="RowMargin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 0
+theme_override_constants/margin_bottom = 0
+
+[node name="RowHBox" type="HBoxContainer" parent="RowMargin"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="AccentBar" type="ColorRect" parent="RowMargin/RowHBox"]
+custom_minimum_size = Vector2(4, 0)
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+color = Color(1, 0.81960785, 0.4, 1)
+
+[node name="ContentVBox" type="VBoxContainer" parent="RowMargin/RowHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_constants/separation = 3
+
+[node name="HeaderRow" type="HBoxContainer" parent="RowMargin/RowHBox/ContentVBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/separation = 6
+
+[node name="NameLabel" type="Label" parent="RowMargin/RowHBox/ContentVBox/HeaderRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_font_sizes/font_size = 12
+text = "Nom de la quête"
+clip_text = true
+
+[node name="TypeBadge" type="Label" parent="RowMargin/RowHBox/ContentVBox/HeaderRow"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/font_size = 9
+theme_override_colors/font_color = Color(0.5529412, 0.7490196, 0.92156863, 1)
+text = "ANNEXE"
+horizontal_alignment = 2
+
+[node name="MetaRow" type="HBoxContainer" parent="RowMargin/RowHBox/ContentVBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="ZoneLabel" type="Label" parent="RowMargin/RowHBox/ContentVBox/MetaRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.34509805, 0.7058824, 0.7764706, 1)
+text = "Introduction"
+clip_text = true
+
+[node name="StatusLabel" type="Label" parent="RowMargin/RowHBox/ContentVBox/MetaRow"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(1, 0.81960785, 0.4, 1)
+text = "En cours"
+horizontal_alignment = 2
+
+[node name="ProgressRow" type="HBoxContainer" parent="RowMargin/RowHBox/ContentVBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/separation = 6
+
+[node name="StepBar" type="ProgressBar" parent="RowMargin/RowHBox/ContentVBox/ProgressRow"]
+custom_minimum_size = Vector2(0, 6)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_progress_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_progress_fill")
+max_value = 3.0
+value = 1.0
+show_percentage = false
+
+[node name="StepLabel" type="Label" parent="RowMargin/RowHBox/ContentVBox/ProgressRow"]
+custom_minimum_size = Vector2(36, 0)
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/font_size = 9
+theme_override_colors/font_color = Color(0.65, 0.72, 0.8, 1)
+text = "1/3"
+horizontal_alignment = 2
+
+[node name="ContentPad" type="Control" parent="RowMargin/RowHBox"]
+custom_minimum_size = Vector2(8, 0)
+layout_mode = 2
+mouse_filter = 2

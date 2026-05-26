@@ -1,0 +1,3 @@
+ID;NAME;TYPE;ZONE;DESCRIPTION;TRIGGER;STEPS;CONDITION_COMPLETED;REWARD_XP;REWARD_MONEY;REWARD_OBJECT;KARMA_IMPACT;DIAL_LINK
+QUEST_INTRO;Débuter l'aventure !;PRINCIPAL;Introduction;Découvrir les bases de l'aventure dans la zone d'introduction.;;Aider le marchand~QUEST_DONE:QUEST_MARCHANDER_01|Se renseigner sur le Karma~DIALOGUE:PNJ_KARMA_01|Lire le livre sacré~DIALOGUE:PNJ_LIVRE_01;ALL_STEPS;100;20;;10;
+QUEST_MARCHANDER_01;À la défense du marchand;ANNEXE;Introduction;Un marchand se fait attaquer par des rats sur la route… Il faut l'aider !;DIALOGUE:MARCHAND_AIDE;Accepter d'aider|Éliminer les rats|Parler au marchand;KILL:Rat:2;10;20;Peau de Rat;5;INTRO_SOS_01

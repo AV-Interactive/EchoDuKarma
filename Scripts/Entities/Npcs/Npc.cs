@@ -7,7 +7,13 @@ public partial class Npc : CharacterBody3D
     [Export] public string NpcName;
     [Export] public Texture2D SpriteTexture;
     [Export] public string StartDialogueId;
-    
+    /// <summary>
+    /// IDs de dialogues alternatifs évalués en priorité (dans l'ordre du tableau).
+    /// Le premier dont la CONDITION ACCES est remplie remplace StartDialogueId.
+    /// Exemple pour le Marchand : ["MARCHAND_DONE_01", "MARCHAND_EN_COURS_01"]
+    /// </summary>
+    [Export] public string[] ConditionalStartIds = Array.Empty<string>();
+
     private Sprite3D _sprite;
     private bool _isPlayerInRange = false;
     private string _currentDialogueId;
@@ -16,18 +22,19 @@ public partial class Npc : CharacterBody3D
     {
         _sprite = GetNode<Sprite3D>("Node3D/Sprite3D");
         _sprite.Texture = SpriteTexture;
-        _currentDialogueId = StartDialogueId;
+        _currentDialogueId = GetActiveStartDialogueId();
         
         // On récupère l'Area3D pour la détection 3D
         var area = GetNode<Area3D>("InteractionArea");
         
         area.BodyEntered += (body) =>
         {
-            // Note: Vérifie si ton joueur possède un script "Player" ou utilise les Groupes
             if (body.Name == "Player" || body.IsInGroup("Player"))
             {
                 _isPlayerInRange = true;
-                GD.Print($"Toine, le joueur est proche de {NpcName}");
+                // Réévalue le dialogue de départ au cas où la quête aurait progressé
+                _currentDialogueId = GetActiveStartDialogueId();
+                GD.Print($"[{NpcName}] Dialogue de départ : {_currentDialogueId}");
             }
         };
 
@@ -122,8 +129,27 @@ public partial class Npc : CharacterBody3D
 
     public void ResetDialogue()
     {
-        _currentDialogueId = StartDialogueId;
+        _currentDialogueId = GetActiveStartDialogueId();
         GameManager.Instance.PlayerMoved = true;
+    }
+
+    /// <summary>
+    /// Retourne le premier dialogue de ConditionalStartIds dont la condition est remplie.
+    /// Retombe sur StartDialogueId si aucune condition ne passe.
+    /// </summary>
+    private string GetActiveStartDialogueId()
+    {
+        if (ConditionalStartIds is { Length: > 0 })
+        {
+            foreach (string condId in ConditionalStartIds)
+            {
+                var line = DialogueSystem.Instance?.GetDialogue(condId);
+                if (line is null) continue;
+                if (QuestManager.Instance?.CheckCondition(line.Condition) ?? true)
+                    return condId;
+            }
+        }
+        return StartDialogueId;
     }
 
     void RefreshPlayerInRange()

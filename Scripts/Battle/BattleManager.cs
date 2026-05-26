@@ -153,6 +153,8 @@ public partial class BattleManager : Node
     {
         SpawnPlayer();
         SpawnEnemies();
+        _hud?.SetupEnemies(_enemies);
+        _hud?.ShowLogs("Un combat commence !");
         DetermineTurnOrder();
     }
 
@@ -174,6 +176,8 @@ public partial class BattleManager : Node
         if (activeUnit == _playerBattler)
         {
             _isPlayerDefending = false;
+            _hud?.ClearActiveHighlight();
+            _hud?.SetActivePlayer(true);
             _hud?.ShowMenu();
         }
         else
@@ -388,11 +392,11 @@ public partial class BattleManager : Node
         }
 
         target.CurrentPv -= damage;
+        _hud?.RefreshEnemy(target);
         _hud?.ShowLogs($"{_playerBattler.Name} attaque {target.EnemyName} pour {damage} dégâts !");
-        
-        // Lead Dev Tip: On utilise GetScreenPositionOfNode pour projeter la position 3D en 2D pour l'UI
+
         Vector2 screenPos = GetScreenPositionOfNode(target);
-        _hud?.ShowDamage(new Vector2(screenPos.X, screenPos.Y - 50), damage, Colors.Red);
+        _hud?.ShowDamage(new Vector2(screenPos.X, screenPos.Y - 24f), damage, Colors.Red);
         
         target.PlayHitEffect();
 
@@ -474,10 +478,11 @@ public partial class BattleManager : Node
 
             e.CurrentPv -= damage;
             e.PlayHitEffect();
+            _hud?.RefreshEnemy(e);
         }
 
         Vector2 screenPos = GetScreenPositionOfNode(target as Node3D);
-        _hud?.ShowDamage(new Vector2(screenPos.X, screenPos.Y - 50), damage, Colors.Red);
+        _hud?.ShowDamage(new Vector2(screenPos.X, screenPos.Y - 24f), damage, Colors.Red);
     }
 
     private async void ExecuteDefense()
@@ -560,6 +565,8 @@ public partial class BattleManager : Node
         await _cameraDirector.CutTo(CameraDirector.CameraShot.EnemyAttack);
         _playerActor?.OnCameraChanged(CameraDirector.CameraShot.EnemyAttack);
 
+        _hud?.SetActiveEnemy(enemy);
+        enemy.PlayTurnHighlight();
         _hud?.ShowLogs($"{enemy.EnemyName} prépare son attaque...");
         await ToSignal(GetTree().CreateTimer(_enemyPreAttackDelay), "timeout");
         await enemy.PlayAttackAnimation();
@@ -586,6 +593,9 @@ public partial class BattleManager : Node
 
         await ToSignal(GetTree().CreateTimer(_actionResultDelay), "timeout");
 
+        enemy.StopTurnHighlight();
+        _hud?.ClearActiveHighlight();
+
         await _cameraDirector.CutTo(CameraDirector.CameraShot.Neutral);
         _playerActor?.OnCameraChanged(CameraDirector.CameraShot.Neutral);
 
@@ -597,9 +607,14 @@ public partial class BattleManager : Node
         await _cameraDirector.CutTo(CameraDirector.CameraShot.Neutral);
         _playerActor?.OnCameraChanged(CameraDirector.CameraShot.Neutral);
 
+        _hud?.SetActiveEnemy(enemy);
+        enemy.PlayTurnHighlight();
         _defendingEnemies.Add(enemy);
         _hud?.ShowLogs($"{enemy.EnemyName} adopte une posture défensive !");
         await ToSignal(GetTree().CreateTimer(_defenseDelay), "timeout");
+
+        enemy.StopTurnHighlight();
+        _hud?.ClearActiveHighlight();
 
         ChangeState(BattleState.Evaluation);
     }
@@ -652,7 +667,10 @@ public partial class BattleManager : Node
             {
                 var dead = _enemies[i];
                 _hud?.ShowLogs($"{dead.EnemyName} est vaincu !");
+                _hud?.RemoveEnemy(dead);
                 dead.PlayDefeatAnimation();
+
+                QuestManager.Instance?.NotifyKill(dead.EnemyName);
 
                 _defendingEnemies.Remove(dead);
                 _enemies.RemoveAt(i);

@@ -337,4 +337,66 @@ P2.x Enrichissement (caméra magie, anim, IA, loot)
 
 ---
 
-*Dernière mise à jour : audit codebase mai 2026 — Echo du Karma, Godot 4.6, C#.*
+---
+
+## Quest System — Intégrations futures
+
+### QS.1 — Lier QuestManager au système de Karma ⚠️ À FAIRE
+
+**Contexte**  
+`QuestManager.CompleteQuest()` contient un TODO explicite : appliquer `quest.KarmaImpact` à la jauge de la zone.  
+Le `GDD_systeme_karma.md` définit l'échelle (-100 / +100) et les seuils d'état du monde.
+
+**À faire quand `KarmaManager` existera**
+
+1. Créer `Global/KarmaManager.cs` (autoload) avec une propriété `ZoneKarma` par zone et les seuils définis dans le GDD.
+2. Dans `QuestManager.CompleteQuest()`, remplacer le TODO par :
+   ```csharp
+   KarmaManager.Instance?.ApplyKarmaImpact(quest.Zone, quest.KarmaImpact);
+   ```
+3. `KarmaManager` émet un signal `KarmaChanged(string zone, int newValue)` pour que la UI et les ennemis réagissent.
+4. `BattleManager` consulte `KarmaManager` pour appliquer les modificateurs de dégâts/soins du GDD.
+
+**Fichiers concernés**  
+`Global/QuestManager.cs` (TODO marqué), `Global/GameManager.cs`, `_GDD/GDD_systeme_karma.md`
+
+**Statut** : en attente de `KarmaManager`.
+
+---
+
+### QS.2 — Brancher `NotifyKill` dans BattleManager
+
+**Contexte**  
+`QuestManager.NotifyKill(enemyName)` est prêt mais n'est appelé nulle part.
+
+**À faire**  
+Dans `BattleManager`, après la mort d'un ennemi (état `Victory` ou à chaque kill confirmé) :
+```csharp
+QuestManager.Instance?.NotifyKill(enemy.EnemyName);
+```
+
+**Fichiers concernés** : `Scripts/Battle/BattleManager.cs`
+
+**Statut** : ✅ implémenté dans `UpdateActiveEnemies` — appelé à chaque kill confirmé (PV ≤ 0).
+
+---
+
+### QS.3 — Évaluer `CONDITION_ACCES` des dialogues via QuestManager
+
+**Contexte**  
+`DialogueLine.Condition` est chargé depuis le CSV mais jamais évalué (voir tableau "Hors scope" ci-dessus).  
+`QuestManager.CheckCondition(condition)` supporte déjà `QUEST_ACTIVE:id`, `QUEST_DONE:id`, `QUEST_INACTIVE:id`.
+
+**À faire**  
+Dans `Npc.AdvanceDialogue()`, avant d'afficher une ligne :
+```csharp
+if (!QuestManager.Instance.CheckCondition(line.Condition)) { /* skip ou dialogue alternatif */ }
+```
+
+**Fichiers concernés** : `Scripts/Entities/Npcs/Npc.cs`
+
+**Statut** : en attente de quêtes avec conditions de dialogue réelles à tester.
+
+---
+
+*Dernière mise à jour : mai 2026 — Echo du Karma, Godot 4.6, C#.*

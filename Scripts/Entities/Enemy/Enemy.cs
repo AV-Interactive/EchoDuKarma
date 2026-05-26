@@ -21,6 +21,7 @@ public partial class Enemy : CharacterBody3D, IBattler
     public int Defense => Stats?.Defense ?? 0;
     
     private Sprite3D _sprite;
+    private Tween _turnHighlightTween;
 
     public override void _Ready()
     {
@@ -65,6 +66,28 @@ public partial class Enemy : CharacterBody3D, IBattler
     
         tween.TweenProperty(_sprite, "modulate", Colors.White, 0.05f);
         tween.Parallel().TweenProperty(_sprite, "position", _sprite.Position, 0.05f);
+    }
+
+    public void PlayTurnHighlight()
+    {
+        if (_sprite == null)
+            return;
+
+        StopTurnHighlight();
+        _turnHighlightTween = CreateTween().SetLoops();
+        _turnHighlightTween.TweenProperty(_sprite, "modulate", new Color(1.4f, 1.35f, 0.75f), 0.3f);
+        _turnHighlightTween.TweenProperty(_sprite, "modulate", Colors.White, 0.3f);
+    }
+
+    public void StopTurnHighlight()
+    {
+        if (_turnHighlightTween != null && _turnHighlightTween.IsValid())
+            _turnHighlightTween.Kill();
+
+        _turnHighlightTween = null;
+
+        if (_sprite != null)
+            _sprite.Modulate = Colors.White;
     }
 
     // TODO: implémenter l'animation d'attaque ennemi (bond vers le joueur + retour)

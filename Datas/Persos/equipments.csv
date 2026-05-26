@@ -1,2 +1,3 @@
-Nom,Slot,Type,Force,Agi,Esprit,Defense,Capacité passive,Classes,Prix
-Bâton Commun,Main,Arme,0,0,5,0,,Magus,100
+Nom;Slot;Type;Force;Agi;Esprit;Defense;Capacité passive;Classes;Prix
+Bâton Commun;Main;Arme;0;0;5;0;;Magus;100
+Gourdin;Main;Arme;3;0;0;0;;Knight;20

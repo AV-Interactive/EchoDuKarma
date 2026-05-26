@@ -1,0 +1,117 @@
+[gd_scene format=3 uid="uid://vbchexub5t73"]
+
+[ext_resource type="Script" uid="uid://dquestdetail01" path="res://Scripts/UI/QuestDetailPanel.cs" id="1_detail"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.09, 0.12, 0.19, 0.96)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.35, 0.55, 0.68, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+content_margin_left = 8.0
+content_margin_top = 6.0
+content_margin_right = 8.0
+content_margin_bottom = 6.0
+
+[node name="QuestDetailPanel" type="PanelContainer" node_paths=PackedStringArray("_nameLabel", "_metaLabel", "_descriptionLabel", "_stepsContainer", "_objectiveLabel", "_rewardsLabel")]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+script = ExtResource("1_detail")
+_nameLabel = NodePath("MarginContainer/VBoxContainer/NameLabel")
+_metaLabel = NodePath("MarginContainer/VBoxContainer/MetaLabel")
+_descriptionLabel = NodePath("MarginContainer/VBoxContainer/DescriptionLabel")
+_stepsContainer = NodePath("MarginContainer/VBoxContainer/StepsList")
+_objectiveLabel = NodePath("MarginContainer/VBoxContainer/ObjectiveLabel")
+_rewardsLabel = NodePath("MarginContainer/VBoxContainer/RewardsLabel")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 4
+
+[node name="NameLabel" type="RichTextLabel" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/normal_font_size = 14
+theme_override_font_sizes/bold_font_size = 14
+bbcode_enabled = true
+text = "[b]Titre de la quête[/b]"
+fit_content = true
+scroll_active = false
+
+[node name="MetaLabel" type="RichTextLabel" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/normal_font_size = 11
+bbcode_enabled = true
+text = "[color=#58B4C6]ANNEXE[/color]  ·  Introduction  ·  [color=#FFD166]En cours[/color]"
+fit_content = true
+scroll_active = false
+
+[node name="Separator1" type="HSeparator" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="DescriptionTitle" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Description"
+
+[node name="DescriptionLabel" type="RichTextLabel" parent="MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/normal_font_size = 11
+bbcode_enabled = true
+text = "Texte descriptif de la quête."
+fit_content = true
+scroll_active = false
+autowrap_mode = 3
+
+[node name="StepsTitle" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Étapes"
+
+[node name="StepsList" type="VBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 1
+
+[node name="Separator2" type="HSeparator" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="ObjectiveTitle" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Objectif"
+
+[node name="ObjectiveLabel" type="RichTextLabel" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/normal_font_size = 11
+bbcode_enabled = true
+text = "[color=#FFD166]Éliminer Rat : 0/2[/color]"
+fit_content = true
+scroll_active = false
+
+[node name="RewardsTitle" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Récompenses"
+
+[node name="RewardsLabel" type="RichTextLabel" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/normal_font_size = 11
+bbcode_enabled = true
+text = "[color=#FFD166]+10 XP[/color]  ·  [color=#F5D76E]+20 or[/color]"
+fit_content = true
+scroll_active = false

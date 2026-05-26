@@ -1,0 +1,144 @@
+[gd_scene format=3 uid="uid://ckarmabanner01"]
+
+[ext_resource type="Script" uid="uid://dkarmabanner01" path="res://Scripts/UI/KarmaBanner.cs" id="1_banner"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.07, 0.1, 0.16, 0.88)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.35, 0.55, 0.68, 0.9)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+content_margin_left = 3.0
+content_margin_top = 2.0
+content_margin_right = 3.0
+content_margin_bottom = 2.0
+
+[node name="KarmaBanner" type="PanelContainer" node_paths=PackedStringArray("_titleLabel", "_minLabel", "_maxLabel", "_barTrack", "_negativeFill", "_positiveFill", "_centerMarker", "_valueMarker", "_deltaLabel", "_stateLabel")]
+z_index = -1
+clip_contents = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+script = ExtResource("1_banner")
+_titleLabel = NodePath("MarginContainer/VBoxContainer/HeaderRow/TitleLabel")
+_minLabel = NodePath("MarginContainer/VBoxContainer/BarRow/MinLabel")
+_maxLabel = NodePath("MarginContainer/VBoxContainer/BarRow/MaxLabel")
+_barTrack = NodePath("MarginContainer/VBoxContainer/BarRow/BarTrack")
+_negativeFill = NodePath("MarginContainer/VBoxContainer/BarRow/BarTrack/NegativeFill")
+_positiveFill = NodePath("MarginContainer/VBoxContainer/BarRow/BarTrack/PositiveFill")
+_centerMarker = NodePath("MarginContainer/VBoxContainer/BarRow/BarTrack/CenterMarker")
+_valueMarker = NodePath("MarginContainer/VBoxContainer/BarRow/BarTrack/ValueMarker")
+_deltaLabel = NodePath("MarginContainer/VBoxContainer/HeaderRow/DeltaLabel")
+_stateLabel = NodePath("MarginContainer/VBoxContainer/HeaderRow/StateLabel")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 0
+theme_override_constants/margin_bottom = 0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 1
+
+[node name="HeaderRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 3
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer/HeaderRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 8
+text = "⚖ Introduction"
+clip_text = true
+
+[node name="DeltaLabel" type="Label" parent="MarginContainer/VBoxContainer/HeaderRow"]
+visible = false
+layout_mode = 2
+theme_override_font_sizes/font_size = 7
+text = "+5"
+
+[node name="StateLabel" type="Label" parent="MarginContainer/VBoxContainer/HeaderRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 7
+theme_override_colors/font_color = Color(0.34509805, 0.7058824, 0.7764706, 1)
+text = "Stable"
+horizontal_alignment = 2
+
+[node name="BarRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="MinLabel" type="Label" parent="MarginContainer/VBoxContainer/BarRow"]
+custom_minimum_size = Vector2(20, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 7
+theme_override_colors/font_color = Color(0.8784314, 0.3529412, 0.3529412, 1)
+text = "-100"
+horizontal_alignment = 1
+
+[node name="BarTrack" type="Control" parent="MarginContainer/VBoxContainer/BarRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(48, 6)
+
+[node name="TrackBg" type="ColorRect" parent="MarginContainer/VBoxContainer/BarRow/BarTrack"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.12, 0.15, 0.22, 1)
+
+[node name="NegativeFill" type="ColorRect" parent="MarginContainer/VBoxContainer/BarRow/BarTrack"]
+layout_mode = 0
+offset_top = 1.0
+offset_right = 20.0
+offset_bottom = 5.0
+color = Color(0.75, 0.2, 0.18, 0.85)
+
+[node name="PositiveFill" type="ColorRect" parent="MarginContainer/VBoxContainer/BarRow/BarTrack"]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 1.0
+offset_right = 44.0
+offset_bottom = 5.0
+color = Color(0.2, 0.65, 0.45, 0.85)
+
+[node name="CenterMarker" type="ColorRect" parent="MarginContainer/VBoxContainer/BarRow/BarTrack"]
+custom_minimum_size = Vector2(1, 6)
+layout_mode = 0
+offset_left = 23.0
+offset_right = 24.0
+offset_bottom = 6.0
+color = Color(0.85, 0.88, 0.92, 0.9)
+
+[node name="ValueMarker" type="ColorRect" parent="MarginContainer/VBoxContainer/BarRow/BarTrack"]
+custom_minimum_size = Vector2(2, 8)
+layout_mode = 0
+offset_left = 28.0
+offset_top = -1.0
+offset_right = 30.0
+offset_bottom = 7.0
+color = Color(0.48, 0.88, 0.51, 1)
+
+[node name="MaxLabel" type="Label" parent="MarginContainer/VBoxContainer/BarRow"]
+custom_minimum_size = Vector2(20, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 7
+theme_override_colors/font_color = Color(0.3529412, 0.8784314, 0.5411765, 1)
+text = "+100"
+horizontal_alignment = 1

@@ -87,6 +87,7 @@ public class PlayerBattleSnapshot : IBattler
         if (player == null || !GodotObject.IsInstanceValid(player))
             return;
 
+        player.GlobalPosition = GlobalPosition;
         player.CurrentPv = CurrentPv;
         player.CurrentMp = CurrentMp;
 
