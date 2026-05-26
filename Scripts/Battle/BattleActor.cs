@@ -35,20 +35,10 @@ public partial class BattleActor : Node3D
         tween.Parallel().TweenProperty(_sprite, "position:x", _sprite.Position.X, 0.1f);
     }
 
-    public async Task PlayAttackAnimation()
+    public Task PlayAttackAnimation()
     {
-        if (_sprite == null) return;
-
-        var tween = CreateTween();
-        Vector3 originalPos = Position;
-        Vector3 forward = originalPos + new Vector3(-1f, 0, 0);
-
-        tween.TweenProperty(this, "position", forward, 0.15f)
-            .SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.Out);
-        tween.TweenProperty(this, "position", originalPos, 0.15f)
-            .SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.In);
-
-        await ToSignal(tween, Tween.SignalName.Finished);
+        // TODO: implémenter l'animation d'attaque joueur
+        return Task.CompletedTask;
     }
     
     public void SetFrame(int frame)

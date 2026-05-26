@@ -67,19 +67,10 @@ public partial class Enemy : CharacterBody3D, IBattler
         tween.Parallel().TweenProperty(_sprite, "position", _sprite.Position, 0.05f);
     }
 
-    public async Task PlayAttackAnimation()
+    public Task PlayAttackAnimation()
     {
-        var tween = CreateTween();
-        Vector3 originalPos = Position;
-        Vector3 targetPos = originalPos + new Vector3(0, 0, -1); // Bond en avant vers le joueur (Z négatif en 3D standard Godot si le joueur est devant)
-
-        // On avance
-        tween.TweenProperty(this, "position", targetPos, 0.2f).SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.Out);
-        
-        // On revient
-        tween.TweenProperty(this, "position", originalPos, 0.2f).SetTrans(Tween.TransitionType.Quad).SetEase(Tween.EaseType.In);
-        
-        await ToSignal(tween, "finished");
+        // TODO: implémenter l'animation d'attaque ennemi
+        return Task.CompletedTask;
     }
     
     public void PlayDefeatAnimation()
