@@ -2,6 +2,10 @@
 
 [ext_resource type="Script" uid="uid://d8stats7page01" path="res://Scripts/UI/PlayerStatsPage.cs" id="1_stats"]
 [ext_resource type="Texture2D" uid="uid://ctkbskepw3pk" path="res://Assets/Actors/Heroes/Magus.png" id="2_avatar"]
+[ext_resource type="Texture2D" path="res://Assets/UI/stats/strength.png" id="3_str"]
+[ext_resource type="Texture2D" path="res://Assets/UI/stats/spirit.png" id="4_spr"]
+[ext_resource type="Texture2D" path="res://Assets/UI/stats/agility.png" id="5_agi"]
+[ext_resource type="Texture2D" path="res://Assets/UI/stats/defense.png" id="6_def"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
 bg_color = Color(0.08, 0.11, 0.18, 0.94)
@@ -265,6 +269,34 @@ layout_mode = 2
 theme_override_constants/h_separation = 10
 theme_override_constants/v_separation = 2
 columns = 4
+
+[node name="ForceIcon" type="TextureRect" parent="Dimmer/PanelContainer/MarginContainer/VBoxContainer/AttributesGrid"]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+texture = ExtResource("3_str")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="EspritIcon" type="TextureRect" parent="Dimmer/PanelContainer/MarginContainer/VBoxContainer/AttributesGrid"]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+texture = ExtResource("4_spr")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="AgiIcon" type="TextureRect" parent="Dimmer/PanelContainer/MarginContainer/VBoxContainer/AttributesGrid"]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+texture = ExtResource("5_agi")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="DefIcon" type="TextureRect" parent="Dimmer/PanelContainer/MarginContainer/VBoxContainer/AttributesGrid"]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+texture = ExtResource("6_def")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="ForceTitle" type="Label" parent="Dimmer/PanelContainer/MarginContainer/VBoxContainer/AttributesGrid"]
 layout_mode = 2

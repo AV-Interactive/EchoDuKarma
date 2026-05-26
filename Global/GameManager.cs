@@ -149,12 +149,14 @@ public partial class GameManager: Node
 
     void GainItem(string item)
     {
-        GD.Print($"Obtention d'un nouvel objet : {item}");
+        if (InventoryManager.Instance?.TryAddItem(item) != true)
+            GD.PrintErr($"[GameManager] Impossible d'ajouter l'objet : {item}");
     }
 
     void GainGold(int amount)
     {
-        GD.Print($"Obtention d'argent : {amount}");
+        if (InventoryManager.Instance?.AddGold(amount) != true)
+            GD.PrintErr($"[GameManager] Impossible d'ajouter {amount} or.");
     }
 
     void ChangeScene(string sceneName)

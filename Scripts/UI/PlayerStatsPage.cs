@@ -38,10 +38,18 @@ public partial class PlayerStatsPage : Control
 
         if (GameManager.Instance != null)
             GameManager.Instance.PlayerLevelUp += OnPlayerLevelUp;
+
+        if (InventoryManager.Instance is not null)
+            InventoryManager.Instance.EquipmentChanged += OnEquipmentChanged;
     }
 
     public override void _ExitTree()
     {
+        if (InventoryManager.Instance is not null)
+        {
+            InventoryManager.Instance.EquipmentChanged -= OnEquipmentChanged;
+        }
+
         if (GameManager.Instance != null)
             GameManager.Instance.PlayerLevelUp -= OnPlayerLevelUp;
 
@@ -69,6 +77,12 @@ public partial class PlayerStatsPage : Control
             Refresh();
     }
 
+    void OnEquipmentChanged()
+    {
+        if (Visible)
+            Refresh();
+    }
+
     bool IsDialogueOpen() => _dialogueUi != null && _dialogueUi.Visible;
 
     public void Toggle()
@@ -82,6 +96,7 @@ public partial class PlayerStatsPage : Control
     public void Open()
     {
         GetParent()?.GetNodeOrNull<QuestJournalPage>("QuestJournalPage")?.Close();
+        GetParent()?.GetNodeOrNull<InventoryPage>("InventoryPage")?.Close();
         Refresh();
         Visible = true;
         ZIndex = 10;
@@ -155,10 +170,20 @@ public partial class PlayerStatsPage : Control
 
     void RefreshAttributes(Player player)
     {
-        _forceLabel.Text = player.Strength.ToString();
-        _espritLabel.Text = player.Spirit.ToString();
-        _agiLabel.Text = player.Dexterity.ToString();
-        _defLabel.Text = player.Defense.ToString();
+        var bonus = InventoryManager.Instance?.GetEquipmentBonuses() ?? default;
+        _forceLabel.Text = FormatStat(player.Strength, bonus.Strength);
+        _espritLabel.Text = FormatStat(player.Spirit, bonus.Spirit);
+        _agiLabel.Text = FormatStat(player.Dexterity, bonus.Dexterity);
+        _defLabel.Text = FormatStat(player.Defense, bonus.Defense);
+    }
+
+    static string FormatStat(int total, int bonus)
+    {
+        if (bonus <= 0)
+            return total.ToString();
+
+        int baseValue = total - bonus;
+        return $"{baseValue} [color=#7AE582](+{bonus})[/color]";
     }
 
     void RefreshSkills(Player player)

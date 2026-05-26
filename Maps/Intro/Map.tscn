@@ -12,10 +12,13 @@
 [ext_resource type="PackedScene" uid="uid://kqhj7bngint6" path="res://Scenes/tree.tscn" id="6_t4cgs"]
 [ext_resource type="PackedScene" uid="uid://bsbotyhp0xrc7" path="res://UI/player_stats_page.tscn" id="7_stats"]
 [ext_resource type="PackedScene" uid="uid://dg3wvkgnaaui0" path="res://Scenes/crate.tscn" id="7_t4cgs"]
+[ext_resource type="PackedScene" uid="uid://d3gn7yxbe6mjs" path="res://UI/inventory_page.tscn" id="8_inventory"]
 [ext_resource type="PackedScene" uid="uid://vbcno0dgtf73" path="res://UI/quest_journal_page.tscn" id="8_quests"]
 [ext_resource type="Texture2D" uid="uid://bxmu5hk73bkey" path="res://Assets/Actors/Npcs/Generic Male NPCs A.png" id="9_ifhrt"]
 [ext_resource type="PackedScene" uid="uid://yl7g5vmddauq" path="res://UI/KarmaBanner.tscn" id="9_karma"]
 [ext_resource type="PackedScene" uid="uid://iakcnhc4fbsq" path="res://Scenes/quest_trigger.tscn" id="10_qtrigger"]
+[ext_resource type="PackedScene" uid="uid://bequipmentpick01" path="res://Scenes/equipment_pickup.tscn" id="11_pickup"]
+[ext_resource type="PackedScene" uid="uid://bpickuptoast01" path="res://UI/pickup_toast.tscn" id="12_toast"]
 
 [sub_resource type="Gradient" id="Gradient_me1ua"]
 
@@ -243,6 +246,12 @@ texture = ExtResource("9_ifhrt")
 hframes = 8
 vframes = 10
 
+[node name="INTERACTIF" type="Node3D" parent="SubViewportContainer/SubViewport" unique_id=2078118075]
+
+[node name="BATON_DEV" parent="SubViewportContainer/SubViewport/INTERACTIF" instance=ExtResource("11_pickup")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4850678, 0, 2.122046)
+ItemName = "Bâton de DEV"
+
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="SubViewportContainer/SubViewport" unique_id=1849374619]
 transform = Transform3D(1, 0, 0, 0, -0.36315373, 0.93172926, 0, -0.93172926, -0.36315373, 0, 13.080275, -14.451)
 light_energy = 0.2
@@ -280,6 +289,21 @@ layout_mode = 1
 
 [node name="QuestJournalPage" parent="GameUI/Root" unique_id=412602038 instance=ExtResource("8_quests")]
 layout_mode = 1
+
+[node name="InventoryPage" parent="GameUI/Root" unique_id=2028735628 instance=ExtResource("8_inventory")]
+layout_mode = 1
+
+[node name="PickupToast" parent="GameUI/Root" instance=ExtResource("12_toast")]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -90.0
+offset_top = 14.0
+offset_right = 90.0
+offset_bottom = 64.0
+grow_horizontal = 2
+mouse_filter = 2
 
 [editable path="SubViewportContainer/SubViewport/-- WORLD/Road"]
 [editable path="SubViewportContainer/SubViewport/-- WORLD/Road/CampainMap2"]

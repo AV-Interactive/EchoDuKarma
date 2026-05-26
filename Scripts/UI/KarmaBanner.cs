@@ -3,6 +3,7 @@ using Godot;
 
 public partial class KarmaBanner : PanelContainer
 {
+    [Export] TextureRect _karmaIcon;
     [Export] Label _titleLabel;
     [Export] Label _minLabel;
     [Export] Label _maxLabel;
@@ -26,6 +27,7 @@ public partial class KarmaBanner : PanelContainer
     public override void _Ready()
     {
         _displayZone = ResolveDisplayZone();
+        UiIcons.Apply(_karmaIcon, UiIcons.Load(UiIcons.Karma));
 
         if (KarmaManager.Instance is not null)
         {
@@ -88,7 +90,7 @@ public partial class KarmaBanner : PanelContainer
         _lastKarma = karma;
 
         if (_titleLabel != null)
-            _titleLabel.Text = $"⚖ {_displayZone}";
+            _titleLabel.Text = _displayZone;
 
         if (_minLabel != null)
             _minLabel.Text = "-100";

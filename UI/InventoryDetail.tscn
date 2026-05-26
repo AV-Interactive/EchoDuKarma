@@ -1,0 +1,108 @@
+[gd_scene format=3 uid="uid://bb4iib24th8dg"]
+
+[ext_resource type="Script" path="res://Scripts/UI/InventoryDetailPanel.cs" id="1_detail"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.09, 0.12, 0.19, 0.96)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.35, 0.55, 0.68, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+content_margin_left = 8.0
+content_margin_top = 6.0
+content_margin_right = 8.0
+content_margin_bottom = 6.0
+
+[node name="InventoryDetailPanel" type="PanelContainer" node_paths=PackedStringArray("_icon", "_nameLabel", "_metaLabel", "_statsLabel", "_passiveLabel", "_priceLabel")]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+script = ExtResource("1_detail")
+_icon = NodePath("MarginContainer/VBoxContainer/HeaderRow/Icon")
+_nameLabel = NodePath("MarginContainer/VBoxContainer/HeaderRow/TextColumn/NameLabel")
+_metaLabel = NodePath("MarginContainer/VBoxContainer/MetaLabel")
+_statsLabel = NodePath("MarginContainer/VBoxContainer/StatsLabel")
+_passiveLabel = NodePath("MarginContainer/VBoxContainer/PassiveLabel")
+_priceLabel = NodePath("MarginContainer/VBoxContainer/PriceLabel")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 4
+
+[node name="HeaderRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Icon" type="TextureRect" parent="MarginContainer/VBoxContainer/HeaderRow"]
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="TextColumn" type="VBoxContainer" parent="MarginContainer/VBoxContainer/HeaderRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 2
+
+[node name="NameLabel" type="RichTextLabel" parent="MarginContainer/VBoxContainer/HeaderRow/TextColumn"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/normal_font_size = 14
+theme_override_font_sizes/bold_font_size = 14
+bbcode_enabled = true
+text = "[b]Bâton Commun[/b]"
+fit_content = true
+scroll_active = false
+
+[node name="MetaLabel" type="RichTextLabel" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/normal_font_size = 11
+bbcode_enabled = true
+text = "[color=#58B4C6]Arme[/color]  ·  Main  ·  [color=#7AE582]Équipé[/color]"
+fit_content = true
+scroll_active = false
+
+[node name="Separator1" type="HSeparator" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="StatsTitle" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Statistiques"
+
+[node name="StatsLabel" type="RichTextLabel" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/normal_font_size = 11
+bbcode_enabled = true
+text = "[color=#FFD166]Bonus[/color]  ·  +5 Esprit"
+fit_content = true
+scroll_active = false
+
+[node name="PassiveLabel" type="RichTextLabel" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/normal_font_size = 11
+bbcode_enabled = true
+text = "[color=#8899AA]Capacité passive : aucune[/color]"
+fit_content = true
+scroll_active = false
+
+[node name="PriceLabel" type="RichTextLabel" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/normal_font_size = 11
+bbcode_enabled = true
+text = "[color=#FFD166]Valeur :[/color] 100 or"
+fit_content = true
+scroll_active = false

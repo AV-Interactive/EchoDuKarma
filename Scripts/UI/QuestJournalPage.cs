@@ -99,6 +99,8 @@ public partial class QuestJournalPage : Control
         if (statsPage != null && statsPage.Visible)
             statsPage.Close();
 
+        GetParent()?.GetNodeOrNull<InventoryPage>("InventoryPage")?.Close();
+
         ShowList();
         Refresh();
         Visible = true;

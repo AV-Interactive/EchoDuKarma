@@ -1,0 +1,227 @@
+[gd_scene format=3 uid="uid://d3gn7yxbe6mjs"]
+
+[ext_resource type="Script" path="res://Scripts/UI/InventoryPage.cs" id="1_inventory"]
+[ext_resource type="PackedScene" uid="uid://binventorydetail01" path="res://UI/InventoryDetail.tscn" id="2_detail"]
+[ext_resource type="PackedScene" uid="uid://bpaperdoll001" path="res://UI/equipment_paper_doll.tscn" id="3_doll"]
+[ext_resource type="Texture2D" path="res://Assets/UI/pocket.png" id="4_pocket"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.08, 0.11, 0.18, 0.94)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.62, 0.78, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+content_margin_left = 6.0
+content_margin_top = 5.0
+content_margin_right = 6.0
+content_margin_bottom = 5.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_list_bg"]
+bg_color = Color(0.06, 0.08, 0.13, 0.85)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.2, 0.3, 0.4, 0.8)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+content_margin_left = 6.0
+content_margin_top = 6.0
+content_margin_right = 6.0
+content_margin_bottom = 6.0
+
+[node name="InventoryPage" type="Control" node_paths=PackedStringArray("_listView", "_paperDoll", "_inventoryGrid", "_emptyLabel", "_goldLabel", "_itemCountLabel", "_closeButton", "_detailView", "_detailPanel", "_backButton", "_actionButton")]
+z_index = 10
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_inventory")
+_listView = NodePath("Dimmer/PanelContainer/MarginContainer/VBoxContainer/ListView")
+_paperDoll = NodePath("Dimmer/PanelContainer/MarginContainer/VBoxContainer/ListView/ContentRow/EquipmentPaperDoll")
+_inventoryGrid = NodePath("Dimmer/PanelContainer/MarginContainer/VBoxContainer/ListView/ContentRow/BagPanel/ScrollContainer/InventoryGrid")
+_emptyLabel = NodePath("Dimmer/PanelContainer/MarginContainer/VBoxContainer/ListView/ContentRow/BagPanel/EmptyLabel")
+_goldLabel = NodePath("Dimmer/PanelContainer/MarginContainer/VBoxContainer/ListView/HeaderRow/GoldLabel")
+_itemCountLabel = NodePath("Dimmer/PanelContainer/MarginContainer/VBoxContainer/ListView/HeaderRow/ItemCountLabel")
+_closeButton = NodePath("Dimmer/PanelContainer/MarginContainer/VBoxContainer/ListView/Footer/CloseButton")
+_detailView = NodePath("Dimmer/PanelContainer/MarginContainer/VBoxContainer/DetailView")
+_detailPanel = NodePath("Dimmer/PanelContainer/MarginContainer/VBoxContainer/DetailView/InventoryDetail")
+_backButton = NodePath("Dimmer/PanelContainer/MarginContainer/VBoxContainer/DetailView/Footer/BackButton")
+_actionButton = NodePath("Dimmer/PanelContainer/MarginContainer/VBoxContainer/DetailView/Footer/ActionButton")
+
+[node name="Dimmer" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.55)
+
+[node name="PanelContainer" type="PanelContainer" parent="Dimmer"]
+clip_contents = true
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.16
+anchor_top = 0.14
+anchor_right = 0.84
+anchor_bottom = 0.86
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="MarginContainer" type="MarginContainer" parent="Dimmer/PanelContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Dimmer/PanelContainer/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 4
+
+[node name="TitleRow" type="HBoxContainer" parent="Dimmer/PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="TitleIcon" type="TextureRect" parent="Dimmer/PanelContainer/MarginContainer/VBoxContainer/TitleRow"]
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+texture = ExtResource("4_pocket")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="TitleLabel" type="Label" parent="Dimmer/PanelContainer/MarginContainer/VBoxContainer/TitleRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.34509805, 0.7058824, 0.7764706, 1)
+text = "Inventaire"
+
+[node name="ListView" type="VBoxContainer" parent="Dimmer/PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 4
+
+[node name="HeaderRow" type="HBoxContainer" parent="Dimmer/PanelContainer/MarginContainer/VBoxContainer/ListView"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="SectionLabel" type="Label" parent="Dimmer/PanelContainer/MarginContainer/VBoxContainer/ListView/HeaderRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.75, 0.8, 0.88, 1)
+text = "Sac & équipement"
+
+[node name="GoldLabel" type="Label" parent="Dimmer/PanelContainer/MarginContainer/VBoxContainer/ListView/HeaderRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(1, 0.81960785, 0.4, 1)
+text = "0 or"
+horizontal_alignment = 2
+
+[node name="ItemCountLabel" type="Label" parent="Dimmer/PanelContainer/MarginContainer/VBoxContainer/ListView/HeaderRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.55, 0.62, 0.72, 1)
+text = "0"
+horizontal_alignment = 2
+
+[node name="ContentRow" type="HBoxContainer" parent="Dimmer/PanelContainer/MarginContainer/VBoxContainer/ListView"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 6
+alignment = 0
+
+[node name="EquipmentPaperDoll" parent="Dimmer/PanelContainer/MarginContainer/VBoxContainer/ListView/ContentRow" instance=ExtResource("3_doll")]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+
+[node name="BagPanel" type="PanelContainer" parent="Dimmer/PanelContainer/MarginContainer/VBoxContainer/ListView/ContentRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_list_bg")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Dimmer/PanelContainer/MarginContainer/VBoxContainer/ListView/ContentRow/BagPanel"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="InventoryGrid" type="GridContainer" parent="Dimmer/PanelContainer/MarginContainer/VBoxContainer/ListView/ContentRow/BagPanel/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 6
+theme_override_constants/v_separation = 6
+columns = 4
+
+[node name="EmptyLabel" type="Label" parent="Dimmer/PanelContainer/MarginContainer/VBoxContainer/ListView/ContentRow/BagPanel"]
+visible = false
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.55, 0.62, 0.72, 1)
+text = "Sac vide."
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HintLabel" type="Label" parent="Dimmer/PanelContainer/MarginContainer/VBoxContainer/ListView"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 9
+theme_override_colors/font_color = Color(0.45, 0.52, 0.62, 1)
+text = "↑↓←→ naviguer   ·   Entrée détails / équiper   ·   I / Échap fermer"
+horizontal_alignment = 1
+
+[node name="Footer" type="HBoxContainer" parent="Dimmer/PanelContainer/MarginContainer/VBoxContainer/ListView"]
+layout_mode = 2
+alignment = 1
+
+[node name="CloseButton" type="Button" parent="Dimmer/PanelContainer/MarginContainer/VBoxContainer/ListView/Footer"]
+custom_minimum_size = Vector2(100, 22)
+layout_mode = 2
+focus_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "Fermer"
+
+[node name="DetailView" type="VBoxContainer" parent="Dimmer/PanelContainer/MarginContainer/VBoxContainer"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 4
+
+[node name="InventoryDetail" parent="Dimmer/PanelContainer/MarginContainer/VBoxContainer/DetailView" instance=ExtResource("2_detail")]
+layout_mode = 2
+
+[node name="Footer" type="HBoxContainer" parent="Dimmer/PanelContainer/MarginContainer/VBoxContainer/DetailView"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 6
+
+[node name="BackButton" type="Button" parent="Dimmer/PanelContainer/MarginContainer/VBoxContainer/DetailView/Footer"]
+custom_minimum_size = Vector2(100, 22)
+layout_mode = 2
+focus_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "Retour"
+
+[node name="ActionButton" type="Button" parent="Dimmer/PanelContainer/MarginContainer/VBoxContainer/DetailView/Footer"]
+custom_minimum_size = Vector2(100, 22)
+layout_mode = 2
+focus_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "Équiper"

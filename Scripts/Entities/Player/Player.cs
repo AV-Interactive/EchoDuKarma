@@ -31,10 +31,13 @@ public partial class Player : CharacterBody3D, IBattler
 		set => _stats.CurrentMp = value;
 	}
 
-	public int Strength => _stats.Strength;
-	public int Dexterity => _stats.Dexterity;
-	public int Spirit => _stats.Spirit;
-	public int Defense => _stats.Defense;
+	public int Strength => _stats.Strength + GetEquipmentBonuses().Strength;
+	public int Dexterity => _stats.Dexterity + GetEquipmentBonuses().Dexterity;
+	public int Spirit => _stats.Spirit + GetEquipmentBonuses().Spirit;
+	public int Defense => _stats.Defense + GetEquipmentBonuses().Defense;
+
+	EquipmentStatBonuses GetEquipmentBonuses() =>
+		InventoryManager.Instance?.GetEquipmentBonuses() ?? EquipmentStatBonuses.Zero;
 
 	public List<Skill> LearnedSkills = new List<Skill>();
 

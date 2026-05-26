@@ -70,13 +70,15 @@ public class PlayerBattleSnapshot : IBattler
         if (CurrentExperience < next.XPForNextLevel)
             return false;
 
+        var bonus = InventoryManager.Instance?.GetEquipmentBonuses() ?? EquipmentStatBonuses.Zero;
+
         Level = nextLevel;
         Pv = next.Pv;
         Mp = next.Mp;
-        Strength = next.Strength;
-        Dexterity = next.Dexterity;
-        Spirit = next.Spirit;
-        Defense = next.Defense;
+        Strength = next.Strength + bonus.Strength;
+        Dexterity = next.Dexterity + bonus.Dexterity;
+        Spirit = next.Spirit + bonus.Spirit;
+        Defense = next.Defense + bonus.Defense;
         CurrentPv = Pv;
         CurrentMp = Mp;
         return true;
@@ -98,12 +100,22 @@ public class PlayerBattleSnapshot : IBattler
             stats.CurrentExperience = CurrentExperience;
             stats.CurrentPv = CurrentPv;
             stats.CurrentMp = CurrentMp;
-            stats.PvMax = Pv;
-            stats.MpMax = Mp;
-            stats.Strength = Strength;
-            stats.Dexterity = Dexterity;
-            stats.Spirit = Spirit;
-            stats.Defense = Defense;
+
+            Stats row = stats.GetStatsForLevel(Level);
+            if (row != null)
+            {
+                stats.PvMax = row.Pv;
+                stats.MpMax = row.Mp;
+                stats.Strength = row.Strength;
+                stats.Dexterity = row.Dexterity;
+                stats.Spirit = row.Spirit;
+                stats.Defense = row.Defense;
+            }
+            else
+            {
+                stats.PvMax = Pv;
+                stats.MpMax = Mp;
+            }
         }
     }
 }

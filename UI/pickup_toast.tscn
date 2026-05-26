@@ -1,0 +1,93 @@
+[gd_scene format=3 uid="uid://c4f4r1sniecwu"]
+
+[ext_resource type="Script" path="res://Scripts/UI/PickupToast.cs" id="1_toast"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.08, 0.11, 0.18, 0.96)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.48, 0.9, 0.51, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+content_margin_left = 6.0
+content_margin_top = 4.0
+content_margin_right = 6.0
+content_margin_bottom = 4.0
+
+[node name="PickupToast" type="Control" node_paths=PackedStringArray("_panel", "_icon", "_headerLabel", "_itemLabel")]
+layout_mode = 3
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -90.0
+offset_top = 14.0
+offset_right = 90.0
+offset_bottom = 64.0
+grow_horizontal = 2
+mouse_filter = 2
+script = ExtResource("1_toast")
+_panel = NodePath("Panel")
+_icon = NodePath("Panel/Margin/VBox/ContentRow/Icon")
+_headerLabel = NodePath("Panel/Margin/VBox/HeaderLabel")
+_itemLabel = NodePath("Panel/Margin/VBox/ContentRow/TextColumn/ItemLabel")
+
+[node name="Panel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+pivot_offset = Vector2(90, 25)
+
+[node name="Margin" type="MarginContainer" parent="Panel"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="VBox" type="VBoxContainer" parent="Panel/Margin"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="HeaderLabel" type="RichTextLabel" parent="Panel/Margin/VBox"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/normal_font_size = 8
+bbcode_enabled = true
+text = "[color=#7AE582]Objet obtenu[/color]"
+fit_content = true
+scroll_active = false
+
+[node name="ContentRow" type="HBoxContainer" parent="Panel/Margin/VBox"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="Icon" type="TextureRect" parent="Panel/Margin/VBox/ContentRow"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="TextColumn" type="VBoxContainer" parent="Panel/Margin/VBox/ContentRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="ItemLabel" type="RichTextLabel" parent="Panel/Margin/VBox/ContentRow/TextColumn"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_font_sizes/normal_font_size = 10
+theme_override_font_sizes/bold_font_size = 10
+bbcode_enabled = true
+text = "[b]Bâton de DEV[/b]"
+fit_content = true
+scroll_active = false

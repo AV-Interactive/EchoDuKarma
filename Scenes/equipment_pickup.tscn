@@ -1,0 +1,23 @@
+[gd_scene format=3 uid="uid://c6so3v71fns5i"]
+
+[ext_resource type="Script" uid="uid://ccxax2pf8uf5g" path="res://Scripts/World/EquipmentPickup.cs" id="1_pickup"]
+[ext_resource type="Texture2D" uid="uid://1e82neschpom" path="res://Assets/UI/weapons/staff.png" id="2_staff"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_zone"]
+size = Vector3(1.2, 1.5, 1.2)
+
+[node name="EquipmentPickup" type="Area3D" unique_id=2058321519]
+visible = false
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("1_pickup")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=876948283]
+shape = SubResource("BoxShape3D_zone")
+debug_color = Color(0.34509805, 0.7058824, 0.7764706, 0.25)
+
+[node name="Visual" type="Sprite3D" parent="." unique_id=1252552864]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
+billboard = 1
+texture = ExtResource("2_staff")
+pixel_size = 0.01
