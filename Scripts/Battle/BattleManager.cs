@@ -223,7 +223,11 @@ public partial class BattleManager : Node
         string skillName = actionName.Split(':')[1];
         _selectedSkill = _playerSkills.Find(s => s.Name == skillName);
 
-        if (_selectedSkill == null) return;
+        if (_selectedSkill == null)
+        {
+            _hud?.ShowMenu();
+            return;
+        }
 
         // Support skills (Heal/Buff) are self-targeted for now
         if (_selectedSkill.Type == SkillType.Support)
@@ -323,6 +327,18 @@ public partial class BattleManager : Node
         _hud?.ShowMenu();
     }
 
+    /// <summary>
+    /// Annule une action joueur en cours et réaffiche le menu (ex. MP insuffisants).
+    /// </summary>
+    private void CancelPlayerActionAndShowMenu()
+    {
+        _isActionRunning = false;
+        _isSelectingTarget = false;
+        _selectedSkill = null;
+        _hud?.HideTargetCursor();
+        ChangeState(BattleState.Selection);
+    }
+
     #endregion
 
     #region --- Combat Execution: Player ---
@@ -369,17 +385,16 @@ public partial class BattleManager : Node
     private async void ExecuteMagicAction(IBattler target, Skill skill)
     {
         if (_isActionRunning) return;
-        _isActionRunning = true;
 
         if (_playerBattler.CurrentMp < skill.Cost)
         {
             _hud?.ShowLogs($"{_playerBattler.Name} n'a pas assez de MP pour utiliser {skill.Name} !");
             await ToSignal(GetTree().CreateTimer(1.0f), "timeout");
-            _isActionRunning = false;
-            _hud?.ShowMenu();
+            CancelPlayerActionAndShowMenu();
             return;
         }
 
+        _isActionRunning = true;
         ChangeState(BattleState.Action);
         _playerBattler.CurrentMp -= skill.Cost;
         _hud?.UpdatePlayerStats(_playerBattler);

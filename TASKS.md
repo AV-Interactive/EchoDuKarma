@@ -90,9 +90,11 @@ Toutes les actions suivantes (attaque, magie, etc.) sont ignorées (`if (_isActi
 
 **Critères d’acceptation**
 
-- [ ] En combat, choisir une compétence trop chère en MP → message d’erreur → le menu réapparaît et une autre action est possible.
+- [x] En combat, choisir une compétence trop chère en MP → message d’erreur → le menu réapparaît et une autre action est possible.
 
-**Référence** : `Scripts/Battle/BattleManager.cs` `ExecuteMagicAction` (~lignes 366–377).
+**Statut** : fait (`CancelPlayerActionAndShowMenu`, vérif MP avant `_isActionRunning`).
+
+**Référence** : `Scripts/Battle/BattleManager.cs` — `ExecuteMagicAction`, `CancelPlayerActionAndShowMenu`.
 
 ---
 
