@@ -62,6 +62,7 @@ public partial class BattleManager : Node
     [Export] float _xpDisplayDelay     = 1.5f; // durée affichage message XP
     [Export] float _levelUpDelay       = 2.0f; // durée affichage niveau gagné
     [Export] float _exitBattleDelay    = 2.5f; // pause finale avant retour map
+    [Export] float _defeatDelay        = 3.0f; // durée affichage message de défaite
 
     [ExportGroup("Turn Management")]
     private BattleState _currentState;
@@ -76,8 +77,7 @@ public partial class BattleManager : Node
     private bool _isActionRunning = false;
 
     private readonly HashSet<Enemy> _defendingEnemies = new();
-    
-    private int _retryCount = 0;
+
     private bool _isReady = false;
 
     #endregion
@@ -191,7 +191,7 @@ public partial class BattleManager : Node
     {
         _hud?.HideMenu();
         _hud?.ShowLogs($"Défaite... {_playerBattler.Name} a succombé.");
-        await ToSignal(GetTree().CreateTimer(3.0f), "timeout");
+        await ToSignal(GetTree().CreateTimer(_defeatDelay), "timeout");
         EndBattle(BattleEndReason.Defeat);
     }
 
@@ -365,6 +365,7 @@ public partial class BattleManager : Node
 
         if (_playerBattler == null || target == null)
         {
+            _isActionRunning = false;
             ChangeState(BattleState.Evaluation);
             return;
         }
@@ -549,6 +550,13 @@ public partial class BattleManager : Node
 
     private async Task ExecuteEnemyAttack(Enemy enemy, bool aggressiveBonus = false)
     {
+        if (enemy.Stats == null)
+        {
+            GD.PrintErr($"[BattleManager] {enemy.EnemyName} a des stats nulles — tour ennemi ignoré.");
+            ChangeState(BattleState.Evaluation);
+            return;
+        }
+
         await _cameraDirector.CutTo(CameraDirector.CameraShot.EnemyAttack);
         _playerActor?.OnCameraChanged(CameraDirector.CameraShot.EnemyAttack);
 
