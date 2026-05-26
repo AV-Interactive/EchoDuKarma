@@ -16,6 +16,24 @@ public partial class GameManager: Node
     
     public List<EnemyStats> ListEnemiesBattle { get; set; } = new List<EnemyStats>();
     public Player CurrentPlayer { get; set; }
+
+    int _battleSignalRetryCount;
+    BattleManager _subscribedBattleManager;
+
+    /// <summary>Scène monde à charger après le combat (définie par MapLoader ou la map courante).</summary>
+    public string ReturnScenePath { get; private set; } = "res://Maps/Intro/Map.tscn";
+
+    /// <summary>Nom de zone pour Datas/Progress/{zone}/dialogues.csv.</summary>
+    public string ReturnZoneName { get; private set; } = "Introduction";
+
+    public void SetMapContext(string zoneName, string scenePath)
+    {
+        if (!string.IsNullOrWhiteSpace(zoneName))
+            ReturnZoneName = zoneName.Trim();
+
+        if (!string.IsNullOrWhiteSpace(scenePath))
+            ReturnScenePath = scenePath;
+    }
     
     public override void _Ready()
     {
@@ -74,6 +92,8 @@ public partial class GameManager: Node
 
     void StartBattle(string enemies, string quantity)
     {
+        CaptureReturnContextFromCurrentScene();
+
         ListEnemiesBattle.Clear();
         string[] enemiesArray = enemies.Split('|');
         string[] quantityArray = quantity.Split('|');
@@ -102,30 +122,52 @@ public partial class GameManager: Node
         
         GD.Print("[GameManager] Transition vers la scène de combat...");
         GetTree().ChangeSceneToFile("res://Maps/Battles/Basic.tscn");
-        
-        // On utilise un timer court pour laisser à la scène le temps de s'instancier
-        // avant de chercher le BattleManager
+
+        _battleSignalRetryCount = 0;
         GetTree().CreateTimer(0.1f).Timeout += ConnectBattleSignals;
     }
 
     void OnBattleEnded(BattleManager.BattleEndReason reason)
     {
+        if (_subscribedBattleManager != null && GodotObject.IsInstanceValid(_subscribedBattleManager))
+            _subscribedBattleManager.BattleEnded -= OnBattleEnded;
+        _subscribedBattleManager = null;
+
         GD.Print($"[GameManager] Signal de fin de combat reçu : {reason}");
-        var map = "res://Maps/Intro/Map.tscn";
         PlayerMoved = true;
         GetTree().Paused = false;
-        
-        Error err = GetTree().ChangeSceneToFile(map);
+
+        Error err = GetTree().ChangeSceneToFile(ReturnScenePath);
         if (err != Error.Ok)
         {
-            GD.PrintErr($"[GameManager] Erreur lors du retour sur map : {err}");
+            GD.PrintErr($"[GameManager] Erreur lors du retour sur map ({ReturnScenePath}) : {err}");
         }
         else
         {
-            GD.Print("[GameManager] Téléportation vers la map en cours...");
+            GD.Print($"[GameManager] Retour sur {ReturnScenePath} (zone {ReturnZoneName}).");
         }
-        
-        DialogueSystem.Instance?.LoadZoneDialogues(map);
+
+        // MapLoader._Ready recharge aussi les dialogues ; appel explicite au cas où la scène n'en a pas.
+        DialogueSystem.Instance?.LoadZoneDialogues(ReturnZoneName);
+    }
+
+    void CaptureReturnContextFromCurrentScene()
+    {
+        var scene = GetTree().CurrentScene;
+        if (scene == null)
+            return;
+
+        string scenePath = scene.SceneFilePath;
+        if (string.IsNullOrEmpty(scenePath))
+            return;
+
+        if (scene is MapLoader mapLoader)
+        {
+            SetMapContext(mapLoader.ZoneName, scenePath);
+            return;
+        }
+
+        SetMapContext(ReturnZoneName, scenePath);
     }
 
     void OnActionTriggered(string fullActionRaw)
@@ -144,23 +186,28 @@ public partial class GameManager: Node
     
     void ConnectBattleSignals()
     {
-        int _retryCount = 0;
-        void ConnectBattleSignals()
+        var bm = GetTree().Root.FindChild("BattleManager", true, false) as BattleManager;
+        if (bm == null)
         {
-            var bm = GetTree().Root.FindChild("BattleManager", true, false) as BattleManager;
-            if (bm == null)
+            if (++_battleSignalRetryCount > 10)
             {
-                if (++_retryCount > 10)
-                {
-                    GD.PrintErr("[GameManager] BattleManager introuvable après 10 tentatives.");
-                    return;
-                }
-                CallDeferred(nameof(ConnectBattleSignals));
+                GD.PrintErr("[GameManager] BattleManager introuvable après 10 tentatives.");
+                _battleSignalRetryCount = 0;
                 return;
             }
-            _retryCount = 0;
-            bm.BattleEnded += OnBattleEnded;
+
+            CallDeferred(nameof(ConnectBattleSignals));
+            return;
         }
+
+        _battleSignalRetryCount = 0;
+
+        if (_subscribedBattleManager != null && GodotObject.IsInstanceValid(_subscribedBattleManager))
+            _subscribedBattleManager.BattleEnded -= OnBattleEnded;
+
+        _subscribedBattleManager = bm;
+        bm.BattleEnded += OnBattleEnded;
+        GD.Print("[GameManager] Signal BattleEnded connecté au BattleManager.");
     }
     
     void PrintNodeTree(Node node)

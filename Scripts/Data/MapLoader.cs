@@ -8,6 +8,8 @@ public partial class MapLoader : Node3D
 	
 	public override void _Ready()
 	{
+		string scenePath = GetTree().CurrentScene?.SceneFilePath ?? "";
+		GameManager.Instance?.SetMapContext(ZoneName, scenePath);
 		DialogueSystem.Instance.LoadZoneDialogues(ZoneName);
 	}
 }
