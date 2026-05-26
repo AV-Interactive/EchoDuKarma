@@ -50,8 +50,15 @@ public enum QuestStatus { Inactive, Active, Completed }
 public class QuestRuntime
 {
     public QuestStatus Status = QuestStatus.Inactive;
+    /// <summary>Utilisé par les quêtes à objectif KILL séquentiel (hors ALL_STEPS).</summary>
     public int CurrentStep = 0;
+    /// <summary>Indices d'étapes accomplies (quêtes ALL_STEPS — ordre libre).</summary>
+    public HashSet<int> CompletedStepIndices = new();
     public Dictionary<string, int> KillCounts = new();
+
+    public bool IsStepCompleted(int index) => CompletedStepIndices.Contains(index);
+
+    public int CompletedStepCount => CompletedStepIndices.Count;
 }
 
 /// <summary>
@@ -192,12 +199,18 @@ public partial class QuestManager : Node
 
         rt.Status = QuestStatus.Active;
         rt.CurrentStep = 0;
+        rt.CompletedStepIndices.Clear();
 
         var q = _quests[questId];
         GD.Print($"[QuestManager] ══ QUÊTE DÉMARRÉE ══ {q.Name} [{q.Type} / {q.Zone}]");
         GD.Print($"[QuestManager]   Objectif  : {q.ConditionCompleted}");
         if (q.Steps.Length > 0)
-            GD.Print($"[QuestManager]   Étape 1/{q.Steps.Length} : {QuestData.GetStepLabel(q.Steps[0])}");
+        {
+            string mode = q.UsesAllStepsCompletion ? "ordre libre" : "séquentiel";
+            GD.Print($"[QuestManager]   Étapes ({q.Steps.Length}, {mode}) :");
+            foreach (string step in q.Steps)
+                GD.Print($"[QuestManager]     · {QuestData.GetStepLabel(step)}");
+        }
         GD.Print($"[QuestManager]   Récompenses : {q.RewardXp} XP | {q.RewardMoney} or | {(string.IsNullOrWhiteSpace(q.RewardObject) ? "—" : q.RewardObject)} | karma {(q.KarmaImpact >= 0 ? "+" : "")}{q.KarmaImpact}");
 
         EmitSignal(SignalName.QuestStarted, questId);
@@ -213,9 +226,14 @@ public partial class QuestManager : Node
 
             if (quest.UsesAllStepsCompletion)
             {
-                string expected = QuestData.GetStepTrigger(quest.Steps[rt.CurrentStep]);
-                if (expected.StartsWith("KILL:", StringComparison.OrdinalIgnoreCase))
+                for (int i = 0; i < quest.Steps.Length; i++)
                 {
+                    if (rt.IsStepCompleted(i)) continue;
+
+                    string expected = QuestData.GetStepTrigger(quest.Steps[i]);
+                    if (!expected.StartsWith("KILL:", StringComparison.OrdinalIgnoreCase))
+                        continue;
+
                     string[] exp = expected.Split(':');
                     if (exp.Length >= 2 && exp[1].Equals(enemyName, StringComparison.OrdinalIgnoreCase))
                     {
@@ -224,7 +242,7 @@ public partial class QuestManager : Node
                     }
                 }
 
-                TryAdvanceAllStepsQuest(quest, rt, questId, $"KILL:{enemyName}");
+                TryCompleteMatchingSteps(quest, rt, questId, $"KILL:{enemyName}");
                 continue;
             }
 
@@ -268,7 +286,16 @@ public partial class QuestManager : Node
         if (rt.Status != QuestStatus.Active || !quest.UsesAllStepsCompletion)
             return;
 
-        AdvanceAllStepsQuest(quest, rt, questId, "QUEST_STEP (manuel)");
+        for (int i = 0; i < quest.Steps.Length; i++)
+        {
+            if (rt.IsStepCompleted(i)) continue;
+            rt.CompletedStepIndices.Add(i);
+            rt.CurrentStep = rt.CompletedStepCount;
+            EmitSignal(SignalName.QuestStepAdvanced, questId, rt.CompletedStepCount);
+            if (rt.CompletedStepCount >= quest.Steps.Length)
+                CompleteQuest(questId);
+            return;
+        }
     }
 
     void ProcessStepTrigger(string eventKey)
@@ -279,23 +306,43 @@ public partial class QuestManager : Node
             if (!_quests.TryGetValue(questId, out QuestData quest)) continue;
             if (!quest.UsesAllStepsCompletion) continue;
 
-            TryAdvanceAllStepsQuest(quest, rt, questId, eventKey);
+            TryCompleteMatchingSteps(quest, rt, questId, eventKey);
         }
     }
 
-    void TryAdvanceAllStepsQuest(QuestData quest, QuestRuntime rt, string questId, string eventKey)
+    /// <summary>Valide toute étape ALL_STEPS dont le trigger correspond (sans ordre imposé).</summary>
+    void TryCompleteMatchingSteps(QuestData quest, QuestRuntime rt, string questId, string eventKey)
     {
-        if (rt.CurrentStep >= quest.Steps.Length)
+        if (rt.CompletedStepCount >= quest.Steps.Length)
             return;
 
-        string expected = QuestData.GetStepTrigger(quest.Steps[rt.CurrentStep]);
-        if (string.IsNullOrWhiteSpace(expected))
+        bool anyNew = false;
+
+        for (int i = 0; i < quest.Steps.Length; i++)
+        {
+            if (rt.IsStepCompleted(i))
+                continue;
+
+            string expected = QuestData.GetStepTrigger(quest.Steps[i]);
+            if (string.IsNullOrWhiteSpace(expected))
+                continue;
+
+            if (!MatchesStepTrigger(expected, eventKey, rt))
+                continue;
+
+            rt.CompletedStepIndices.Add(i);
+            anyNew = true;
+            GD.Print($"[QuestManager] [{questId}] Étape validée ({eventKey}) : « {QuestData.GetStepLabel(quest.Steps[i])} » ({rt.CompletedStepCount}/{quest.Steps.Length})");
+        }
+
+        if (!anyNew)
             return;
 
-        if (!MatchesStepTrigger(expected, eventKey, rt))
-            return;
+        rt.CurrentStep = rt.CompletedStepCount;
+        EmitSignal(SignalName.QuestStepAdvanced, questId, rt.CompletedStepCount);
 
-        AdvanceAllStepsQuest(quest, rt, questId, eventKey);
+        if (rt.CompletedStepCount >= quest.Steps.Length)
+            CompleteQuest(questId);
     }
 
     bool MatchesStepTrigger(string expected, string eventKey, QuestRuntime rt)
@@ -318,21 +365,6 @@ public partial class QuestManager : Node
         }
 
         return false;
-    }
-
-    void AdvanceAllStepsQuest(QuestData quest, QuestRuntime rt, string questId, string cause)
-    {
-        string completedLabel = QuestData.GetStepLabel(quest.Steps[rt.CurrentStep]);
-        rt.CurrentStep++;
-
-        GD.Print($"[QuestManager] [{questId}] Étape validée ({cause}) : « {completedLabel} » → {rt.CurrentStep}/{quest.Steps.Length}");
-
-        EmitSignal(SignalName.QuestStepAdvanced, questId, rt.CurrentStep);
-
-        if (rt.CurrentStep >= quest.Steps.Length)
-            CompleteQuest(questId);
-        else
-            GD.Print($"[QuestManager] [{questId}] Prochaine étape : {QuestData.GetStepLabel(quest.Steps[rt.CurrentStep])}");
     }
 
     public bool CheckCondition(string condition)
@@ -396,7 +428,7 @@ public partial class QuestManager : Node
         GD.Print($"[QuestManager]   Karma   : {(quest.KarmaImpact >= 0 ? "+" : "")}{quest.KarmaImpact}");
 
         if (quest.KarmaImpact != 0)
-            KarmaManager.Instance?.ApplyKarmaImpact(quest.Zone, quest.KarmaImpact);
+            KarmaManager.Instance?.ApplyKarmaImpact(quest.Zone, (float)quest.KarmaImpact);
 
         EmitSignal(SignalName.QuestCompleted, questId);
     }

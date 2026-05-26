@@ -16,8 +16,9 @@ textLabel = NodePath("Panel/NpcDialogue")
 choicesContainer = NodePath("VBoxContainer")
 
 [node name="Panel" type="Panel" parent="." unique_id=1874095793]
+self_modulate = Color(0.14044744, 0.14044744, 0.14044744, 1)
 layout_mode = 1
-anchors_preset = 12
+anchors_preset = -1
 anchor_top = 0.72
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -31,10 +32,6 @@ anchor_left = 0.02
 anchor_top = 0.05
 anchor_right = 0.45
 anchor_bottom = 0.28
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 0.0
-offset_bottom = 0.0
 theme_override_font_sizes/normal_font_size = 18
 theme_override_font_sizes/bold_font_size = 18
 theme_override_font_sizes/bold_italics_font_size = 18
@@ -44,7 +41,6 @@ bbcode_enabled = true
 text = "[b]NOM DU PNJ[b]"
 fit_content = true
 scroll_active = false
-scroll_following = false
 autowrap_mode = 0
 
 [node name="NpcDialogue" type="RichTextLabel" parent="Panel" unique_id=897616576]
@@ -54,10 +50,6 @@ anchor_left = 0.02
 anchor_top = 0.32
 anchor_right = 0.98
 anchor_bottom = 0.95
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 0.0
-offset_bottom = 0.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_font_sizes/normal_font_size = 12
@@ -75,10 +67,6 @@ anchor_left = 0.58
 anchor_top = 0.5
 anchor_right = 0.97
 anchor_bottom = 0.7
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 0.0
-offset_bottom = 0.0
 grow_horizontal = 0
 grow_vertical = 0
 

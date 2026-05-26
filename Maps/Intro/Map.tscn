@@ -169,6 +169,32 @@ texture = ExtResource("9_ifhrt")
 hframes = 8
 vframes = 10
 
+[node name="PNJ APPRENDRE MONDE" parent="SubViewportContainer/SubViewport/CHARACTERS" unique_id=2030247009 instance=ExtResource("4_y7c5g")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2275362, 0.043306172, -5.8178864)
+visible = false
+NpcName = "Marchand"
+SpriteTexture = ExtResource("9_ifhrt")
+StartDialogueId = "PNJ_LIVRE_01"
+ConditionalStartIds = PackedStringArray("MARCHAND_DONE_01", "MARCHAND_EN_COURS_01")
+
+[node name="Sprite3D" parent="SubViewportContainer/SubViewport/CHARACTERS/PNJ APPRENDRE MONDE/Node3D" parent_id_path=PackedInt32Array(2030247009, 1928349061) index="0" unique_id=2017281585]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
+texture = ExtResource("9_ifhrt")
+hframes = 8
+vframes = 10
+
+[node name="PNJ APPRENDRE KARMA" parent="SubViewportContainer/SubViewport/CHARACTERS" unique_id=589811627 instance=ExtResource("4_y7c5g")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.195035, 0.043306172, -3.6623132)
+NpcName = "Sage du Karma"
+SpriteTexture = ExtResource("9_ifhrt")
+StartDialogueId = "PNJ_KARMA_01"
+
+[node name="Sprite3D" parent="SubViewportContainer/SubViewport/CHARACTERS/PNJ APPRENDRE KARMA/Node3D" parent_id_path=PackedInt32Array(589811627, 1928349061) index="0" unique_id=2017281585]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
+texture = ExtResource("9_ifhrt")
+hframes = 8
+vframes = 10
+
 [node name="BATTLE_LAUNCH" parent="SubViewportContainer/SubViewport/CHARACTERS" unique_id=1204224578 instance=ExtResource("4_y7c5g")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.67561346, -0.4513217, -4.4533453)
 NpcName = "Marchand"
@@ -195,11 +221,23 @@ vframes = 10
 
 [node name="KARMA -" parent="SubViewportContainer/SubViewport/CHARACTERS" unique_id=403699691 instance=ExtResource("4_y7c5g")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.3676074, 0.31443182, -0.66441894)
-NpcName = "Marchand"
+NpcName = "Karma -"
 SpriteTexture = ExtResource("9_ifhrt")
 StartDialogueId = "PNJ_TEST_K_M"
 
 [node name="Sprite3D" parent="SubViewportContainer/SubViewport/CHARACTERS/KARMA -/Node3D" parent_id_path=PackedInt32Array(403699691, 1928349061) index="0" unique_id=2017281585]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
+texture = ExtResource("9_ifhrt")
+hframes = 8
+vframes = 10
+
+[node name="KARMA +" parent="SubViewportContainer/SubViewport/CHARACTERS" unique_id=875199563 instance=ExtResource("4_y7c5g")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.4182503, 0.31443182, -2.623716)
+NpcName = "Karma +"
+SpriteTexture = ExtResource("9_ifhrt")
+StartDialogueId = "PNJ_TEST_K_P"
+
+[node name="Sprite3D" parent="SubViewportContainer/SubViewport/CHARACTERS/KARMA +/Node3D" parent_id_path=PackedInt32Array(875199563, 1928349061) index="0" unique_id=2017281585]
 transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
 texture = ExtResource("9_ifhrt")
 hframes = 8
@@ -247,6 +285,9 @@ layout_mode = 1
 [editable path="SubViewportContainer/SubViewport/-- WORLD/Road/CampainMap2"]
 [editable path="SubViewportContainer/SubViewport/CHARACTERS/Player"]
 [editable path="SubViewportContainer/SubViewport/CHARACTERS/Marchand"]
+[editable path="SubViewportContainer/SubViewport/CHARACTERS/PNJ APPRENDRE MONDE"]
+[editable path="SubViewportContainer/SubViewport/CHARACTERS/PNJ APPRENDRE KARMA"]
 [editable path="SubViewportContainer/SubViewport/CHARACTERS/BATTLE_LAUNCH"]
 [editable path="SubViewportContainer/SubViewport/CHARACTERS/LEVELUP"]
 [editable path="SubViewportContainer/SubViewport/CHARACTERS/KARMA -"]
+[editable path="SubViewportContainer/SubViewport/CHARACTERS/KARMA +"]

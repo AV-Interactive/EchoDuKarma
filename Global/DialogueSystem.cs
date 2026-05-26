@@ -17,6 +17,9 @@ public partial class DialogueLine : RefCounted
     public string NextId { get; set; }
     
     public Dictionary<string, string> Choices { get; set; } = new Dictionary<string, string>();
+
+    /// <summary>Condition d'accès par libellé de choix (CONDITION ACCES, tokens séparés par |).</summary>
+    public Dictionary<string, string> ChoiceConditions { get; set; } = new Dictionary<string, string>();
 }
 
 public partial class DialogueSystem: Node
@@ -66,29 +69,32 @@ public partial class DialogueSystem: Node
             // Nouvelle entrée avec ID
             if (!string.IsNullOrWhiteSpace(fields[0]))
             {
-                if (fields.Length < 7)
+                if (!TryParseDialogueFields(fields, out string id, out string rawType, out string npcName,
+                        out string text, out string condition, out string action, out string nextId))
                 {
-                    GD.PrintErr($"[DialogueSystem] Ligne invalide (colonnes < 7): {string.Join("|", fields)}");
+                    GD.PrintErr($"[DialogueSystem] Ligne invalide: {string.Join("|", fields)}");
                     continue;
                 }
 
-                string rawType = fields[1];
                 string typeValue = rawType == "CHOIX" ? "CHOICE" : rawType;
 
                 var line = new DialogueLine
                 {
-                    Id = fields[0].Trim(),
+                    Id = id,
                     Type = Enum.Parse<DialogueType>(typeValue, true),
-                    NpcName = fields[2].Trim(),
-                    Text = fields[3],
-                    Condition = fields[4],
-                    Action = fields[5],
-                    NextId = fields[6],
+                    NpcName = npcName,
+                    Text = text,
+                    Condition = condition,
+                    Action = action,
+                    NextId = nextId,
                 };
 
                 if (line.Type == DialogueType.CHOICE && !string.IsNullOrWhiteSpace(line.Action) && !string.IsNullOrWhiteSpace(line.NextId))
                 {
-                    line.Choices[line.Action.Trim()] = line.NextId.Trim();
+                    string label = line.Action.Trim();
+                    line.Choices[label] = line.NextId.Trim();
+                    if (!string.IsNullOrWhiteSpace(line.Condition))
+                        line.ChoiceConditions[label] = line.Condition.Trim();
                 }
 
                 // Utiliser set pour éviter les exceptions sur doublon d'ID
@@ -101,12 +107,49 @@ public partial class DialogueSystem: Node
                 // Ligne de continuation de choix (ID vide)
                 if (!string.IsNullOrWhiteSpace(fields[5]) && !string.IsNullOrWhiteSpace(fields[6]))
                 {
-                    lastLine.Choices[fields[5].Trim()] = fields[6].Trim();
+                    string label = fields[5].Trim();
+                    lastLine.Choices[label] = fields[6].Trim();
+                    if (!string.IsNullOrWhiteSpace(fields[4]))
+                        lastLine.ChoiceConditions[label] = fields[4].Trim();
                 }
             }
         }
 
         GD.Print($"[DialogueSystem] {count} lignes (ID) chargées. Total noeuds de dialogue: {_dialogues.Count}");
+    }
+
+    /// <summary>
+    /// Parse une ligne dialogue (7 colonnes fixes ; le TEXTE peut contenir des ';').
+    /// Colonnes finales : … TEXTE | CONDITION | ACTION | LIEN SUIVANT.
+    /// </summary>
+    static bool TryParseDialogueFields(string[] fields, out string id, out string rawType, out string npcName,
+        out string text, out string condition, out string action, out string nextId)
+    {
+        id = rawType = npcName = text = condition = action = nextId = "";
+
+        if (fields == null || fields.Length < 4)
+            return false;
+
+        var cols = new List<string>(fields);
+        while (cols.Count > 0 && string.IsNullOrWhiteSpace(cols[^1]))
+            cols.RemoveAt(cols.Count - 1);
+
+        while (cols.Count < 7)
+            cols.Add("");
+
+        if (string.IsNullOrWhiteSpace(cols[0]))
+            return false;
+
+        int n = cols.Count;
+        id = cols[0].Trim();
+        rawType = cols[1].Trim();
+        npcName = cols[2].Trim();
+        nextId = cols[n - 1].Trim();
+        action = cols[n - 2].Trim();
+        condition = cols[n - 3].Trim();
+        text = string.Join(";", cols.GetRange(3, n - 6)).Trim();
+
+        return true;
     }
     
     public void SelectChoice(string nextId)
@@ -121,7 +164,7 @@ public partial class DialogueSystem: Node
         // UI d'abord, puis action (ex. BATTLE) pour que le texte s'affiche avant changement de scène.
         EmitSignal(SignalName.DialogueRequested, line);
 
-        if (line != null && !string.IsNullOrWhiteSpace(line.Action))
+        if (line != null && line.Type == DialogueType.TEXT && !string.IsNullOrWhiteSpace(line.Action))
             EmitSignal(SignalName.ActionTriggered, line.Action);
     }
     

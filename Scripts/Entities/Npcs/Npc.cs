@@ -145,7 +145,7 @@ public partial class Npc : CharacterBody3D
             {
                 var line = DialogueSystem.Instance?.GetDialogue(condId);
                 if (line is null) continue;
-                if (QuestManager.Instance?.CheckCondition(line.Condition) ?? true)
+                if (DialogueConditions.EvaluateAll(line.Condition))
                     return condId;
             }
         }

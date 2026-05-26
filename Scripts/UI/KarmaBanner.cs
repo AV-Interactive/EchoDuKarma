@@ -19,7 +19,7 @@ public partial class KarmaBanner : PanelContainer
 
     Tween _deltaTween;
     string _displayZone = "Introduction";
-    int _lastKarma;
+    float _lastKarma;
 
     const float FillHeight = 4f;
 
@@ -51,7 +51,7 @@ public partial class KarmaBanner : PanelContainer
         base._ExitTree();
     }
 
-    void OnKarmaChanged(string zone, int newValue, int delta)
+    void OnKarmaChanged(string zone, float newValue, float delta)
     {
         if (zone != _displayZone)
             return;
@@ -76,14 +76,14 @@ public partial class KarmaBanner : PanelContainer
         return GameManager.Instance?.ReturnZoneName ?? "Introduction";
     }
 
-    void RefreshFromManager(int delta)
+    void RefreshFromManager(float delta)
     {
         _displayZone = ResolveDisplayZone();
-        int karma = KarmaManager.Instance?.GetZoneKarma(_displayZone) ?? 0;
+        float karma = KarmaManager.Instance?.GetZoneKarma(_displayZone) ?? 0f;
         Refresh(karma, delta);
     }
 
-    public void Refresh(int karma, int delta)
+    public void Refresh(float karma, float delta)
     {
         _lastKarma = karma;
 
@@ -97,13 +97,13 @@ public partial class KarmaBanner : PanelContainer
             _maxLabel.Text = "+100";
 
         if (_stateLabel != null)
-            _stateLabel.Text = GetShortStateLabel(karma);
+            _stateLabel.Text = $"{KarmaManager.FormatKarma(karma)} · {GetShortStateLabel(karma)}";
 
         CallDeferred(nameof(UpdateBarLayout));
         ShowDelta(delta);
     }
 
-    static string GetShortStateLabel(int karma)
+    static string GetShortStateLabel(float karma)
     {
         if (karma >= 70) return "Utopie";
         if (karma >= 30) return "Stable";
@@ -112,19 +112,18 @@ public partial class KarmaBanner : PanelContainer
         return "Chaos";
     }
 
-    void ShowDelta(int delta)
+    void ShowDelta(float delta)
     {
         if (_deltaLabel == null)
             return;
 
-        if (delta == 0)
+        if (Mathf.IsZeroApprox(delta))
         {
             _deltaLabel.Visible = false;
             return;
         }
 
-        string sign = delta > 0 ? "+" : "";
-        _deltaLabel.Text = $"{sign}{delta}";
+        _deltaLabel.Text = KarmaManager.FormatDelta(delta);
         _deltaLabel.Modulate = delta > 0
             ? new Color(0.48f, 0.9f, 0.51f)
             : new Color(0.96f, 0.35f, 0.27f);
@@ -141,7 +140,7 @@ public partial class KarmaBanner : PanelContainer
 
     void UpdateBarLayout() => UpdateBarLayout(_lastKarma);
 
-    void UpdateBarLayout(int karma)
+    void UpdateBarLayout(float karma)
     {
         if (_barTrack == null)
             return;

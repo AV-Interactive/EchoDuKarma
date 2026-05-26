@@ -79,7 +79,7 @@ public partial class BattleManager : Node
     private readonly HashSet<Enemy> _defendingEnemies = new();
 
     private bool _isReady = false;
-    private int _zoneKarma;
+    private float _zoneKarma;
     private KarmaCombatModifiers.CombatBonuses _karmaBonuses;
 
     #endregion
@@ -711,6 +711,7 @@ public partial class BattleManager : Node
                 dead.PlayDefeatAnimation();
 
                 QuestManager.Instance?.NotifyKill(dead.EnemyName);
+                ApplyKarmaForMonsterKill(dead.EnemyName);
 
                 _defendingEnemies.Remove(dead);
                 _enemies.RemoveAt(i);
@@ -785,6 +786,17 @@ public partial class BattleManager : Node
             return GetPlayerEffectiveStat(battler.Dexterity, KarmaCombatModifiers.StatKind.Dexterity);
 
         return battler.Dexterity;
+    }
+
+    void ApplyKarmaForMonsterKill(string enemyName)
+    {
+        string zone = GameManager.Instance?.ReturnZoneName ?? "Introduction";
+        KarmaManager.Instance?.ApplyMonsterKillImpact(zone);
+
+        _zoneKarma = KarmaManager.Instance?.GetZoneKarma(zone) ?? _zoneKarma;
+        _karmaBonuses = KarmaCombatModifiers.GetCombatBonuses(_zoneKarma);
+
+        _hud?.ShowLogs($"Karma {KarmaManager.FormatDelta(KarmaManager.KarmaLossPerMonsterKill)} ({enemyName})");
     }
 
     void LogKarmaCombatStart()

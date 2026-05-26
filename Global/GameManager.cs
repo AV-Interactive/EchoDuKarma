@@ -132,7 +132,7 @@ public partial class GameManager: Node
             deltaRaw = args[1];
         }
 
-        if (!int.TryParse(deltaRaw, NumberStyles.Integer, CultureInfo.InvariantCulture, out int delta))
+        if (!float.TryParse(deltaRaw, NumberStyles.Float, CultureInfo.InvariantCulture, out float delta))
         {
             GD.PrintErr($"[GameManager] Action KARMA : delta invalide '{deltaRaw}'.");
             return;

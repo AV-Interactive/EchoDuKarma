@@ -14,6 +14,9 @@ public partial class Dialogue : Control
     bool _isTyping = false;
     bool _choicesInputLocked = false;
     readonly List<string> _choiceValues = new();
+    readonly List<string> _choiceLabels = new();
+    readonly List<bool> _choiceAvailable = new();
+    DialogueLine _currentChoiceLine;
     int _selectedChoiceIndex = 0;
 
     public override void _Ready()
@@ -67,7 +70,7 @@ public partial class Dialogue : Control
             // Choix visible : confirmer la sélection courante (clavier / manette)
             if (choicesContainer.Visible && _choiceValues.Count > 0)
             {
-                DialogueSystem.Instance.SelectChoice(_choiceValues[_selectedChoiceIndex]);
+                TryConfirmChoice(_selectedChoiceIndex);
                 GetViewport().SetInputAsHandled();
                 return;
             }
@@ -114,6 +117,22 @@ public partial class Dialogue : Control
             Visible = false;
             _isTyping = false;
             _choicesInputLocked = false;
+            _currentChoiceLine = null;
+            CallDeferred(MethodName.ReleaseFocus);
+            return;
+        }
+
+        if (line.Type == DialogueType.TEXT
+            && !string.IsNullOrWhiteSpace(line.Condition)
+            && !DialogueConditions.EvaluateAll(line.Condition))
+        {
+            Visible = true;
+            npcNameLabel.Text = $"[color=#3F9DD9]{line.NpcName}[/color]";
+            textLabel.Text = DialogueConditions.GetFailureReason(line.Condition)
+                             ?? "[color=#E85D5D]Tu ne peux pas poursuivre ce dialogue pour l'instant.[/color]";
+            textLabel.VisibleCharacters = textLabel.Text.Length;
+            choicesContainer.Visible = false;
+            _isTyping = false;
             CallDeferred(MethodName.ReleaseFocus);
             return;
         }
@@ -170,26 +189,37 @@ public partial class Dialogue : Control
 
     void ShowChoices(DialogueLine line)
     {
+        _currentChoiceLine = line;
         _choiceValues.Clear();
+        _choiceLabels.Clear();
+        _choiceAvailable.Clear();
         _selectedChoiceIndex = 0;
         choicesContainer.Visible = true;
         _choicesInputLocked = true;
 
         foreach (var choice in line.Choices)
         {
-            _choiceValues.Add(choice.Value);
+            string label = choice.Key;
+            string nextId = choice.Value;
+            string condition = line.ChoiceConditions.GetValueOrDefault(label, "");
+            bool available = DialogueConditions.EvaluateAll(condition);
+
+            _choiceLabels.Add(label);
+            _choiceValues.Add(nextId);
+            _choiceAvailable.Add(available);
 
             var btn = new Button();
             btn.AddThemeFontSizeOverride("font_size", 16);
             btn.CustomMinimumSize = new Vector2(0, 40);
-            btn.Text = choice.Key;
+            btn.Text = BuildChoiceButtonText(label, condition, available);
             btn.Alignment = HorizontalAlignment.Right;
-            // FocusMode = All pour le highlight visuel, mais l'input clavier
-            // est entièrement géré par _Input (pas via ui_accept du bouton)
             btn.FocusMode = FocusModeEnum.All;
 
-            string capturedValue = choice.Value;
-            btn.Pressed += () => DialogueSystem.Instance.SelectChoice(capturedValue); // souris uniquement
+            if (!available)
+                btn.Modulate = new Color(0.55f, 0.55f, 0.6f);
+
+            int capturedIndex = _choiceValues.Count - 1;
+            btn.Pressed += () => TryConfirmChoice(capturedIndex);
 
             choicesContainer.AddChild(btn);
         }
@@ -197,8 +227,70 @@ public partial class Dialogue : Control
         GetTree().CreateTimer(0.5f).Timeout += () =>
         {
             _choicesInputLocked = false;
-            HighlightChoice(0);
+            HighlightChoice(FindFirstAvailableChoiceIndex());
         };
+    }
+
+    static string BuildChoiceButtonText(string label, string condition, bool available)
+    {
+        if (available || string.IsNullOrWhiteSpace(condition))
+            return label;
+
+        string shortHint = ExtractKarmaShortHint(condition);
+        return string.IsNullOrEmpty(shortHint) ? $"{label} (bloqué)" : $"{label} ({shortHint})";
+    }
+
+    static string ExtractKarmaShortHint(string condition)
+    {
+        foreach (string raw in condition.Split('|'))
+        {
+            string token = raw.Trim();
+            if (!token.StartsWith("KARMA:", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            int colon = token.LastIndexOf(':');
+            if (colon >= 0 && colon < token.Length - 1)
+                return $"Karma {token[(colon + 1)..]}";
+        }
+
+        return null;
+    }
+
+    void TryConfirmChoice(int index)
+    {
+        if (index < 0 || index >= _choiceValues.Count)
+            return;
+
+        if (!_choiceAvailable[index])
+        {
+            string condition = _currentChoiceLine?.ChoiceConditions.GetValueOrDefault(_choiceLabels[index], "") ?? "";
+            ShowConditionFailure(DialogueConditions.GetFailureReason(condition));
+            return;
+        }
+
+        DialogueSystem.Instance.SelectChoice(_choiceValues[index]);
+    }
+
+    void ShowConditionFailure(string message)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+            message = "[color=#E85D5D]Tu ne remplis pas encore les conditions pour ce choix.[/color]";
+
+        SkipTypewriter();
+        textLabel.Text = message;
+        textLabel.VisibleCharacters = message.Length;
+        _isTyping = false;
+    }
+
+    int FindFirstAvailableChoiceIndex()
+    {
+        for (int i = 0; i < _choiceAvailable.Count; i++)
+        {
+            if (_choiceAvailable[i])
+                return i;
+        }
+
+        return 0;
     }
 
     /// <summary>Met le highlight visuel sur le choix à l'index donné.</summary>

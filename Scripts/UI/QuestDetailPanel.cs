@@ -55,6 +55,13 @@ public partial class QuestDetailPanel : PanelContainer
         if (runtime.Status == QuestStatus.Completed)
             return "✓";
 
+        if (quest.UsesAllStepsCompletion)
+        {
+            if (runtime.IsStepCompleted(index))
+                return "✓";
+            return "·";
+        }
+
         if (index < runtime.CurrentStep)
             return "✓";
 
@@ -66,7 +73,13 @@ public partial class QuestDetailPanel : PanelContainer
 
     static string GetStepTone(int index, QuestData quest, QuestRuntime runtime)
     {
-        if (runtime.Status == QuestStatus.Completed || index < runtime.CurrentStep)
+        if (runtime.Status == QuestStatus.Completed)
+            return "done";
+
+        if (quest.UsesAllStepsCompletion)
+            return runtime.IsStepCompleted(index) ? "done" : "pending";
+
+        if (index < runtime.CurrentStep)
             return "done";
 
         if (index == runtime.CurrentStep)
@@ -102,7 +115,7 @@ public partial class QuestDetailPanel : PanelContainer
             int total = quest.Steps?.Length ?? 0;
             int done = runtime.Status == QuestStatus.Completed
                 ? total
-                : Mathf.Clamp(runtime.CurrentStep, 0, total);
+                : Mathf.Clamp(runtime.CompletedStepCount, 0, total);
             string color = done >= total && total > 0 ? "#7AE582" : "#FFD166";
             return total > 0
                 ? $"[color={color}]Étapes accomplies : {done}/{total}[/color]"

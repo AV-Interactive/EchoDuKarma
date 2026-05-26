@@ -16,13 +16,13 @@ public static class KarmaCombatModifiers
 
     public readonly struct CombatBonuses
     {
-        public int Karma { get; init; }
+        public float Karma { get; init; }
         public float DamageTakenMultiplier { get; init; }
         public float HealMultiplier { get; init; }
         public string StateLabel { get; init; }
     }
 
-    public static CombatBonuses GetCombatBonuses(int karma)
+    public static CombatBonuses GetCombatBonuses(float karma)
     {
         karma = KarmaManager.Clamp(karma);
         return new CombatBonuses
@@ -35,7 +35,7 @@ public static class KarmaCombatModifiers
     }
 
     /// <summary>StatFinale = StatBase + (StatBase × modificateur).</summary>
-    public static int GetEffectiveStat(int baseStat, StatKind kind, int karma)
+    public static int GetEffectiveStat(int baseStat, StatKind kind, float karma)
     {
         if (baseStat <= 0)
             return baseStat;
@@ -52,7 +52,7 @@ public static class KarmaCombatModifiers
         return Mathf.Max(1, Mathf.RoundToInt(baseStat + baseStat * modifier));
     }
 
-    public static int ApplyDamageTaken(int rawDamage, int karma)
+    public static int ApplyDamageTaken(int rawDamage, float karma)
     {
         if (rawDamage <= 0)
             return rawDamage;
@@ -61,7 +61,7 @@ public static class KarmaCombatModifiers
         return Math.Max(1, Mathf.RoundToInt(scaled));
     }
 
-    public static int ApplyHealAmount(int rawHeal, int karma)
+    public static int ApplyHealAmount(int rawHeal, float karma)
     {
         if (rawHeal <= 0)
             return 0;
@@ -74,7 +74,7 @@ public static class KarmaCombatModifiers
     }
 
     /// <summary>Force : +0,25 à -100, -0,2 à +70.</summary>
-    public static float GetForceModifier(int karma)
+    public static float GetForceModifier(float karma)
     {
         karma = KarmaManager.Clamp(karma);
         if (karma <= 0)
@@ -84,7 +84,7 @@ public static class KarmaCombatModifiers
     }
 
     /// <summary>Esprit : -0,2 à -100, +0,25 à +70.</summary>
-    public static float GetSpiritModifier(int karma)
+    public static float GetSpiritModifier(float karma)
     {
         karma = KarmaManager.Clamp(karma);
         if (karma <= 0)
@@ -94,7 +94,7 @@ public static class KarmaCombatModifiers
     }
 
     /// <summary>Agi / Def : +0,25 atteint vers -65 (GDD).</summary>
-    public static float GetAgilityDefenseModifier(int karma)
+    public static float GetAgilityDefenseModifier(float karma)
     {
         karma = KarmaManager.Clamp(karma);
         if (karma <= 0)
@@ -103,7 +103,7 @@ public static class KarmaCombatModifiers
         return Mathf.Lerp(0f, -0.2f, karma / 70f);
     }
 
-    public static float GetDamageTakenMultiplier(int karma)
+    public static float GetDamageTakenMultiplier(float karma)
     {
         karma = KarmaManager.Clamp(karma);
         if (karma >= 70) return 0.8f;
@@ -113,7 +113,7 @@ public static class KarmaCombatModifiers
         return 1.25f;
     }
 
-    public static float GetHealMultiplier(int karma)
+    public static float GetHealMultiplier(float karma)
     {
         karma = KarmaManager.Clamp(karma);
         if (karma >= 70) return 1.2f;

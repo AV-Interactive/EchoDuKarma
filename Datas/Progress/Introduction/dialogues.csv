@@ -1,26 +1,27 @@
-ID;TYPE DIALOGUE;PNJ;TEXTE;CONDITION ACCES;ACTION POST DIALOGUE;LIEN SUIVANT
-INTRO_SOS_01;TEXT;Marchand;À l'aide ! Quelqu'un, aidez-moi ! ;proximité joueur;;INTRO_SOS_02
-INTRO_SOS_02;CHOICE;Marchand;Vite ! Ces [color=#58B4C6]rongeurs[/color] vont me dévorer ma cargaison !;interaction joueur;Aider;MARCHAND_AIDE
-;;;;;Partir;MARCHAND_FUITE
-MARCHAND_AIDE;TEXT;Marchand;Merci ! Réduis les en bouillis !;Lancer combat (2 rats);BATTLE:Rat:2;
-MARCHAND_FUITE;TEXT;Marchand;Hé ! Attend, reviens ! … Pas cool…;;;
-MARCHAND_EN_COURS_01;TEXT;Marchand;Ces rats sont encore dans les parages ? Dépêche-toi !;QUEST_ACTIVE:QUEST_MARCHANDER_01;;
-MARCHAND_DONE_01;TEXT;Marchand;Merci du fond du cœur ! Ma cargaison est sauvée grâce à toi.;QUEST_DONE:QUEST_MARCHANDER_01;;MARCHAND_DONE_02
-MARCHAND_DONE_02;TEXT;Marchand;Si tu repasses par là un jour… je t'offrirai bien quelque chose.;QUEST_DONE:QUEST_MARCHANDER_01;;
-PNJ_TEST;TEXT;Testeur;Je ne suis qu'un PNJ de test. Je suis là pour montrer les capacités des dialogues !;interaction joueur;;PNJ_TEST_2
-PNJ_TEST_2;TEXT;Testeur;"Je sais même afficher plusieurs lignes ;) Par exemple, ce message là me sert à démontrer l'affichage des longs messages. T'en pense quoi ? Il est bien affiché ? Dis moi si ça te conviens. Ou pas… Oui, effectivement. Le message semble inutilement log. Et c'est le cas…";interaction joueur;LEVEL_UP:1;PNJ_TEST_TROIS
-PNJ_TEST_LEVEL;TEXT;Testeur en [color=red]retraite[/color];J'ai décider de te faire UP !;interaction joueur;LEVEL_UP:10;PNJ_TEST_TROIS
-PNJ_TEST_TROIS;TEXT;Testeur en [color=red]retraite[/color];J'ai plus rien à dire.;;;
-TEST_BATTLE;TEXT;Testeur en [color=red]combat[/color];Bon bah… COMBAT !;interaction joueur;;TEST_BATTLE_2
-TEST_BATTLE_2;TEXT;Testeur en [color=red]combat[/color];YAAAAA !;interaction joueur;BATTLE:Rat|Gobi:2|1;
-PNJ_TEST_K_M;TEXT;Expert en [color=blue]Karma[/color];Avec moi, le karma [color=red]diminue ![/color];interaction joueur;KARMA:-10;
-PNJ_TEST_K_P;TEXT;Expert en [color=blue]Karma[/color];Avec moi, le karma [color=green]augmente ![/color];interaction joueur;KARMA:+10;
-PNJ_KARMA_01;TEXT;Sage du Karma;Le [color=#58B4C6]Karma[/color] est l'équilibre énergétique du monde. Chaque zone possède sa propre jauge, visible en haut de l'écran.;interaction joueur;;PNJ_KARMA_02
-PNJ_KARMA_02;TEXT;Sage du Karma;Elle oscille entre [color=red]-100[/color] (Chaos total) et [color=green]+100[/color] (Utopie étouffante). Tes actes — et ceux des autres — la font bouger.;interaction joueur;;PNJ_KARMA_03
-PNJ_KARMA_03;TEXT;Sage du Karma;Selon le seuil atteint, le [color=#58B4C6]monde[/color] change d'humeur : en [color=green]Ordre[/color], tu encaisses moins et les soins peuvent être renforcés. En [color=red]Instabilité[/color] ou [color=red]Chaos[/color], les coups frappent plus fort et les soins perdent leur effet.;interaction joueur;;PNJ_KARMA_04
-PNJ_KARMA_04;TEXT;Sage du Karma;Le Karma façonne aussi [color=#58B4C6]tes stats[/color] : un Karma négatif renforce la [color=red]Force[/color] et l'[color=red]Agilité[/color], un Karma positif favorise l'[color=green]Esprit[/color]. La [color=#58B4C6]Défense[/color] suit la même logique.;interaction joueur;;PNJ_KARMA_05
-PNJ_KARMA_05;TEXT;Sage du Karma;En [color=#58B4C6]combat[/color], ces bonus s'appliquent à tes attaques, ta magie et ton tour d'initiative. Aider un PNJ ou accomplir une quête noble fait monter le Karma ; l'exploiter les ressources d'une zone le fait chuter.;interaction joueur;;
-PNJ_LIVRE_01;TEXT;Livre sacré;[i]« Première loi : l'âme du lieu se mesure. »[/i] Le Karma de la zone va de [color=red]-100[/color] à [color=green]+100[/color]. La jauge en témoigne sans cesse.;interaction joueur;;PNJ_LIVRE_02
-PNJ_LIVRE_02;TEXT;Livre sacré;[i]« Seconde loi : le monde répond. »[/i] Sous l'[color=green]Utopie[/color], les blessures s'allègent et les soins prosperent. Sous le [color=red]Chaos[/color], la chair souffre davantage et la guérison se tarit.;interaction joueur;;PNJ_LIVRE_03
-PNJ_LIVRE_03;TEXT;Livre sacré;[i]« Troisième loi : le héros porte l'écho. »[/i] Le Chaos durcit le corps ([color=red]Force[/color], [color=red]Agi[/color], [color=red]Déf[/color]) ; l'Ordre éveille l'esprit ([color=green]Esprit[/color]).;interaction joueur;;PNJ_LIVRE_04
-PNJ_LIVRE_04;TEXT;Livre sacré;[i]« Quatrième loi : les actes pèsent. »[/i] Secourir les vivants élève le Karma. Piller les cristaux ou abandonner les faibles l'entraîne vers l'abîme. Que ta route reste consciente.;interaction joueur;;
+ID;TYPE DIALOGUE;PNJ;TEXTE;CONDITION ACCES;ACTION POST DIALOGUE;LIEN SUIVANT;;
+INTRO_SOS_01;TEXT;Marchand;À l'aide ! Quelqu'un, aidez-moi ! ;proximité joueur;;INTRO_SOS_02;;
+INTRO_SOS_02;CHOICE;Marchand;Vite ! Ces [color=#58B4C6]rongeurs[/color] vont me dévorer ma cargaison !;interaction joueur|KARMA:>=10;Aider;MARCHAND_AIDE;;
+;;;;;Partir;MARCHAND_FUITE;;
+MARCHAND_AIDE;TEXT;Marchand;Merci ! Réduis les en bouillis !;Lancer combat (2 rats);BATTLE:Rat:2;;;
+MARCHAND_FUITE;TEXT;Marchand;Hé ! Attend, reviens ! … Pas cool…;;;;;
+MARCHAND_EN_COURS_01;TEXT;Marchand;Ces rats sont encore dans les parages ? Dépêche-toi !;QUEST_ACTIVE:QUEST_MARCHANDER_01;;;;
+MARCHAND_DONE_01;TEXT;Marchand;Merci du fond du cœur ! Ma cargaison est sauvée grâce à toi.;QUEST_DONE:QUEST_MARCHANDER_01;;MARCHAND_DONE_02;;
+MARCHAND_DONE_02;TEXT;Marchand;Si tu repasses par là un jour… je t'offrirai bien quelque chose.;QUEST_DONE:QUEST_MARCHANDER_01;;;;
+PNJ_TEST;TEXT;Testeur;Je ne suis qu'un PNJ de test. Je suis là pour montrer les capacités des dialogues !;interaction joueur;;PNJ_TEST_2;;
+PNJ_TEST_2;TEXT;Testeur;"Je sais même afficher plusieurs lignes ;) Par exemple, ce message là me sert à démontrer l'affichage des longs messages. T'en pense quoi ? Il est bien affiché ? Dis moi si ça te conviens. Ou pas… Oui, effectivement. Le message semble inutilement log. Et c'est le cas…";interaction joueur;LEVEL_UP:1;PNJ_TEST_TROIS;;
+PNJ_TEST_LEVEL;TEXT;Testeur en [color=red]retraite[/color];J'ai décider de te faire UP !;interaction joueur;LEVEL_UP:10;PNJ_TEST_TROIS;;
+PNJ_TEST_TROIS;TEXT;Testeur en [color=red]retraite[/color];J'ai plus rien à dire.;;;;;
+TEST_BATTLE;TEXT;Testeur en [color=red]combat[/color];Bon bah… COMBAT !;interaction joueur;;TEST_BATTLE_2;;
+TEST_BATTLE_2;TEXT;Testeur en [color=red]combat[/color];YAAAAA !;interaction joueur;BATTLE:Rat|Gobi:2|1;;;
+PNJ_TEST_K_M;TEXT;Expert en [color=blue]Karma[/color];Avec moi, le karma [color=red]diminue ![/color];interaction joueur;KARMA:-10;;;
+PNJ_TEST_K_P;TEXT;Expert en [color=blue]Karma[/color];Avec moi, le karma [color=green]augmente ![/color];interaction joueur;KARMA:+10;;;
+PNJ_KARMA_01;TEXT;Sage du Karma;Le [color=#58B4C6]Karma[/color] est l'équilibre énergétique du monde. Chaque zone possède sa propre jauge, visible en haut de l'écran.;interaction joueur;;PNJ_KARMA_02;;
+PNJ_KARMA_02;TEXT;Sage du Karma;Elle oscille entre [color=red]-100[/color] (Chaos total) et [color=green]+100[/color] (Utopie étouffante). Tes actes — et ceux des autres — la font bouger.;interaction joueur;;PNJ_KARMA_03;;
+PNJ_KARMA_03;TEXT;Sage du Karma;Selon le seuil atteint, le [color=#58B4C6]monde[/color] change d'humeur : en [color=green]Ordre[/color], tu encaisses moins et les soins peuvent être renforcés. En [color=red]Instabilité[/color] ou [color=red]Chaos[/color], les coups frappent plus fort et les soins perdent leur effet.;interaction joueur;;PNJ_KARMA_04;;
+PNJ_KARMA_04;TEXT;Sage du Karma;Le Karma façonne aussi [color=#58B4C6]tes stats[/color] : un Karma négatif renforce la [color=red]Force[/color] et l'[color=red]Agilité[/color], un Karma positif favorise l'[color=green]Esprit[/color]. La [color=#58B4C6]Défense[/color] suit la même logique.;interaction joueur;;PNJ_KARMA_05;;
+PNJ_KARMA_05;TEXT;Sage du Karma;En [color=#58B4C6]combat[/color], ces bonus s'appliquent à tes attaques, ta magie et ton tour d'initiative. Aider un PNJ ou accomplir une quête noble fait monter le Karma — l'exploitation des ressources d'une zone le fait chuter.;interaction joueur;;PNJ_KARMA_06;
+PNJ_KARMA_06;TEXT;Sage du Karma;Méfie-toi aussi de la [color=red]violence[/color] : chaque [color=#58B4C6]monstre vaincu[/color] fait baisser le Karma de la zone de [color=#FFD166]0,15[/color]. Même une victoire nécessaire laisse une écorchure sur l'équilibre du monde.;interaction joueur;;;;
+PNJ_LIVRE_01;TEXT;Livre sacré;[i]« Première loi : l'âme du lieu se mesure. »[/i] Le Karma de la zone va de [color=red]-100[/color] à [color=green]+100[/color]. La jauge en témoigne sans cesse.;interaction joueur;;PNJ_LIVRE_02;;
+PNJ_LIVRE_02;TEXT;Livre sacré;[i]« Seconde loi : le monde répond. »[/i] Sous l'[color=green]Utopie[/color], les blessures s'allègent et les soins prosperent. Sous le [color=red]Chaos[/color], la chair souffre davantage et la guérison se tarit.;interaction joueur;;PNJ_LIVRE_03;;
+PNJ_LIVRE_03;TEXT;Livre sacré;[i]« Troisième loi : le héros porte l'écho. »[/i] Le Chaos durcit le corps ([color=red]Force[/color], [color=red]Agi[/color], [color=red]Déf[/color]) — l'Ordre éveille l'esprit ([color=green]Esprit[/color]).;interaction joueur;;PNJ_LIVRE_04;
+PNJ_LIVRE_04;TEXT;Livre sacré;[i]« Quatrième loi : les actes pèsent. »[/i] Secourir les vivants élève le Karma. Piller les cristaux ou abandonner les faibles l'entraîne vers l'abîme. Que ta route reste consciente.;interaction joueur;;;;

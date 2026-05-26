@@ -56,9 +56,10 @@ public partial class QuestStatRow : Button
             : new Color(0.55f, 0.75f, 0.92f));
 
         int stepCount = quest.Steps?.Length ?? 0;
-        int currentStep = stepCount > 0
-            ? Mathf.Clamp(runtime.CurrentStep + 1, 1, stepCount)
-            : 0;
+        int doneSteps = quest.UsesAllStepsCompletion
+            ? runtime.CompletedStepCount
+            : Mathf.Clamp(runtime.CurrentStep + 1, 0, stepCount);
+        int currentStep = stepCount > 0 ? Mathf.Clamp(doneSteps, 0, stepCount) : 0;
 
         if (runtime.Status == QuestStatus.Completed)
         {
