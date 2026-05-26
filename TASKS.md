@@ -69,9 +69,9 @@ Les dialogues ne se rechargent pas correctement après un combat ; les PNJ peuve
 - [ ] Après un combat, parler au Marchand ou au Testeur : les textes s’affichent normalement.
 - [ ] Aucune erreur `Fichier introuvable` pour un CSV sous `Datas/Progress/`.
 
-**Statut** : implémenté (à valider en playtest Godot).
+**Statut** : implémenté + correctifs post-retour map (snapshot joueur, combat différé, proximité PNJ).
 
-**Référence** : `Global/GameManager.cs` (`ReturnScenePath`, `ReturnZoneName`, `SetMapContext`) ; `Scripts/Data/MapLoader.cs`.
+**Référence** : `Global/GameManager.cs`, `Global/PlayerBattleSnapshot.cs`, `Scripts/Data/MapLoader.cs`, `Scripts/Entities/Npcs/Npc.cs`.
 
 ---
 

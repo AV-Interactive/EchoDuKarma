@@ -42,7 +42,10 @@ public partial class BattleHud : CanvasLayer
         _skillsListPanel.Hide();
         
         // Stats Player
-        _playerHpLabel.Text = $"{GameManager.Instance.CurrentPlayer.CurrentPv.ToString()}/{GameManager.Instance.CurrentPlayer.Pv.ToString()} HP";
+        var battlePlayer = GameManager.Instance.GetBattleSnapshot()
+            ?? GameManager.Instance.CurrentPlayer as IBattler;
+        if (battlePlayer != null)
+            UpdatePlayerStats(battlePlayer);
         
         GetNode<Button>("Scene/Actions/Panel/ActionMenu/BtnAttack").Pressed += () => OnButtonPressed("Attack");
         GetNode<Button>("Scene/Actions/Panel/ActionMenu/BtnMagic").Pressed += () => OnButtonPressed("Magic");
@@ -80,23 +83,21 @@ public partial class BattleHud : CanvasLayer
 
     void OnPlayerDamageReceived(int damage)
     {
-        var player = GameManager.Instance.CurrentPlayer;
-        _playerHpLabel.Text = $"{player.CurrentPv}/{player.Pv} HP";
+        var player = GameManager.Instance.GetBattleSnapshot()
+            ?? GameManager.Instance.CurrentPlayer as IBattler;
+        if (player != null)
+            UpdatePlayerStats(player);
     }
     
-    public void UpdatePlayerStats(Player player)
+    public void UpdatePlayerStats(IBattler player)
     {
-        // Mise à jour des PV
-        if (_playerHpLabel != null)
-        {
-            _playerHpLabel.Text = $"{player.CurrentPv}/{player.Pv} HP";
-        }
+        if (player == null) return;
 
-        // Mise à jour des PM
+        if (_playerHpLabel != null)
+            _playerHpLabel.Text = $"{player.CurrentPv}/{player.Pv} HP";
+
         if (_playerMpLabel != null)
-        {
             _playerMpLabel.Text = $"{player.CurrentMp}/{player.Mp} MP";
-        }
     }
 
     public void ShowDamage(Vector2 position, int amount, Color color)

@@ -20,6 +20,10 @@ public partial class GameManager: Node
     int _battleSignalRetryCount;
     BattleManager _subscribedBattleManager;
 
+    PlayerBattleSnapshot _battleSnapshot;
+    string _pendingBattleEnemies;
+    string _pendingBattleQuantity;
+
     /// <summary>Scène monde à charger après le combat (définie par MapLoader ou la map courante).</summary>
     public string ReturnScenePath { get; private set; } = "res://Maps/Intro/Map.tscn";
 
@@ -33,6 +37,21 @@ public partial class GameManager: Node
 
         if (!string.IsNullOrWhiteSpace(scenePath))
             ReturnScenePath = scenePath;
+    }
+
+    public PlayerBattleSnapshot GetBattleSnapshot() => _battleSnapshot;
+
+    public void PersistPlayerForBattle()
+    {
+        if (CurrentPlayer != null && GodotObject.IsInstanceValid(CurrentPlayer))
+            _battleSnapshot = PlayerBattleSnapshot.FromPlayer(CurrentPlayer);
+        else if (_battleSnapshot == null)
+            GD.PrintErr("[GameManager] Impossible de sauvegarder le joueur avant combat.");
+    }
+
+    public void ApplyBattleSnapshotToPlayer(Player player)
+    {
+        _battleSnapshot?.ApplyToPlayer(player);
     }
     
     public override void _Ready()
@@ -93,6 +112,7 @@ public partial class GameManager: Node
     void StartBattle(string enemies, string quantity)
     {
         CaptureReturnContextFromCurrentScene();
+        PersistPlayerForBattle();
 
         ListEnemiesBattle.Clear();
         string[] enemiesArray = enemies.Split('|');
@@ -137,6 +157,8 @@ public partial class GameManager: Node
         PlayerMoved = true;
         GetTree().Paused = false;
 
+        DialogueSystem.Instance?.RequestDialogue(null);
+
         Error err = GetTree().ChangeSceneToFile(ReturnScenePath);
         if (err != Error.Ok)
         {
@@ -146,9 +168,6 @@ public partial class GameManager: Node
         {
             GD.Print($"[GameManager] Retour sur {ReturnScenePath} (zone {ReturnZoneName}).");
         }
-
-        // MapLoader._Ready recharge aussi les dialogues ; appel explicite au cas où la scène n'en a pas.
-        DialogueSystem.Instance?.LoadZoneDialogues(ReturnZoneName);
     }
 
     void CaptureReturnContextFromCurrentScene()
@@ -178,10 +197,37 @@ public partial class GameManager: Node
         string actionKey = parts[0];
         string[] args = parts.Length > 1 ? parts[1..] : Array.Empty<string>();
 
+        if (actionKey == "BATTLE")
+        {
+            if (args.Length < 2)
+            {
+                GD.PrintErr("[GameManager] Action BATTLE invalide (ennemis:quantités attendus).");
+                return;
+            }
+
+            _pendingBattleEnemies = args[0];
+            _pendingBattleQuantity = args[1];
+            PersistPlayerForBattle();
+            PlayerMoved = true;
+            DialogueSystem.Instance?.RequestDialogue(null);
+            CallDeferred(nameof(RunPendingBattle));
+            return;
+        }
+
         if (_eventLibrary.TryGetValue(actionKey, out var action))
         {
             action.Invoke(args);
         }
+    }
+
+    void RunPendingBattle()
+    {
+        if (string.IsNullOrEmpty(_pendingBattleEnemies))
+            return;
+
+        StartBattle(_pendingBattleEnemies, _pendingBattleQuantity);
+        _pendingBattleEnemies = null;
+        _pendingBattleQuantity = null;
     }
     
     void ConnectBattleSignals()

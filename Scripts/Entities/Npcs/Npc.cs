@@ -39,6 +39,8 @@ public partial class Npc : CharacterBody3D
                 ResetDialogue();
             }
         };
+
+        CallDeferred(nameof(RefreshPlayerInRange));
         
         // Ton système de dialogue reste identique (logique pure)
         DialogueSystem.Instance.ChoiceSelected += (nextId) => 
@@ -122,5 +124,20 @@ public partial class Npc : CharacterBody3D
     {
         _currentDialogueId = StartDialogueId;
         GameManager.Instance.PlayerMoved = true;
+    }
+
+    void RefreshPlayerInRange()
+    {
+        var area = GetNodeOrNull<Area3D>("InteractionArea");
+        if (area == null) return;
+
+        foreach (var body in area.GetOverlappingBodies())
+        {
+            if (body.Name == "Player" || body.IsInGroup("Player"))
+            {
+                _isPlayerInRange = true;
+                return;
+            }
+        }
     }
 }

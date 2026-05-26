@@ -118,11 +118,11 @@ public partial class DialogueSystem: Node
     
     public void RequestDialogue(DialogueLine line)
     {
-        if (line != null && !string.IsNullOrWhiteSpace(line.Action))
-        {
-            EmitSignal(SignalName.ActionTriggered, line.Action);
-        }
+        // UI d'abord, puis action (ex. BATTLE) pour que le texte s'affiche avant changement de scène.
         EmitSignal(SignalName.DialogueRequested, line);
+
+        if (line != null && !string.IsNullOrWhiteSpace(line.Action))
+            EmitSignal(SignalName.ActionTriggered, line.Action);
     }
     
     public DialogueLine GetDialogue(string id)

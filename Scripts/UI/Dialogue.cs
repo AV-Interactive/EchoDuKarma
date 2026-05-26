@@ -21,6 +21,17 @@ public partial class Dialogue : Control
         MouseFilter = MouseFilterEnum.Stop; // Changé de Ignore à Stop pour bloquer les clics
     }
 
+    public override void _ExitTree()
+    {
+        if (DialogueSystem.Instance != null)
+            DialogueSystem.Instance.DialogueRequested -= OnDialogueRecevied;
+
+        if (_typewriterTween != null && _typewriterTween.IsValid())
+            _typewriterTween.Kill();
+
+        base._ExitTree();
+    }
+
     public override void _Input(InputEvent @event)
     {
         if (Visible && @event.IsActionPressed("Interaction"))
@@ -43,7 +54,11 @@ public partial class Dialogue : Control
 
     void OnDialogueRecevied(DialogueLine line)
     {
-        if (!IsInsideTree() || IsQueuedForDeletion()) return;
+        if (!GodotObject.IsInstanceValid(this))
+            return;
+
+        if (!IsInsideTree() || IsQueuedForDeletion())
+            return;
         
         if (line == null)
         {

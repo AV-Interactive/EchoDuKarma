@@ -44,7 +44,8 @@ public partial class BattleManager : Node
     [Export] PackedScene BattleActorScene { get; set; }
 
     [ExportGroup("Combatants")]
-    private Player _player;                          // source de vérité des stats
+    private IBattler _playerBattler;
+    private List<Skill> _playerSkills = new();
     private BattleActor _playerActor;               // coquille visuelle joueur
     private Node3D _playerAnchor;                   // point de spawn joueur
     private Node3D _enemiesAnchor;                  // point de spawn ennemis
@@ -77,13 +78,15 @@ public partial class BattleManager : Node
 
     private void InitializeBattle()
     {
-        _player = GameManager.Instance.CurrentPlayer;
-
-        if (_player == null)
+        var snapshot = GameManager.Instance.GetBattleSnapshot();
+        if (snapshot == null)
         {
-            GD.PrintErr("[BattleManager] CRITICAL ERROR: Player not found in GameManager.");
+            GD.PrintErr("[BattleManager] CRITICAL ERROR: aucun snapshot joueur (PersistPlayerForBattle manquant).");
             return;
         }
+
+        _playerBattler = snapshot;
+        _playerSkills = snapshot.LearnedSkills;
 
         _enemyStatsSource = GameManager.Instance.ListEnemiesBattle;
 
@@ -155,7 +158,7 @@ public partial class BattleManager : Node
 
         var activeUnit = _turnOrder[_currentTurnIndex];
 
-        if (activeUnit is Player)
+        if (activeUnit == _playerBattler)
         {
             _isPlayerDefending = false;
             _hud?.ShowMenu();
@@ -173,7 +176,7 @@ public partial class BattleManager : Node
 
     private void HandleDefeatState()
     {
-        _hud?.ShowLogs($"Défaite... {_player.Name} a succombé.");
+        _hud?.ShowLogs($"Défaite... {_playerBattler.Name} a succombé.");
         EndBattle(BattleEndReason.Defeat);
     }
 
@@ -204,7 +207,7 @@ public partial class BattleManager : Node
                 StartTargetSelection();
                 break;
             case "Magic":
-                _hud.ShowMagicMenu(_player.LearnedSkills);
+                _hud.ShowMagicMenu(_playerSkills);
                 break;
             case "Defense":
                 ExecuteDefense();
@@ -218,14 +221,14 @@ public partial class BattleManager : Node
     private void ProcessMagicSelection(string actionName)
     {
         string skillName = actionName.Split(':')[1];
-        _selectedSkill = _player.LearnedSkills.Find(s => s.Name == skillName);
+        _selectedSkill = _playerSkills.Find(s => s.Name == skillName);
 
         if (_selectedSkill == null) return;
 
         // Support skills (Heal/Buff) are self-targeted for now
         if (_selectedSkill.Type == SkillType.Support)
         {
-            ExecuteMagicAction(_player, _selectedSkill);
+            ExecuteMagicAction(_playerBattler, _selectedSkill);
         }
         else
         {
@@ -329,7 +332,7 @@ public partial class BattleManager : Node
         if (_isActionRunning) return;
         _isActionRunning = true;
 
-        if (_player == null || target == null)
+        if (_playerBattler == null || target == null)
         {
             ChangeState(BattleState.Evaluation);
             return;
@@ -341,10 +344,10 @@ public partial class BattleManager : Node
         await _cameraDirector.CutTo(CameraDirector.CameraShot.PlayerAttack);
         _playerActor?.OnCameraChanged(CameraDirector.CameraShot.PlayerAttack);
 
-        int damage = CalculatePhysicalDamage(_player.Strength, target.Defense);
+        int damage = CalculatePhysicalDamage(_playerBattler.Strength, target.Defense);
         target.CurrentPv -= damage;
 
-        _hud?.ShowLogs($"{_player.Name} attaque {target.EnemyName} pour {damage} dégâts !");
+        _hud?.ShowLogs($"{_playerBattler.Name} attaque {target.EnemyName} pour {damage} dégâts !");
         
         // Lead Dev Tip: On utilise GetScreenPositionOfNode pour projeter la position 3D en 2D pour l'UI
         Vector2 screenPos = GetScreenPositionOfNode(target);
@@ -368,17 +371,18 @@ public partial class BattleManager : Node
         if (_isActionRunning) return;
         _isActionRunning = true;
 
-        if (_player.CurrentMp < skill.Cost)
+        if (_playerBattler.CurrentMp < skill.Cost)
         {
-            _hud?.ShowLogs($"{_player.Name} n'a pas assez de MP pour utiliser {skill.Name} !");
+            _hud?.ShowLogs($"{_playerBattler.Name} n'a pas assez de MP pour utiliser {skill.Name} !");
             await ToSignal(GetTree().CreateTimer(1.0f), "timeout");
+            _isActionRunning = false;
             _hud?.ShowMenu();
             return;
         }
 
         ChangeState(BattleState.Action);
-        _player.CurrentMp -= skill.Cost;
-        _hud?.UpdatePlayerStats(_player);
+        _playerBattler.CurrentMp -= skill.Cost;
+        _hud?.UpdatePlayerStats(_playerBattler);
 
         if (skill.Type == SkillType.Support)
             ApplyHealEffect(skill);
@@ -394,18 +398,18 @@ public partial class BattleManager : Node
 
     private void ApplyHealEffect(Skill skill)
     {
-        _hud?.ShowLogs($"{_player.Name} utilise {skill.Name} !");
+        _hud?.ShowLogs($"{_playerBattler.Name} utilise {skill.Name} !");
         int healAmount = CalculateHealAmount(skill);
 
-        _player.CurrentPv = Math.Min(_player.Pv, _player.CurrentPv + healAmount);
-        _hud?.UpdatePlayerStats(_player);
+        _playerBattler.CurrentPv = Math.Min(_playerBattler.Pv, _playerBattler.CurrentPv + healAmount);
+        _hud?.UpdatePlayerStats(_playerBattler);
         _hud?.ShowDamage(GetPlayerUIPosition(), healAmount, Colors.Green);
     }
 
     private void ApplyMagicDamage(IBattler target, Skill skill)
     {
-        _hud?.ShowLogs($"{_player.Name} lance {skill.Name} sur {target.Name} !");
-        int damage = CalculateMagicDamage(_player, target, skill);
+        _hud?.ShowLogs($"{_playerBattler.Name} lance {skill.Name} sur {target.Name} !");
+        int damage = CalculateMagicDamage(_playerBattler, target, skill);
 
         if (target is Enemy e)
         {
@@ -421,7 +425,7 @@ public partial class BattleManager : Node
     {
         ChangeState(BattleState.Action);
         _isPlayerDefending = true;
-        _hud?.ShowLogs($"{_player.Name} se prépare à encaisser !");
+        _hud?.ShowLogs($"{_playerBattler.Name} se prépare à encaisser !");
         await ToSignal(GetTree().CreateTimer(1.5f), "timeout");
         ChangeState(BattleState.Evaluation);
     }
@@ -429,7 +433,7 @@ public partial class BattleManager : Node
     async void ExecuteFlee()
     {
         ChangeState(BattleState.Action);
-        _hud?.ShowLogs($"{_player.Name} tente de fuir...");
+        _hud?.ShowLogs($"{_playerBattler.Name} tente de fuir...");
         await ToSignal(GetTree().CreateTimer(1.5f), "timeout");
 
         if (GD.Randf() > 0.5f)
@@ -474,17 +478,17 @@ public partial class BattleManager : Node
         _hud?.ShowLogs($"{enemy.EnemyName} prépare son attaque...");
         await ToSignal(GetTree().CreateTimer(1.0f), "timeout");
 
-        int damage = CalculatePhysicalDamage(enemy.Stats.Strength, _player.Defense);
+        int damage = CalculatePhysicalDamage(enemy.Stats.Strength, _playerBattler.Defense);
 
         if (_isPlayerDefending)
         {
             damage = Math.Max(1, damage / 2);
-            _hud?.ShowLogs($"{_player.Name} bloque une partie de l'attaque !");
+            _hud?.ShowLogs($"{_playerBattler.Name} bloque une partie de l'attaque !");
         }
 
         ShakeScreen();
-        _player.CurrentPv -= damage;
-        _hud?.UpdatePlayerStats(_player);
+        _playerBattler.CurrentPv -= damage;
+        _hud?.UpdatePlayerStats(_playerBattler);
         _hud?.ShowDamage(GetPlayerUIPosition(), damage, Colors.Red);
         
         _hud?.ShowLogs($"{enemy.EnemyName} inflige {damage} dégâts !");
@@ -506,7 +510,7 @@ public partial class BattleManager : Node
     private void DetermineTurnOrder()
     {
         _turnOrder.Clear();
-        if (_player != null) _turnOrder.Add(_player);
+        if (_playerBattler != null) _turnOrder.Add(_playerBattler);
         _turnOrder.AddRange(_enemies);
 
         // Turn order based on Dexterity
@@ -519,7 +523,7 @@ public partial class BattleManager : Node
     private void CheckBattleStatus()
     {
         // 1. Defeat Check
-        if (_player != null && _player.CurrentPv <= 0)
+        if (_playerBattler != null && _playerBattler.CurrentPv <= 0)
         {
             ChangeState(BattleState.Defeat);
             return;
@@ -547,15 +551,10 @@ public partial class BattleManager : Node
             {
                 var dead = _enemies[i];
                 _hud?.ShowLogs($"{dead.EnemyName} est vaincu !");
-
-                var tween = CreateTween();
-                tween.TweenProperty(dead, "modulate:a", 0, 0.5f);
-                tween.Parallel().TweenProperty(dead, "scale", Vector3.Zero, 0.5f);
+                dead.PlayDefeatAnimation();
 
                 _enemies.RemoveAt(i);
                 _turnOrder.Remove(dead);
-
-                tween.Finished += () => dead.QueueFree();
             }
         }
         
@@ -611,7 +610,7 @@ public partial class BattleManager : Node
     private int CalculateHealAmount(Skill skill)
     {
         // Formula: Power + (Spirit * 1.5)
-        float baseHeal = skill.Power + (_player.Spirit * 1.5f);
+        float baseHeal = skill.Power + (_playerBattler.Spirit * 1.5f);
         float variance = (float)GD.RandRange(0.9, 1.1);
         return Mathf.RoundToInt(baseHeal * variance);
     }
@@ -708,12 +707,9 @@ public partial class BattleManager : Node
 
     private Vector2 GetPlayerUIPosition()
     {
-        // On récupère la position écran du joueur (qui est en 3D)
-        if (_player != null && IsInstanceValid(_player))
-        {
-            return GetScreenPositionOfNode(_player as Node3D);
-        }
-        
+        if (_playerAnchor != null && IsInstanceValid(_playerAnchor))
+            return GetScreenPositionOfNode(_playerAnchor);
+
         var size = GetViewport()?.GetVisibleRect().Size ?? new Vector2(1920, 1080);
         return new Vector2(size.X / 2.0f, 980);
     }

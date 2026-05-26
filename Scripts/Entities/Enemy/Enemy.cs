@@ -81,6 +81,21 @@ public partial class Enemy : CharacterBody3D, IBattler
         await ToSignal(tween, "finished");
     }
     
+    public void PlayDefeatAnimation()
+    {
+        var visualRoot = GetNodeOrNull<Node3D>("Node3D");
+        if (_sprite == null || visualRoot == null)
+        {
+            QueueFree();
+            return;
+        }
+
+        var tween = CreateTween();
+        tween.TweenProperty(_sprite, "modulate:a", 0f, 0.5f);
+        tween.Parallel().TweenProperty(visualRoot, "scale", Vector3.Zero, 0.5f);
+        tween.Finished += QueueFree;
+    }
+
     public void LookAtTarget(Vector3 targetPosition)
     {
         var node3D = GetNodeOrNull<Node3D>("Node3D/Sprite3D");

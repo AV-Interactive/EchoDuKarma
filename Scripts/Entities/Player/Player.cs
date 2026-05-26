@@ -44,8 +44,9 @@ public partial class Player : CharacterBody3D, IBattler
 	{
 		GameManager.Instance.PlayerLevelUp += OnPlayerLevelUp;
 		GameManager.Instance.CurrentPlayer = this;
-		
+
 		_stats = GetNode<StatHandler>("PlayerStats");
+		GameManager.Instance.ApplyBattleSnapshotToPlayer(this);
 		var allSkills = SkillManager.LoadSkills();
 		foreach (var skill in allSkills)
 		{
@@ -98,11 +99,10 @@ public partial class Player : CharacterBody3D, IBattler
 		// 1. Récupération de l'entrée (Vector2)
 		Vector2 inputDir = Input.GetVector("left", "right", "up", "down");
 	
-		// 2. Récupération de la caméra active
 		var camera = GetViewport().GetCamera3D() as CameraFollow3D;
-	
-		// 3. Calcul des vecteurs de direction relatifs à la caméra
-		// On récupère la base de la caméra (son orientation)
+		if (camera == null)
+			return;
+
 		Vector3 forward = camera.GlobalTransform.Basis.Z;
 		Vector3 right = camera.GlobalTransform.Basis.X;
 
