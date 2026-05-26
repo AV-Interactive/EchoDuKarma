@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.Threading.Tasks;
 
 public partial class Enemy : CharacterBody3D, IBattler
 {
@@ -66,7 +67,7 @@ public partial class Enemy : CharacterBody3D, IBattler
         tween.Parallel().TweenProperty(_sprite, "position", _sprite.Position, 0.05f);
     }
 
-    public async void PlayAttackAnimation()
+    public async Task PlayAttackAnimation()
     {
         var tween = CreateTween();
         Vector3 originalPos = Position;

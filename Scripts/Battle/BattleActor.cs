@@ -1,4 +1,5 @@
 using Godot;
+using System.Threading.Tasks;
 
 /// <summary>
 /// Représentation visuelle du joueur dans la scène de combat.
@@ -34,7 +35,7 @@ public partial class BattleActor : Node3D
         tween.Parallel().TweenProperty(_sprite, "position:x", _sprite.Position.X, 0.1f);
     }
 
-    public async void PlayAttackAnimation()
+    public async Task PlayAttackAnimation()
     {
         if (_sprite == null) return;
 

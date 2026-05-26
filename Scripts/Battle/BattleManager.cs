@@ -362,6 +362,9 @@ public partial class BattleManager : Node
         await _cameraDirector.CutTo(CameraDirector.CameraShot.PlayerAttack);
         _playerActor?.OnCameraChanged(CameraDirector.CameraShot.PlayerAttack);
 
+        if (_playerActor != null)
+            await _playerActor.PlayAttackAnimation();
+
         int damage = CalculatePhysicalDamage(_playerBattler.Strength, target.Defense);
         target.CurrentPv -= damage;
 
@@ -506,7 +509,8 @@ public partial class BattleManager : Node
         _playerActor?.OnCameraChanged(CameraDirector.CameraShot.EnemyAttack);
         
         _hud?.ShowLogs($"{enemy.EnemyName} prépare son attaque...");
-        await ToSignal(GetTree().CreateTimer(1.0f), "timeout");
+        await ToSignal(GetTree().CreateTimer(0.5f), "timeout");
+        await enemy.PlayAttackAnimation();
 
         int damage = CalculatePhysicalDamage(enemy.Stats.Strength, _playerBattler.Defense);
 
