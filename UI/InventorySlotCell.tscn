@@ -83,7 +83,7 @@ content_margin_right = 4.0
 content_margin_bottom = 4.0
 
 [node name="InventorySlotCell" type="Button" node_paths=PackedStringArray("_icon", "_hintLabel", "_itemLabel")]
-custom_minimum_size = Vector2(58, 58)
+custom_minimum_size = Vector2(44, 44)
 focus_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
 theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
@@ -107,7 +107,7 @@ theme_override_constants/separation = 1
 alignment = 1
 
 [node name="Icon" type="TextureRect" parent="VBox"]
-custom_minimum_size = Vector2(24, 24)
+custom_minimum_size = Vector2(20, 20)
 layout_mode = 2
 mouse_filter = 2
 expand_mode = 1
@@ -123,9 +123,8 @@ horizontal_alignment = 1
 
 [node name="ItemLabel" type="Label" parent="VBox"]
 layout_mode = 2
-size_flags_vertical = 3
 mouse_filter = 2
-theme_override_font_sizes/font_size = 7
+theme_override_font_sizes/font_size = 6
 theme_override_colors/font_color = Color(0.75, 0.8, 0.88, 1)
 text = "—"
 horizontal_alignment = 1

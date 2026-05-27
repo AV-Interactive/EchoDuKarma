@@ -1,3 +1,3 @@
-Nom,Niveau,PV,XP,FORCE,ESPRIT,AGI,DEF,IA,LOOT
-Rat,1,10,2,5,4,3,2,Aggressive,Peau de rat
-Gobi,2,35,5,8,6,8,12,Defensive,"Gelée, Fleur de gobi"
+Nom;Niveau;PV;XP;FORCE;ESPRIT;AGI;DEF;IA;LOOT;Affinity
+Rat;1;10;2;5;4;3;2;Aggressive;Peau de rat;Earth
+Gobi;2;35;5;8;6;8;12;Defensive;Gelée, Fleur de gobi;Water

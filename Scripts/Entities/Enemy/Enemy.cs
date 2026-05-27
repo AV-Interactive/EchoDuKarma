@@ -1,3 +1,4 @@
+using EchoduKarma.Scripts.Data;
 using Godot;
 using System;
 using System.Threading.Tasks;
@@ -19,7 +20,8 @@ public partial class Enemy : CharacterBody3D, IBattler
     public int Dexterity => Stats?.Dexterity ?? 0;
     public int Spirit => Stats?.Spirit ?? 0;
     public int Defense => Stats?.Defense ?? 0;
-    
+    public ElementType Affinity => Stats?.Affinity ?? ElementType.None;
+
     private Sprite3D _sprite;
     private Tween _turnHighlightTween;
 

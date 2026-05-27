@@ -33,8 +33,8 @@ public partial class InventoryManager : Node
         if (_inventory.Count > 0 || _equipped.Count > 0)
             return;
 
-        AddEquipment("Bâton Commun", notify: false);
-        Equip("Bâton Commun");
+        AddEquipment("Bâton", notify: false);
+        Equip("Bâton");
     }
 
     public IReadOnlyList<string> GetInventoryItems() => _inventory;
@@ -95,12 +95,6 @@ public partial class InventoryManager : Node
             return false;
         }
 
-        if (_inventory.Contains(equipment.Name))
-        {
-            GD.Print($"[InventoryManager] '{equipment.Name}' déjà dans l'inventaire.");
-            return false;
-        }
-
         _inventory.Add(equipment.Name);
         EmitSignal(SignalName.InventoryChanged);
         if (notify)
@@ -131,12 +125,6 @@ public partial class InventoryManager : Node
         if (resource == null)
         {
             GD.PrintErr($"[InventoryManager] Ressource inconnue : '{resourceName}'.");
-            return false;
-        }
-
-        if (_inventory.Contains(resource.Name))
-        {
-            GD.Print($"[InventoryManager] '{resource.Name}' déjà dans l'inventaire.");
             return false;
         }
 
@@ -230,6 +218,22 @@ public partial class InventoryManager : Node
         return _inventory.Contains(equipment.Name) && equipment.IsUsableByClass(PlayerClass);
     }
 
+    public int CountInBag(string itemName)
+    {
+        if (string.IsNullOrWhiteSpace(itemName))
+            return 0;
+
+        string name = itemName.Trim();
+        int count = 0;
+        foreach (string entry in _inventory)
+        {
+            if (entry.Equals(name, StringComparison.OrdinalIgnoreCase))
+                count++;
+        }
+
+        return count;
+    }
+
     public bool CanBuyEquipment(Equipment equipment, int price, out string reason)
     {
         reason = "";
@@ -237,12 +241,6 @@ public partial class InventoryManager : Node
         if (equipment == null)
         {
             reason = "Objet inconnu.";
-            return false;
-        }
-
-        if (OwnsEquipment(equipment.Name))
-        {
-            reason = "Tu possèdes déjà cet objet.";
             return false;
         }
 
@@ -271,5 +269,61 @@ public partial class InventoryManager : Node
             return false;
 
         return AddEquipment(equipment.Name);
+    }
+
+    public bool CanSellEquipment(string equipmentName, out string reason)
+    {
+        reason = "";
+
+        if (string.IsNullOrWhiteSpace(equipmentName))
+        {
+            reason = "Objet inconnu.";
+            return false;
+        }
+
+        string name = equipmentName.Trim();
+
+        if (IsEquipped(name))
+        {
+            reason = "Déséquipe l'objet avant de le vendre.";
+            return false;
+        }
+
+        if (CountInBag(name) <= 0)
+        {
+            reason = "Objet absent du sac.";
+            return false;
+        }
+
+        if (EquipmentManager.GetEquipment(name) == null)
+        {
+            reason = "Seuls les équipements sont rachetés.";
+            return false;
+        }
+
+        return true;
+    }
+
+    public bool TrySellEquipment(string equipmentName, int sellPrice)
+    {
+        if (!CanSellEquipment(equipmentName, out _))
+            return false;
+
+        string name = equipmentName.Trim();
+        for (int i = 0; i < _inventory.Count; i++)
+        {
+            if (!_inventory[i].Equals(name, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            _inventory.RemoveAt(i);
+            if (sellPrice > 0)
+                AddGold(sellPrice);
+
+            EmitSignal(SignalName.InventoryChanged);
+            GD.Print($"[InventoryManager] Vendu : {name} (+{sellPrice} or).");
+            return true;
+        }
+
+        return false;
     }
 }

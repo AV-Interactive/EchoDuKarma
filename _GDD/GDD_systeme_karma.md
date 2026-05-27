@@ -30,3 +30,8 @@ StatFinale = StatBase + (StatBase x ModificateurKarma)
 La jauge de Karma fluctue dynamiquement selon les actions du joueur et l'exploitation des ressources :
 * **Actions Morales** : Intervenir pour aider un PNJ (ex: sauver un marchand des Rats) augmente le Karma positif.
 * **Exploitation des Ressources** : L'extraction excessive de cristaux de Karma fait basculer la zone vers un Karma négatif.
+* **Violence** : Chaque monstre vaincu fait baisser le Karma de la zone (ex. **−0,15** par kill en introduction).
+
+## 5. Voir aussi
+
+* `GDD_systeme_elementaire.md` — affinités, cycle Feu → Terre → Air → Eau, synergie sort/affinité et double cycle en combat (cumul multiplicatif avec les dégâts ci-dessus).

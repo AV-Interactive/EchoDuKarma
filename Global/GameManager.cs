@@ -33,6 +33,8 @@ public partial class GameManager: Node
     Dictionary<int, Stats> _progressionTable;
     string _pendingBattleEnemies;
     string _pendingBattleQuantity;
+    string _pendingShopId;
+    int _pendingLevelUpPopupCount;
 
     /// <summary>Scène monde à charger après le combat (définie par MapLoader ou la map courante).</summary>
     public string ReturnScenePath { get; private set; } = "res://Maps/Intro/Map.tscn";
@@ -52,6 +54,14 @@ public partial class GameManager: Node
     }
 
     public PlayerBattleSnapshot GetBattleSnapshot() => _battleSnapshot;
+
+    /// <summary>Montées de niveau gagnées en combat, en attente d'affichage sur la map.</summary>
+    public int ConsumePendingLevelUpPopups()
+    {
+        int pending = _pendingLevelUpPopupCount;
+        _pendingLevelUpPopupCount = 0;
+        return pending;
+    }
 
     public void PersistPlayerForBattle()
     {
@@ -80,7 +90,20 @@ public partial class GameManager: Node
             return 0;
         }
 
-        return _battleSnapshot.AddExperience(amount, _progressionTable);
+        int levelsGained = _battleSnapshot.AddExperience(amount, _progressionTable);
+
+        if (levelsGained > 0)
+        {
+            if (CurrentPlayer != null && GodotObject.IsInstanceValid(CurrentPlayer))
+            {
+                CurrentPlayer.RefreshLearnedSkills(logNewSkills: true);
+                EmitSignal(SignalName.PlayerLevelUp, levelsGained);
+            }
+            else
+                _pendingLevelUpPopupCount += levelsGained;
+        }
+
+        return levelsGained;
     }
 
     public void ApplyBattleSnapshotToPlayer(Player player)
@@ -307,6 +330,21 @@ public partial class GameManager: Node
             return;
         }
 
+        if (actionKey == "SHOP")
+        {
+            if (args.Length < 1 || string.IsNullOrWhiteSpace(args[0]))
+            {
+                GD.PrintErr("[GameManager] Action SHOP invalide (format: SHOP:ShopId).");
+                return;
+            }
+
+            _pendingShopId = args[0].Trim();
+            PlayerMoved = true;
+            DialogueSystem.Instance?.RequestDialogue(null);
+            CallDeferred(nameof(RunPendingShop));
+            return;
+        }
+
         if (_eventLibrary.TryGetValue(actionKey, out var action))
         {
             action.Invoke(args);
@@ -321,6 +359,25 @@ public partial class GameManager: Node
         StartBattle(_pendingBattleEnemies, _pendingBattleQuantity);
         _pendingBattleEnemies = null;
         _pendingBattleQuantity = null;
+    }
+
+    void RunPendingShop()
+    {
+        if (string.IsNullOrEmpty(_pendingShopId))
+            return;
+
+        var shopUi = GetTree().GetFirstNodeInGroup(EchoduKarma.Scripts.UI.ShopUI.GroupName)
+            as EchoduKarma.Scripts.UI.ShopUI;
+
+        if (shopUi == null)
+        {
+            GD.PrintErr("[GameManager] ShopUI introuvable dans la scène courante.");
+            _pendingShopId = null;
+            return;
+        }
+
+        shopUi.Open(_pendingShopId);
+        _pendingShopId = null;
     }
     
     void ConnectBattleSignals()

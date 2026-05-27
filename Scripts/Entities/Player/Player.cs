@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using EchoduKarma.Scripts.Data;
 using EchoduKarma.Scripts.Entities.Player;
 
@@ -41,6 +42,9 @@ public partial class Player : CharacterBody3D, IBattler
 
 	public List<Skill> LearnedSkills = new List<Skill>();
 
+	ElementType _affinity = ElementType.None;
+	public ElementType Affinity => _affinity;
+
 	PlayerVisuals _visuals;
 	
 	public override void _Ready()
@@ -50,15 +54,14 @@ public partial class Player : CharacterBody3D, IBattler
 
 		_stats = GetNode<StatHandler>("PlayerStats");
 		GameManager.Instance.ApplyBattleSnapshotToPlayer(this);
-		var allSkills = SkillManager.LoadSkills();
-		foreach (var skill in allSkills)
-		{
-			if (skill.Classes.Contains("Magus")) //TODO |-> CHANGER PAR LA CLASSE DE FAÇON DYNAMIQUE
-			{
-				LearnedSkills.Add(skill);
-				GD.Print($"Le joueur a appris la skill {skill.Name}");
-			}
-		}
+
+		var hero = HeroManager.GetDefaultHero();
+		if (hero != null)
+			_affinity = hero.Affinity;
+		else
+			GD.PrintErr("[Player] Héros par défaut introuvable dans heroes.csv.");
+
+		RefreshLearnedSkills(logNewSkills: true);
 
 		if (Sprite != null)
 		{
@@ -89,9 +92,28 @@ public partial class Player : CharacterBody3D, IBattler
 
 	}
 
+	public void RefreshLearnedSkills(bool logNewSkills = false)
+	{
+		var hero = HeroManager.GetDefaultHero();
+		if (hero == null || _stats == null)
+			return;
+
+		var previous = new HashSet<string>(LearnedSkills.Select(s => s.Name));
+		LearnedSkills.Clear();
+		foreach (Skill skill in SkillManager.GetUnlockedForClass(hero.ClassName, Level))
+		{
+			LearnedSkills.Add(skill);
+			if (logNewSkills && !previous.Contains(skill.Name))
+				GD.Print($"[Player] Compétence débloquée : {skill.Name} (niveau {skill.LevelRequired})");
+		}
+	}
+
 	void OnPlayerLevelUp(int levelUpAmount)
 	{
-		_stats.LevelUp();
+		for (int i = 0; i < levelUpAmount; i++)
+			_stats.LevelUp();
+
+		RefreshLearnedSkills(logNewSkills: true);
 		GD.Print($"Le joueur est maintenant niveau {_stats.CurrentLevel} et à {_stats.CurrentPv} PV");
 	}
 

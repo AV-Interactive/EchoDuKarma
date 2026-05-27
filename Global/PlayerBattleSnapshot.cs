@@ -20,6 +20,7 @@ public class PlayerBattleSnapshot : IBattler
     public int Dexterity { get; set; }
     public int Spirit { get; set; }
     public int Defense { get; set; }
+    public ElementType Affinity { get; set; }
     public int CurrentExperience { get; set; }
     public List<Skill> LearnedSkills { get; set; } = new();
 
@@ -40,8 +41,13 @@ public class PlayerBattleSnapshot : IBattler
             Dexterity = player.Dexterity,
             Spirit = player.Spirit,
             Defense = player.Defense,
+            Affinity = player.Affinity != ElementType.None
+                ? player.Affinity
+                : HeroManager.GetDefaultHero()?.Affinity ?? ElementType.None,
             CurrentExperience = statHandler?.CurrentExperience ?? 0,
-            LearnedSkills = new List<Skill>(player.LearnedSkills),
+            LearnedSkills = SkillManager.GetUnlockedForClass(
+                HeroManager.GetDefaultHero()?.ClassName ?? string.Empty,
+                player.Level),
         };
     }
 
@@ -58,7 +64,19 @@ public class PlayerBattleSnapshot : IBattler
         while (TryLevelUp(progressionByLevel))
             levelsGained++;
 
+        if (levelsGained > 0)
+            SyncLearnedSkillsWithLevel();
+
         return levelsGained;
+    }
+
+    void SyncLearnedSkillsWithLevel()
+    {
+        var hero = HeroManager.GetDefaultHero();
+        if (hero == null)
+            return;
+
+        LearnedSkills = SkillManager.GetUnlockedForClass(hero.ClassName, Level);
     }
 
     bool TryLevelUp(IReadOnlyDictionary<int, Stats> progressionByLevel)

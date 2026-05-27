@@ -46,10 +46,17 @@ The battle flow is a **state machine** in `BattleManager`:
 - `StatHandler` reads a CSV file (set via `[Export] DataFilePath`) to populate a `Dictionary<int, Stats>` keyed by level.
 - `SkillManager.LoadSkills()` reads `Datas/Persos/skills.csv` and returns all skills. `Player._Ready()` then filters them by class (currently hardcoded to `"Magus"`).
 
+### Elemental Combat (`Scripts/Data/ElementCombat.cs`)
+- Cycle: **Fire → Earth → Air → Water → Fire** (strong ×1.5, weak ×0.75 per cycle check).
+- **Affinity synergy**: skill element matches battler affinity → ×1.25.
+- **Two cycle checks** on offense: skill vs target affinity, and attacker affinity vs target affinity (multiplicative). Applies to magic and physical melee (player and enemies).
+- Data: `heroes.csv` (`Affinity`), `bestiary.csv` (`Affinity`), `skills.csv` (`Élément`). See `_GDD/GDD_systeme_elementaire.md`.
+
 ### Data / CSV Convention
 All game data lives in `Datas/` as CSV files:
-- `Datas/Bestiary/bestiary.csv` — enemy stats (10 columns)
-- `Datas/Persos/skills.csv` — skills (11 columns, class filter on col 9)
+- `Datas/Bestiary/bestiary.csv` — enemy stats + `Affinity` column
+- `Datas/Persos/heroes.csv` — hero `Classe`, `Affinity`
+- `Datas/Persos/skills.csv` — skills (11 columns, class filter on col 9, `Élément` column)
 - `Datas/Persos/equipments.csv` — equipment data
 - `Datas/Persos/<ClassName>/progression-*.csv` — per-class level stat tables (loaded by StatHandler)
 - `Datas/Progress/<ZoneName>/dialogues.csv` — zone dialogues loaded on scene enter via `MapLoader`

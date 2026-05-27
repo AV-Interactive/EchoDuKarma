@@ -47,15 +47,15 @@ public partial class InventoryDetailPanel : PanelContainer
             : "[color=#8899AA]Valeur : —[/color]";
     }
 
-    public void SetShopOffer(Equipment equipment, int price, bool canBuy, string blockReason)
+    public void SetShopTransaction(Equipment equipment, int price, bool isSelling, bool canTransact, string blockReason)
     {
         UiIcons.Apply(_icon, UiIcons.GetEquipmentIcon(equipment));
 
         _nameLabel.Text = $"[b]{equipment.Name}[/b]";
         _metaLabel.Text =
             $"[color=#58B4C6]{equipment.Type}[/color]  ·  {equipment.GetSlotDisplayName()}  ·  " +
-            (canBuy
-                ? "[color=#7AE582]Disponible[/color]"
+            (canTransact
+                ? (isSelling ? "[color=#FFD166]À vendre[/color]" : "[color=#7AE582]Disponible[/color]")
                 : "[color=#E85D5D]Indisponible[/color]");
 
         _statsLabel.Text = FormatStats(equipment);
@@ -63,15 +63,21 @@ public partial class InventoryDetailPanel : PanelContainer
             ? "[color=#8899AA]Capacité passive : aucune[/color]"
             : $"[color=#FFD166]Passif :[/color] {equipment.PassiveAbility}";
 
+        string label = isSelling ? "Revente" : "Prix d'achat";
         string priceText = price > 0
-            ? $"[color=#FFD166]Prix :[/color] {price} or"
-            : "[color=#7AE582]Gratuit[/color]";
+            ? $"[color=#FFD166]{label} :[/color] {price} or"
+            : isSelling
+                ? "[color=#E85D5D]Le marchand ne rachète pas cet objet.[/color]"
+                : "[color=#7AE582]Gratuit[/color]";
 
-        if (!canBuy && !string.IsNullOrWhiteSpace(blockReason))
+        if (!canTransact && !string.IsNullOrWhiteSpace(blockReason))
             priceText += $"\n[color=#E85D5D]{blockReason}[/color]";
 
         _priceLabel.Text = priceText;
     }
+
+    public void SetShopOffer(Equipment equipment, int price, bool canBuy, string blockReason) =>
+        SetShopTransaction(equipment, price, isSelling: false, canBuy, blockReason);
 
     static string FormatStats(Equipment equipment)
     {

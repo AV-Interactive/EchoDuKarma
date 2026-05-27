@@ -8,6 +8,8 @@ namespace EchoduKarma.Scripts.UI;
 public partial class InventoryPage : Control, IGameMenuTabPage
 {
     const string CellScenePath = "res://UI/InventorySlotCell.tscn";
+    static readonly Vector2 BagCellSize = new(44, 44);
+    static readonly Vector2 BagIconSize = new(20, 20);
 
     [Export] Control _listView;
     [Export] EquipmentPaperDoll _paperDoll;
@@ -218,6 +220,7 @@ public partial class InventoryPage : Control, IGameMenuTabPage
                 bagCount++;
                 bool canEquip = InventoryManager.Instance.CanEquip(equipment);
                 var cell = packed.Instantiate<InventorySlotCell>();
+                ConfigureBagCell(cell);
                 cell.BindInventoryItem(equipment, canEquip);
                 cell.Pressed += () => ShowDetail(equipment, false);
                 _inventoryGrid.AddChild(cell);
@@ -231,6 +234,7 @@ public partial class InventoryPage : Control, IGameMenuTabPage
 
             bagCount++;
             var resourceCell = packed.Instantiate<InventorySlotCell>();
+            ConfigureBagCell(resourceCell);
             resourceCell.BindResourceItem(resource);
             resourceCell.Pressed += () => ShowResourceDetail(resource);
             _inventoryGrid.AddChild(resourceCell);
@@ -251,5 +255,12 @@ public partial class InventoryPage : Control, IGameMenuTabPage
         _cells.Clear();
         foreach (Node child in _inventoryGrid.GetChildren())
             child.QueueFree();
+    }
+
+    static void ConfigureBagCell(InventorySlotCell cell)
+    {
+        cell.ApplyDimensions(BagCellSize, BagIconSize, hintFontSize: 7, itemFontSize: 6);
+        cell.SizeFlagsHorizontal = SizeFlags.ShrinkBegin;
+        cell.SizeFlagsVertical = SizeFlags.ShrinkBegin;
     }
 }

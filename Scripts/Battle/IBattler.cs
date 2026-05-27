@@ -1,3 +1,4 @@
+using EchoduKarma.Scripts.Data;
 using Godot;
 
 public interface IBattler
@@ -13,4 +14,5 @@ public interface IBattler
     int Dexterity { get; }
     int Spirit { get; }
     int Defense { get; }
+    ElementType Affinity { get; }
 }

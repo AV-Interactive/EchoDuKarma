@@ -56,7 +56,10 @@ res://
 `Magus`, `Paladin`
 
 ### Éléments
-`Fire`, `Water` (à étendre)
+`Fire`, `Water`, `Earth`, `Air` (à étendre)
+
+### Déplacements
+Déplacement clavier/manette uniquement ! A prendre en compte dans le code.
 
 ### Format CSV de référence
 

@@ -1,3 +1,4 @@
+using EchoduKarma.Scripts.Data;
 using Godot;
 using System;
 using System.Collections.Generic;
@@ -15,6 +16,7 @@ public class EnemyStats : Stats
     public int XpValue { get; set; }
     public string Loot { get; set; }
     public AiPattern AiPattern { get; set; }
+    public ElementType Affinity { get; set; }
 
     static readonly Dictionary<string, AiPattern> _patternMap = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -76,7 +78,7 @@ public partial class Bestiary : Node
 
         while (!file.EofReached())
         {
-            string[] columns = file.GetCsvLine(",");
+            string[] columns = file.GetCsvLine(";");
             if (columns == null || columns.Length == 0) continue;
             if (columns.Length < 10)
             {
@@ -91,12 +93,15 @@ public partial class Bestiary : Node
                     Level = int.Parse(columns[1]),
                     Pv = int.Parse(columns[2]),
                     XpValue = int.Parse(columns[3]),
-                    Loot = columns[9].Trim(),
                     Strength = int.Parse(columns[4]),
                     Spirit = int.Parse(columns[5]),
                     Dexterity = int.Parse(columns[6]),
                     Defense = int.Parse(columns[7]),
-                    AiPattern = EnemyStats.ParsePattern(columns[8])
+                    AiPattern = EnemyStats.ParsePattern(columns[8]),
+                    Loot = columns[9].Trim(),
+                    Affinity = columns.Length > 10
+                        ? ElementCombat.Parse(columns[10])
+                        : ElementType.None,
                 };
                 _bestiary[enemy.EnemyName] = enemy;
                 count++;

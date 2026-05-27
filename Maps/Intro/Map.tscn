@@ -10,13 +10,15 @@
 [ext_resource type="Texture2D" uid="uid://cde3ducm2ro8v" path="res://Assets/World/Textures/GrassMask.png" id="5_ne6lv"]
 [ext_resource type="PackedScene" uid="uid://df5ufudng06yc" path="res://UI/dialogue.tscn" id="6_2whbv"]
 [ext_resource type="PackedScene" uid="uid://kqhj7bngint6" path="res://Scenes/tree.tscn" id="6_t4cgs"]
+[ext_resource type="PackedScene" uid="uid://b28mqdybmfjoi" path="res://UI/game_menu_shell.tscn" id="7_menu"]
 [ext_resource type="PackedScene" uid="uid://dg3wvkgnaaui0" path="res://Scenes/crate.tscn" id="7_t4cgs"]
-[ext_resource type="PackedScene" uid="uid://cgamemenushell01" path="res://UI/game_menu_shell.tscn" id="7_menu"]
 [ext_resource type="Texture2D" uid="uid://bxmu5hk73bkey" path="res://Assets/Actors/Npcs/Generic Male NPCs A.png" id="9_ifhrt"]
 [ext_resource type="PackedScene" uid="uid://yl7g5vmddauq" path="res://UI/KarmaBanner.tscn" id="9_karma"]
 [ext_resource type="PackedScene" uid="uid://iakcnhc4fbsq" path="res://Scenes/quest_trigger.tscn" id="10_qtrigger"]
 [ext_resource type="PackedScene" uid="uid://c6so3v71fns5i" path="res://Scenes/equipment_pickup.tscn" id="11_pickup"]
 [ext_resource type="PackedScene" uid="uid://c4f4r1sniecwu" path="res://UI/pickup_toast.tscn" id="12_toast"]
+[ext_resource type="PackedScene" uid="uid://cshopui001" path="res://UI/shop_ui.tscn" id="13_shop"]
+[ext_resource type="PackedScene" uid="uid://dleveluppopup01" path="res://UI/level_up_popup.tscn" id="14_levelup"]
 
 [sub_resource type="Gradient" id="Gradient_me1ua"]
 
@@ -181,7 +183,7 @@ hframes = 8
 vframes = 10
 
 [node name="PNJ APPRENDRE KARMA" parent="SubViewportContainer/SubViewport/CHARACTERS" unique_id=589811627 instance=ExtResource("4_y7c5g")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.804965, -0.3890553, -4.162243)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.9003531, -0.21154612, -3.5754752)
 NpcName = "Sage du Karma"
 StartDialogueId = "PNJ_KARMA_01"
 
@@ -190,7 +192,6 @@ SpritesBasePath = "res://Assets/Actors/Npcs/religious/standard/"
 
 [node name="BATTLE_LAUNCH" parent="SubViewportContainer/SubViewport/CHARACTERS" unique_id=1204224578 instance=ExtResource("4_y7c5g")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.67561346, -0.4513217, -4.4533453)
-visible = false
 NpcName = "Marchand"
 SpriteTexture = ExtResource("9_ifhrt")
 StartDialogueId = "TEST_BATTLE"
@@ -203,7 +204,6 @@ vframes = 10
 
 [node name="LEVELUP" parent="SubViewportContainer/SubViewport/CHARACTERS" unique_id=1151338402 instance=ExtResource("4_y7c5g")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7837762, -0.19476232, -2.197381)
-visible = false
 NpcName = "Marchand"
 SpriteTexture = ExtResource("9_ifhrt")
 StartDialogueId = "PNJ_TEST_LEVEL"
@@ -216,7 +216,6 @@ vframes = 10
 
 [node name="KARMA -" parent="SubViewportContainer/SubViewport/CHARACTERS" unique_id=403699691 instance=ExtResource("4_y7c5g")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.3676074, 0.31443182, -0.66441894)
-visible = false
 NpcName = "Karma -"
 SpriteTexture = ExtResource("9_ifhrt")
 StartDialogueId = "PNJ_TEST_K_M"
@@ -229,7 +228,6 @@ vframes = 10
 
 [node name="KARMA +" parent="SubViewportContainer/SubViewport/CHARACTERS" unique_id=875199563 instance=ExtResource("4_y7c5g")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.4182503, 0.31443182, -2.623716)
-visible = false
 NpcName = "Karma +"
 SpriteTexture = ExtResource("9_ifhrt")
 StartDialogueId = "PNJ_TEST_K_P"
@@ -282,6 +280,12 @@ layout_mode = 1
 layout_mode = 1
 
 [node name="PickupToast" parent="GameUI/Root" unique_id=1958840557 instance=ExtResource("12_toast")]
+layout_mode = 1
+
+[node name="ShopUI" parent="GameUI/Root" unique_id=2133062461 instance=ExtResource("13_shop")]
+layout_mode = 1
+
+[node name="LevelUpPopup" parent="GameUI/Root" instance=ExtResource("14_levelup")]
 layout_mode = 1
 
 [editable path="SubViewportContainer/SubViewport/-- WORLD/Road"]

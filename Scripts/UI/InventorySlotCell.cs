@@ -113,6 +113,74 @@ public partial class InventorySlotCell : Button
         Modulate = Colors.White;
     }
 
+    public void BindShopItem(Equipment equipment, int price, int ownedCount, bool canBuy, bool tooExpensive)
+    {
+        PaperDollSlot = null;
+        Equipment = equipment;
+        IsEquippedCell = false;
+        Text = string.Empty;
+        Disabled = false;
+        _itemLabel.Visible = true;
+
+        UiIcons.Apply(_icon, UiIcons.GetEquipmentIcon(equipment));
+        Modulate = Colors.White;
+
+        string priceText = price > 0 ? $"{price} or" : "Gratuit";
+        if (ownedCount > 0)
+            _hintLabel.Text = ownedCount > 1 ? $"x{ownedCount} · {priceText}" : $"x1 · {priceText}";
+        else
+            _hintLabel.Text = priceText;
+
+        _itemLabel.Text = Truncate(equipment.Name, 9);
+
+        if (!canBuy && !tooExpensive)
+        {
+            _hintLabel.AddThemeColorOverride("font_color", ColorLocked);
+            _itemLabel.AddThemeColorOverride("font_color", ColorLocked);
+            _icon.Modulate = new Color(0.7f, 0.7f, 0.7f, 0.85f);
+        }
+        else if (tooExpensive)
+        {
+            _hintLabel.AddThemeColorOverride("font_color", new Color(0.91f, 0.36f, 0.36f));
+            _itemLabel.AddThemeColorOverride("font_color", new Color(0.91f, 0.36f, 0.36f));
+            _icon.Modulate = Colors.White;
+        }
+        else
+        {
+            _hintLabel.AddThemeColorOverride("font_color", new Color(1f, 0.82f, 0.4f));
+            _itemLabel.AddThemeColorOverride("font_color", Colors.White);
+            _icon.Modulate = Colors.White;
+        }
+    }
+
+    public void BindShopSellItem(Equipment equipment, int sellPrice, bool canSell)
+    {
+        PaperDollSlot = null;
+        Equipment = equipment;
+        IsEquippedCell = false;
+        Text = string.Empty;
+        Disabled = false;
+        _itemLabel.Visible = true;
+
+        UiIcons.Apply(_icon, UiIcons.GetEquipmentIcon(equipment));
+        Modulate = Colors.White;
+        _itemLabel.Text = Truncate(equipment.Name, 9);
+
+        if (!canSell || sellPrice <= 0)
+        {
+            _hintLabel.Text = "—";
+            _hintLabel.AddThemeColorOverride("font_color", ColorLocked);
+            _itemLabel.AddThemeColorOverride("font_color", ColorLocked);
+            _icon.Modulate = new Color(0.7f, 0.7f, 0.7f, 0.85f);
+            return;
+        }
+
+        _hintLabel.Text = $"+{sellPrice} or";
+        _hintLabel.AddThemeColorOverride("font_color", ColorEquipped);
+        _itemLabel.AddThemeColorOverride("font_color", Colors.White);
+        _icon.Modulate = Colors.White;
+    }
+
     static string Truncate(string value, int maxLength)
     {
         if (string.IsNullOrEmpty(value) || value.Length <= maxLength)

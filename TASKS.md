@@ -2,7 +2,7 @@
 
 Document de suivi actionnable. Synthèse complète : **[AUDIT.md](AUDIT.md)**.
 
-**État global : ~67 % du gameplay RPG** (vertical slice Intro ~75 %).
+**État global : ~73 % du gameplay RPG** (vertical slice Intro ~80 %). Voir **[AUDIT.md](AUDIT.md)** (26 mai 2026).
 
 ---
 
@@ -86,7 +86,7 @@ Document de suivi actionnable. Synthèse complète : **[AUDIT.md](AUDIT.md)**.
 |----|-------|----------|--------|
 | P3.1 | Filtrer skills par `LevelRequired` + niveau actuel | **Haute** | ⬜ |
 | P3.2 | Classe joueur dynamique (plus `"Magus"` en dur) | **Haute** | ⬜ |
-| P3.3 | Snapshot combat : inclure bonus équipement dans stats | Moyenne | 🔶 |
+| P3.3 | Snapshot combat : inclure bonus équipement dans stats | Moyenne | ✅ |
 | P3.4 | Déblocage skill à la montée de niveau (signal / log) | Basse | ⬜ |
 | P3.5 | Paladin jouable (progression CSV + classe) | Basse | ⬜ |
 
@@ -98,9 +98,9 @@ Document de suivi actionnable. Synthèse complète : **[AUDIT.md](AUDIT.md)**.
 
 | ID | Tâche | Priorité | Statut |
 |----|-------|----------|--------|
-| P4.1 | **Boutique marchand** (acheter / prix CSV) | **Haute** | ⬜ |
-| P4.2 | Modificateur prix selon karma zone (GDD) | Moyenne | ⬜ |
-| P4.3 | Vendre des objets | Basse | ⬜ |
+| P4.1 | **Boutique marchand** (acheter / prix CSV) | **Haute** | ✅ |
+| P4.2 | Modificateur prix selon karma zone (GDD) | Moyenne | ✅ |
+| P4.3 | Vendre des objets | Basse | ✅ |
 | P4.4 | Consommables utilisables (map ou combat) | Basse | ⬜ |
 | P4.5 | Stack ressources identiques (si design le prévoit) | Basse | ⬜ |
 
@@ -180,24 +180,20 @@ Document de suivi actionnable. Synthèse complète : **[AUDIT.md](AUDIT.md)**.
 ```text
 P0.5  Playtest Intro (validation)
   ↓
-P2.4  Loot combat
-  ↓
-P3.1–P3.2  Skills par niveau + classe
+P3.1–P3.2  Skills par niveau + classe dynamique
   ↓
 P8.1–P8.3  Sauvegarde (stats, inventaire, karma, quêtes)
-  ↓
-P4.1  Boutique marchand
   ↓
 P7.x  Contenu (zone 2, ennemis, quêtes)
   ↓
 P5.3+  Karma monde (GDD)
   ↓
-P2.7, P9.x  Dette technique
+P9.x  Dette technique (.gitignore, code mort, anchors combat)
 ```
 
-**Objectif court terme (~75 % gameplay)** : P0.5 validé + loot combat + save minimale + skills par niveau.
+**Objectif court terme (~78 % gameplay)** : P0.5 validé + save minimale + skills par niveau.
 
-**Objectif moyen terme (~80 %)** : boutique + 2e zone + effets karma monde légers.
+**Objectif moyen terme (~82 %)** : 2e zone + effets karma monde légers + Paladin.
 
 ---
 
@@ -217,4 +213,4 @@ P2.7, P9.x  Dette technique
 
 ---
 
-*Dernière mise à jour : mai 2026 — aligné sur [AUDIT.md](AUDIT.md).*
+*Dernière mise à jour : 26 mai 2026 — aligné sur [AUDIT.md](AUDIT.md).*

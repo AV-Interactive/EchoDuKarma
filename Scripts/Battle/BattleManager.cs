@@ -105,7 +105,16 @@ public partial class BattleManager : Node
         }
 
         _playerBattler = snapshot;
-        _playerSkills = snapshot.LearnedSkills;
+        _playerSkills = snapshot.LearnedSkills
+            .Where(s => SkillManager.IsUnlockedAtLevel(s, snapshot.Level))
+            .ToList();
+
+        if (snapshot.Affinity == ElementType.None)
+        {
+            var hero = HeroManager.GetDefaultHero();
+            if (hero != null)
+                snapshot.Affinity = hero.Affinity;
+        }
 
         InitializeKarmaForBattle();
 
@@ -188,9 +197,22 @@ public partial class BattleManager : Node
     {
         SpawnPlayer();
         SpawnEnemies();
+        RegisterCameraBattleFocus();
         _hud?.SetupEnemies(_enemies);
         LogKarmaCombatStart();
         DetermineTurnOrder();
+    }
+
+    void RegisterCameraBattleFocus()
+    {
+        if (_cameraDirector == null || _enemies.Count == 0)
+            return;
+
+        Vector3 sum = Vector3.Zero;
+        foreach (Enemy enemy in _enemies)
+            sum += enemy.GlobalPosition;
+
+        _cameraDirector.RegisterBattleFocus(sum / _enemies.Count);
     }
 
     private void HandleSelectionState()
@@ -413,15 +435,16 @@ public partial class BattleManager : Node
 
         ChangeState(BattleState.Action);
 
-        // CHANGEMENT ANGLE CAMERA
-        await _cameraDirector.CutTo(CameraDirector.CameraShot.PlayerAttack);
+        // CHANGEMENT ANGLE CAMERA — cadre l'ennemi ciblé au centre
+        await _cameraDirector.CutTo(CameraDirector.CameraShot.PlayerAttack, target);
         _playerActor?.OnCameraChanged(CameraDirector.CameraShot.PlayerAttack);
 
         if (_playerActor != null)
             await _playerActor.PlayAttackAnimation();
 
         int playerStr = GetPlayerEffectiveStat(_playerBattler.Strength, KarmaCombatModifiers.StatKind.Force);
-        int damage = CalculatePhysicalDamage(playerStr, target.Defense);
+        LogElementCombat(_playerBattler.Affinity, null, target.Affinity);
+        int damage = CalculatePhysicalDamage(_playerBattler, target, playerStr, target.Defense);
 
         if (_defendingEnemies.Remove(target))
         {
@@ -469,7 +492,10 @@ public partial class BattleManager : Node
         bool isOffensive = skill.Type != SkillType.Support;
         var magicShot = CameraDirector.CameraShot.PlayerMagic;
 
-        await _cameraDirector.CutTo(magicShot);
+        if (isOffensive && target is Node3D offensiveTarget)
+            await _cameraDirector.CutTo(magicShot, offensiveTarget);
+        else
+            await _cameraDirector.CutTo(magicShot);
         _playerActor?.OnCameraChanged(magicShot);
 
         if (_playerActor != null)
@@ -493,6 +519,9 @@ public partial class BattleManager : Node
     private void ApplyHealEffect(Skill skill)
     {
         _hud?.ShowLogs($"{_playerBattler.Name} utilise {skill.Name} !");
+
+        LogElementCombat(_playerBattler.Affinity, skill.Element, ElementType.None);
+
         int healAmount = CalculateHealAmount(skill);
 
         if (healAmount <= 0)
@@ -509,6 +538,9 @@ public partial class BattleManager : Node
     private void ApplyMagicDamage(IBattler target, Skill skill)
     {
         _hud?.ShowLogs($"{_playerBattler.Name} lance {skill.Name} sur {target.Name} !");
+
+        LogElementCombat(_playerBattler.Affinity, skill.Element, target.Affinity);
+
         int damage = CalculateMagicDamage(_playerBattler, target, skill);
 
         if (target is Enemy e)
@@ -620,7 +652,8 @@ public partial class BattleManager : Node
 
         int baseStrength = aggressiveBonus ? Mathf.RoundToInt(enemy.Stats.Strength * 1.2f) : enemy.Stats.Strength;
         int playerDef = GetPlayerEffectiveStat(_playerBattler.Defense, KarmaCombatModifiers.StatKind.Defense);
-        int damage = CalculatePhysicalDamage(baseStrength, playerDef);
+        LogElementCombat(enemy.Affinity, null, _playerBattler.Affinity);
+        int damage = CalculatePhysicalDamage(enemy, _playerBattler, baseStrength, playerDef);
         damage = KarmaCombatModifiers.ApplyDamageTaken(damage, _zoneKarma);
 
         if (_isPlayerDefending)
@@ -761,11 +794,19 @@ public partial class BattleManager : Node
         }
     }
 
-    private int CalculatePhysicalDamage(int attackerAtk, int defenderDef)
+    void LogElementCombat(ElementType attackerAffinity, string skillElement, ElementType defenderAffinity)
+    {
+        foreach (string line in ElementCombat.GetCombatLogLines(attackerAffinity, skillElement, defenderAffinity))
+            _hud?.ShowLogs(line);
+    }
+
+    private int CalculatePhysicalDamage(IBattler attacker, IBattler target, int attackerAtk, int defenderDef)
     {
         float baseDamage = (attackerAtk / 2.0f) - (defenderDef / 4.0f);
         float variance = (float)GD.RandRange(0.9, 1.1);
-        return Math.Max(1, Mathf.RoundToInt(baseDamage * variance));
+        float elementMult = ElementCombat.GetCombinedPowerMultiplier(
+            attacker.Affinity, null, target.Affinity);
+        return Math.Max(1, Mathf.RoundToInt(baseDamage * variance * elementMult));
     }
 
     private int CalculateMagicDamage(IBattler attacker, IBattler target, Skill skill)
@@ -776,7 +817,9 @@ public partial class BattleManager : Node
 
         float baseDamage = (skill.Power * (attackerSpirit / 5.0f)) - (target.Spirit / 4.0f);
         float variance = (float)GD.RandRange(0.9, 1.1);
-        return Math.Max(1, Mathf.RoundToInt(baseDamage * variance));
+        float elementMult = ElementCombat.GetCombinedPowerMultiplier(
+            attacker.Affinity, skill.Element, target.Affinity);
+        return Math.Max(1, Mathf.RoundToInt(baseDamage * variance * elementMult));
     }
 
     private int CalculateHealAmount(Skill skill)
@@ -784,7 +827,8 @@ public partial class BattleManager : Node
         int playerSpirit = GetPlayerEffectiveStat(_playerBattler.Spirit, KarmaCombatModifiers.StatKind.Spirit);
         float baseHeal = skill.Power + (playerSpirit * 1.5f);
         float variance = (float)GD.RandRange(0.9, 1.1);
-        int rawHeal = Mathf.RoundToInt(baseHeal * variance);
+        float elementMult = ElementCombat.GetAffinityPowerMultiplier(_playerBattler.Affinity, skill.Element);
+        int rawHeal = Mathf.RoundToInt(baseHeal * variance * elementMult);
         return KarmaCombatModifiers.ApplyHealAmount(rawHeal, _zoneKarma);
     }
 

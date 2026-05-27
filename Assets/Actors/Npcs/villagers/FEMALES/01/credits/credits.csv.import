@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://7wcnd8ohtt1a"
+
+[deps]
+
+files=["res://Assets/Actors/Npcs/villagers/FEMALES/01/credits/credits.notes.translation", "res://Assets/Actors/Npcs/villagers/FEMALES/01/credits/credits.authors.translation", "res://Assets/Actors/Npcs/villagers/FEMALES/01/credits/credits.licenses.translation", "res://Assets/Actors/Npcs/villagers/FEMALES/01/credits/credits.urls.translation"]
+
+source_file="res://Assets/Actors/Npcs/villagers/FEMALES/01/credits/credits.csv"
+dest_files=["res://Assets/Actors/Npcs/villagers/FEMALES/01/credits/credits.notes.translation", "res://Assets/Actors/Npcs/villagers/FEMALES/01/credits/credits.authors.translation", "res://Assets/Actors/Npcs/villagers/FEMALES/01/credits/credits.licenses.translation", "res://Assets/Actors/Npcs/villagers/FEMALES/01/credits/credits.urls.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

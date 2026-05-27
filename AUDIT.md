@@ -1,34 +1,40 @@
 # Audit gameplay — Echo du Karma
 
-**Date** : mai 2026  
+**Date** : 26 mai 2026  
 **Moteur** : Godot 4.6 · C# · GL Compatibility  
-**Périmètre** : dossier `Scripts/`, autoloads `Global/`, données `Datas/`, maps `Maps/`
+**Périmètre** : `Scripts/`, autoloads `Global/`, données `Datas/`, maps `Maps/`  
+**Référence précédente** : audit mai 2026 (~67 %)
 
 ---
 
 ## Synthèse exécutive
 
-| Indicateur | Score |
-|------------|-------|
-| **Gameplay RPG principal** (systèmes + contenu) | **~67 %** |
-| **Vertical slice Intro** (jouable de bout en bout) | **~75 %** |
-| **Expérience « vrai RPG »** (durée, save, économie) | **~55 %** |
+| Indicateur | Audit précédent | **Maintenant** |
+|------------|-----------------|----------------|
+| **Gameplay RPG principal** (systèmes + contenu) | ~67 % | **~73 %** |
+| **Vertical slice Intro** (jouable de bout en bout) | ~75 % | **~80 %** |
+| **Expérience « vrai RPG »** (durée, save, économie) | ~55 % | **~60 %** |
 
-Le projet est passé d’un **proto technique** (~45 % en début d’audit) à un **vertical slice RPG crédible**. Les fondations (combat, dialogue, karma, quêtes, inventaire) sont en place ; les plus gros manques sont la **persistance**, le **loot combat**, les **boutiques** et le **contenu** (1 zone, 2 ennemis).
+Le projet a franchi une étape supplémentaire depuis le dernier audit : **loot combat**, **boutique karma-aware**, **système élémentaire**, **sprites LPC** et **`heroes.csv`** sont en place. Le vertical slice Intro (exploration → quête marchand → combat → loot → boutique) est **jouable de bout en bout**.
+
+Le **plus gros gap** reste la **persistance (0 %)** — toute progression est perdue à la fermeture. Ensuite : **progression skills par niveau**, **multi-zones** et **effets karma monde** (GDD).
 
 ---
 
 ## Métriques projet
 
-| Métrique | Valeur |
-|----------|--------|
-| Scripts C# | 54 |
-| Autoloads | 6 |
-| Zones jouables | 1 (`Introduction`) |
-| Scènes combat | 1 (`Maps/Battles/Basic.tscn`) |
-| Ennemis bestiaire | 2 (Rat, Gobi) |
-| Quêtes CSV | 2 |
-| Sauvegarde | Non |
+| Métrique | Audit précédent | **Maintenant** |
+|----------|-----------------|----------------|
+| Scripts C# | 54 | **66** |
+| Autoloads | 6 | **6** |
+| Zones jouables | 1 | **1** (`Introduction`) |
+| Scènes combat | 1 | **1** (`Maps/Battles/Basic.tscn`) |
+| Ennemis bestiaire | 2 | **2** (Rat, Gobi) |
+| Quêtes CSV | 2 | **2** |
+| Boutiques CSV | 0 | **1** (`MARCHAND_INTRO`, 2 items) |
+| Lignes dialogue Intro | ~27 | **~33** |
+| Compétences jouables | — | **2** (Flammeche, Soin) |
+| Sauvegarde | Non | **Non** |
 
 ---
 
@@ -36,24 +42,23 @@ Le projet est passé d’un **proto technique** (~45 % en début d’audit) à u
 
 ```
 Exploration     ██████████████░░░░░░  70%
-Dialogues       ███████████████░░░░░  75%
-Combat          ████████████████░░░░  80%
-Progression     █████████████░░░░░░░  65%
-Économie        ███████████░░░░░░░░░  55%
-Karma           ██████████████░░░░░░  70%
-Quêtes          █████████████░░░░░░░  65%
+Dialogues       ████████████████░░░░  78%
+Combat          █████████████████░░░  88%
+Progression     █████████████░░░░░░░  68%
+Économie        ███████████████░░░░░  75%
+Karma           ███████████████░░░░░  75%
 Sauvegarde      ░░░░░░░░░░░░░░░░░░░░   0%
 ─────────────────────────────────────────
-GLOBAL PONDÉRÉ  █████████████░░░░░░░  ~67%
+GLOBAL PONDÉRÉ  ██████████████░░░░░░  ~73%
 ```
 
 | Pilier | Poids | Score | OK | Manque |
 |--------|-------|-------|-----|--------|
-| Exploration | 15 % | 70 % | Déplacement 3D, caméra, limites, herbe/arbres, pickups, menus | 1 map, TELEPORT/CHANGE_SCENE stubs |
-| Dialogues | 20 % | 75 % | CSV, choix, BBCode, conditions karma/quête, PNJ conditionnels | 1 zone, pas de branches karma profondes |
-| Combat | 25 % | 80 % | Boucle map↔combat, XP, karma, IA, défaite, animations | Loot combat, FindChild fragile |
-| Progression | 25 % | 65 % | XP combat/quête, level up, équipement → stats | Skills toutes au start, Magus en dur |
-| Économie | 10 % | 55 % | Or, inventaire, équipement UI, récompenses quête | Boutique, vente, loot aléatoire |
+| Exploration | 15 % | 70 % | Déplacement 3D, caméra, limites, herbe/arbres, pickups, menus | 1 map, `TELEPORT`/`CHANGE_SCENE` stubs |
+| Dialogues | 20 % | 78 % | CSV, choix, BBCode, conditions karma/quête, boutique, tutoriels éléments | 1 zone, branches karma profondes |
+| Combat | 25 % | 88 % | Boucle complète, XP, loot, karma, IA, éléments, caméras, animations LPC | Drop rates, anchors `FindChild` |
+| Progression | 25 % | 68 % | XP combat/quête, level up, équipement → stats, `heroes.csv` (affinité) | `LevelRequired` ignoré, Paladin, déblocage skills |
+| Économie | 10 % | 75 % | Or, inventaire, shop buy/sell, prix karma, loot combat | Craft, consommables, ressources en boutique |
 | Persistance | 5 % | 0 % | — | Aucune save |
 
 ---
@@ -64,24 +69,27 @@ GLOBAL PONDÉRÉ  █████████████░░░░░░░  
 
 | Manager | Fichier | Rôle | Maturité |
 |---------|---------|------|----------|
-| GameManager | `Global/GameManager.cs` | Combat, retour map, actions dialogue, récompenses | ✅ Solide |
+| GameManager | `Global/GameManager.cs` | Combat, shop, retour map, actions dialogue, récompenses | ✅ Solide |
 | DialogueSystem | `Global/DialogueSystem.cs` | CSV, choix, conditions par libellé | ✅ Solide |
-| Bestiary | `Global/Bestiary.cs` | Ennemis, IA, XP, loot (data) | ✅ OK |
+| Bestiary | `Global/Bestiary.cs` | Ennemis, IA, XP, loot, affinité | ✅ OK |
 | QuestManager | `Global/QuestManager.cs` | Quêtes, kills, ALL_STEPS, journal | ✅ Solide |
-| KarmaManager | `Global/KarmaManager.cs` | Jauge zone -100…+100 | ✅ Solide |
-| InventoryManager | `Global/InventoryManager.cs` | Or, équipement, ressources | ✅ Fonctionnel |
+| KarmaManager | `Global/KarmaManager.cs` | Jauge zone −100…+100 | ✅ Solide |
+| InventoryManager | `Global/InventoryManager.cs` | Or, équipement, ressources, buy/sell | ✅ Fonctionnel |
 
 ### Données CSV
 
 | Fichier | Branché |
 |---------|---------|
-| `Datas/Bestiary/bestiary.csv` | ✅ Combat, IA, XP — loot colonne non utilisée en combat |
-| `Datas/Persos/skills.csv` | ⚠️ Chargé ; toutes skills Magus au `_Ready` |
-| `Datas/Persos/equipments.csv` | ✅ Inventaire + bonus stats |
-| `Datas/Persos/resources.csv` | ✅ Récompenses quête |
+| `Datas/Bestiary/bestiary.csv` | ✅ Combat, IA, XP, loot, affinité |
+| `Datas/Persos/heroes.csv` | ⚠️ `HeroManager` — affinité + filtre classe skills ; `InventoryManager.PlayerClass` encore en dur |
+| `Datas/Persos/skills.csv` | ⚠️ Chargé ; colonne `Level requis` **non filtrée** au `_Ready` |
+| `Datas/Persos/equipments.csv` | ✅ Inventaire, shop, bonus stats |
+| `Datas/Persos/resources.csv` | ✅ Loot combat + récompenses quête |
 | `Datas/Persos/Magus/progression-mage.csv` | ✅ XP / level up |
-| `Datas/Progress/Introduction/dialogues.csv` | ✅ + conditions |
+| `Datas/Progress/Introduction/dialogues.csv` | ✅ + conditions, shop, combat, karma |
 | `Datas/Progress/quests.csv` | ✅ 2 quêtes |
+| `Datas/Progress/shops.csv` | ✅ Catalogue `MARCHAND_INTRO` |
+| `Datas/Bestiary/EdK.csv` | ❌ Ancien format, **non référencé** |
 
 ---
 
@@ -93,55 +101,70 @@ GLOBAL PONDÉRÉ  █████████████░░░░░░░  
 - `GrassSpawner` / `PropSpawner` : procédural par masque herbe
 - `EquipmentPickup`, `QuestTrigger`, `MapLoader`
 - Menus bloquent le monde via `GameManager.CanInteractWithWorld`
-- **Manque** : multi-maps, téléportation, changement de scène réel
+- Sprites LPC joueur (`PlayerVisuals`, walk/idle)
+- **Manque** : multi-maps, téléportation réelle, changement de scène
 
-### Dialogues (75 %)
+### Dialogues (78 %)
 
-- `DialogueConditions` : `QUEST_*`, `KARMA:>=10`, messages d’échec
+- `DialogueConditions` : `QUEST_*`, `KARMA:>=10`, messages d'échec
 - Choix avec conditions par libellé (`ChoiceConditions`)
-- PNJ : `ConditionalStartIds` (Marchand en cours / terminé)
-- Tutoriels Karma + Livre sacré in-game
-- **Manque** : contenu multi-zones, effets karma sur le monde (pas seulement combat)
+- PNJ : `ConditionalStartIds` (Marchand en cours / terminé / boutique)
+- Actions : `BATTLE`, `SHOP`, `KARMA`, `GOLD`, `ITEM`
+- Tutoriels Karma + Livre sacré + éléments in-game
+- **Manque** : contenu multi-zones, effets karma exploration (GDD)
 
-### Combat (80 %)
+### Combat (88 %)
 
 - Machine à états : Setup → Selection → Action → Evaluation → Victory/Defeat
-- Snapshot joueur (`PlayerBattleSnapshot`) pour changement de scène
+- Snapshot joueur (`PlayerBattleSnapshot`) incluant bonus équipement
 - XP victoire, défaite → map avec 1 PV / 0 MP
+- **Loot post-victoire** : `DistributeBattleLoot()` → `EnemyStats.ParseLoot()` → `TryAddItem`
+- Fuite : 50 % succès, pas d'XP ni butin (documenté dans `docs/COMBAT_REGRESSION.md`)
 - Karma : `KarmaCombatModifiers` (stats, dégâts subis, soins)
+- **Éléments** : `ElementCombat` — cycle Fire→Earth→Air→Water, affinité héros/ennemi, logs combat
 - IA : `Aggressive`, `Defensive`, `Normal` via `AiPattern`
-- `NotifyKill` → quêtes ; karma -0,15 par monstre
-- Animations, surbrillance tour, popups dégâts, mort 3D
-- **Manque** : loot depuis `LOOT` bestiaire, remplacer `FindChild`
+- `NotifyKill` → quêtes ; karma −0,15 par monstre
+- Caméras : Neutral, PlayerAttack, PlayerMagic, EnemyAttack + fade
+- Animations LPC : `BattleActor` (thrust, spellcast, hurt)
+- HUD : actions, magie, stats flottantes, popups dégâts, `KarmaBanner`
+- `BattleManager` via groupe `battle_manager` (plus de `FindChild` pour le signal fin)
+- **Manque** : loot probabiliste, `FindChild` pour `PlayerAnchor`/`EnemiesAnchor`, level-up combat sans signal `PlayerLevelUp`
 
-### Progression (65 %)
+### Progression (68 %)
 
-- `StatHandler.AddExperience`, seuils CSV
-- Équipement via `InventoryManager.GetEquipmentBonuses()` → stats joueur
-- Récompenses quête : XP, or, objet
-- **Manque** : `LevelRequired` skills, classe dynamique, Paladin jouable
+- `StatHandler.AddExperience`, seuils CSV Magus
+- Équipement via `InventoryManager.GetEquipmentBonuses()` → stats joueur + snapshot combat
+- `HeroManager` : `heroes.csv` (classe Magus, affinité Fire)
+- Récompenses quête : XP, or, objet, karma
+- **Manque** : filtrage `LevelRequired`, sync `PlayerClass` depuis CSV, Paladin jouable, déblocage skill au level up
 
-### Économie / inventaire (55 %)
+### Économie / inventaire (75 %)
 
-- UI : inventaire, paper doll, détail, toast pickup, stats, journal quêtes
-- Or + items via dialogues / quêtes / pickups
-- **Manque** : boutique, vente, craft, loot combat
+- UI : inventaire, paper doll, détail, toast pickup, stats, journal quêtes, **shop UI**
+- Or + items via dialogues / quêtes / pickups / **loot combat**
+- **Boutique** : `ShopUI` + `ShopCatalog` + `ShopPricing` (multiplicateurs karma achat/vente)
+- Hook dialogue `SHOP:MARCHAND_INTRO` après quête marchand
+- `TryBuyEquipment` / `TrySellEquipment` dans `InventoryManager`
+- **Manque** : craft, consommables utilisables, ressources vendables en boutique, stacks
 
-### Karma (70 %)
+### Karma (75 %)
 
-- Jauge par zone, états GDD, bannière HUD
+- Jauge par zone, états GDD, bannière HUD (map + combat)
 - Combat, dialogues, quêtes, kills
-- **Manque** : prix marchands, auberges, cristaux, spawns conditionnels (GDD)
+- **Prix boutique** selon bandes karma (`ShopPricing`)
+- **Manque** : marchands apathiques, auberges, cristaux, spawns conditionnels (GDD)
 
 ### Quêtes (65 %)
 
 - `QUEST_INTRO` (ALL_STEPS), `QUEST_MARCHANDER_01` (KILL:Rat:2)
-- Journal UI, triggers dialogue / kills
+- Journal UI liste-détail, triggers dialogue / kills
 - **Manque** : volume contenu, abandon/échec, persistence
 
 ### Sauvegarde (0 %)
 
-- Aucun `SaveManager` — tout perdu au redémarrage
+- Aucun `SaveManager` — confirmé (aucune classe save dans le projet)
+- Tout l'état vit dans les autoloads : perdu au redémarrage
+- Commentaire explicite dans `GameManager.OnBattleEnded` (défaite sans save)
 
 ---
 
@@ -149,10 +172,35 @@ GLOBAL PONDÉRÉ  █████████████░░░░░░░  
 
 ```text
 Explorer → Parler PNJ → (conditions karma/quête) → Choix / Combat
-    → XP + karma + avancement quête → Or/objet → Retour map → Menus (inv/stats/journal)
+    → XP + loot + karma −0,15/kill → Avancement quête → Retour map
+    → Boutique (post-quête) / Menus (inv / stats / skills / journal)
 ```
 
-**Quête Marchand** : jouable de bout en bout (`MARCHAND_AIDE` → `BATTLE:Rat:2` → retour → `MARCHAND_DONE_01` → complétion quête).
+**Quête Marchand** : jouable de bout en bout.
+
+| Étape | Flux |
+|-------|------|
+| 1 | `MARCHAND_AIDE` → `BATTLE:Rat:2` |
+| 2 | Victoire → XP + Peau de rat ×2 + karma |
+| 3 | `MARCHAND_DONE_01` → complétion quête (+ or, XP, karma) |
+| 4 | `MARCHAND_SHOP_OPEN` → `SHOP:MARCHAND_INTRO` (achat/vente) |
+
+---
+
+## Nouveautés depuis le dernier audit
+
+| Fonctionnalité | Statut | Fichiers clés |
+|----------------|--------|---------------|
+| Loot combat | ✅ | `BattleManager.DistributeBattleLoot`, `EnemyStats.ParseLoot` |
+| Caméra magie / soin | ✅ | `CameraDirector.PlayerMagic`, `BattleActor` |
+| Animations LPC combat | ✅ | `LpcSprites`, `BattleActor`, `PlayerVisuals` |
+| Groupe `battle_manager` | ✅ | `BattleManager`, `GameManager` |
+| Doc régression combat | ✅ | `docs/COMBAT_REGRESSION.md` |
+| Système élémentaire | ✅ | `ElementCombat`, affinité bestiaire + héros |
+| `heroes.csv` | ⚠️ Partiel | `HeroManager`, affinité ; classe pas sync inventaire |
+| Boutique buy/sell | ✅ | `ShopUI`, `ShopCatalog`, `ShopPricing`, `shops.csv` |
+| Menu unifié + skills/quêtes | ✅ | `GameMenuShell`, `SkillsPage`, `QuestJournalPage` |
+| Bestiaire séparateur `;` | ✅ | Colonne `Affinity` ajoutée |
 
 ---
 
@@ -161,40 +209,43 @@ Explorer → Parler PNJ → (conditions karma/quête) → Choix / Combat
 | Sujet | Gravité | Fichiers |
 |-------|---------|----------|
 | Pas de sauvegarde | 🔴 Haute | — |
-| Loot combat absent | 🟠 Moyenne | `Bestiary.cs`, `BattleManager.cs` |
-| Skills / classe en dur | 🟠 Moyenne | `Player.cs` |
-| `FindChild` en production | 🟠 Moyenne | `GameManager`, `BattleManager`, `BattleHud` |
-| CSV vs Resources (.tres) | 🟡 Architecture | `.cursorrules` |
-| TELEPORT / CHANGE_SCENE stubs | 🟡 Contenu | `GameManager.cs` |
+| Skills / `LevelRequired` ignorés | 🟠 Moyenne | `Player.cs`, `SkillManager.cs` |
+| `PlayerClass` en dur (`"Magus"`) | 🟠 Moyenne | `InventoryManager.cs` |
+| `FindChild` anchors combat | 🟡 Moyenne | `BattleManager.cs` |
+| `TELEPORT` / `CHANGE_SCENE` stubs | 🟡 Contenu | `GameManager.cs` |
+| `EdK.csv` / `CSVLoader.cs` morts | 🟡 Basse | `Datas/`, `Scripts/Helpers/` |
+| `.DS_Store` non ignorés | 🟡 Basse | `.gitignore` |
 | 1 zone / 2 ennemis | 🟡 Contenu | `Maps/`, `bestiary.csv` |
+| Casing loot (`Peau de rat` vs `Peau de Rat`) | 🟡 Données | `bestiary.csv`, `quests.csv`, `resources.csv` |
 
 ---
 
-## Comparaison audit initial → maintenant
+## Comparaison audit précédent → maintenant
 
-| Métrique | Audit 1 (~45 %) | **Maintenant (~67 %)** |
-|----------|-----------------|------------------------|
-| Scripts C# | 24 | 54 |
-| Autoloads | 3 | 6 |
-| Boucle combat | Cassée | OK |
-| XP combat | Non | Oui |
-| Conditions dialogue | Non | Oui |
-| Inventaire | Stub | UI + équipement |
-| Karma | Absent | Système complet |
-| Quêtes | Absent | Manager + journal |
-| IA ennemis | Attaque seule | 3 patterns |
+| Métrique | Audit 1 (~45 %) | Audit 2 (~67 %) | **Audit 3 (~73 %)** |
+|----------|-----------------|-----------------|---------------------|
+| Scripts C# | 24 | 54 | **66** |
+| Boucle combat | Cassée | OK | OK + loot + éléments |
+| XP combat | Non | Oui | Oui |
+| Loot combat | Non | Non | **Oui** |
+| Boutique | Non | Non | **Oui** |
+| Système élémentaire | Non | Non | **Oui** |
+| Sprites LPC | Non | Partiel | **Joueur + combat** |
+| Inventaire | Stub | UI + équipement | UI + shop + loot |
+| Karma | Absent | Système complet | + pricing shop |
+| Sauvegarde | 0 % | 0 % | **0 %** |
 
 ---
 
 ## Prochaines priorités (voir TASKS.md)
 
-1. **Sauvegarde** — plus gros gap gameplay
-2. **Loot combat** — colonne `LOOT` bestiaire
-3. **Skills par niveau** + classe dynamique
-4. **Boutique** marchand (minimal)
-5. **Contenu** — zone / ennemis / quêtes
-6. **Karma monde** — effets hors combat (GDD)
+1. **Sauvegarde (P8)** — plus gros gap gameplay
+2. **Skills par niveau + classe dynamique (P3.1–P3.2)**
+3. **Playtest Intro (P0.5)** — valider boucle complète incluant boutique/loot
+4. **Contenu (P7)** — 2e zone, ennemis, quêtes
+5. **Karma monde (P5.3+)** — effets hors combat GDD
+6. **Dette technique (P9)** — `.gitignore`, code mort, anchors combat
 
 ---
 
-*Référence croisée : [TASKS.md](TASKS.md) pour le backlog actionnable.*
+*Référence croisée : [TASKS.md](TASKS.md) pour le backlog actionnable · [docs/COMBAT_REGRESSION.md](docs/COMBAT_REGRESSION.md) pour les scénarios combat.*

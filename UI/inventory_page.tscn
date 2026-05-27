@@ -133,8 +133,8 @@ horizontal_scroll_mode = 0
 [node name="InventoryGrid" type="GridContainer" parent="MarginContainer/VBoxContainer/ListView/ContentRow/BagPanel/ScrollContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/h_separation = 6
-theme_override_constants/v_separation = 6
+theme_override_constants/h_separation = 4
+theme_override_constants/v_separation = 4
 columns = 4
 
 [node name="EmptyLabel" type="Label" parent="MarginContainer/VBoxContainer/ListView/ContentRow/BagPanel"]

@@ -12,7 +12,7 @@
 ---
 
 ## 2. Les Protagonistes 🛡️
-* [cite_start]**Le Mage (Magus)** : Un érudit fragile dont la quête de diplôme devient une mission de sauvetage du monde[cite: 56]. [cite_start]Il commence le voyage avec des statistiques défensives faibles (4 de Défense)[cite: 89].
+* [cite_start]**Le Mage (Magus)** : Un érudit fragile dont la quête de diplôme devient une mission de sauvetage du monde[cite: 56]. [cite_start]Il commence le voyage avec des statistiques défensives faibles (4 de Défense)[cite: 89]. Affinité élémentaire de départ : **Feu** (`heroes.csv`) — privilégie **Flammeche** contre les **Rats** (Terre), moins efficace contre les **Gobis** (Eau) ; voir `GDD_systeme_elementaire.md`.
 * [cite_start]**Le Tank (Paladin)** : Le protecteur indispensable, garant de la survie du Mage face à un bestiaire de plus en plus agressif[cite: 57].
 
 ---
@@ -30,4 +30,11 @@
 
 ### Zone 3 : La Mine de l'Instabilité (Le Chaos)
 * [cite_start]**Contexte** : Un village minier autrefois prospère grâce à l'extraction de cristaux de Karma[cite: 52, 82]. [cite_start]Une surexploitation et une extraction excessive ont fait basculer la zone dans l'Instabilité, avec un score de **-40**[cite: 53, 83].
-* [cite_start]**Gameplay / Objectif** : Les galeries de la mine sont désormais envahies par des **Gobis**[cite: 54, 84]. [cite_start]Les héros y interviennent en tant que mercenaires pour éliminer la menace et stabiliser la jauge de Karma de la région[cite: 54, 84].
+* [cite_start]**Gameplay / Objectif** : Les galeries de la mine sont désormais envahies par des **Gobis**[cite: 54, 84]. [cite_start]Les héros y interviennent en tant que mercenaires pour éliminer la menace et stabiliser la jauge de Karma de la région[cite: 54, 84]. En combat : affinité **Eau** des Gobis — contre-nature pour un Magus **Feu** (double cycle défavorable si le joueur spamme Flammeche).
+
+---
+
+## 4. Documentation systèmes
+
+* `GDD_systeme_karma.md` — jauge de zone et modificateurs globaux.
+* `GDD_systeme_elementaire.md` — affinités, cycle, formules et tutoriel Sage du Karma.
