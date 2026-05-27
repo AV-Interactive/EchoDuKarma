@@ -4,6 +4,14 @@ using EchoduKarma.Scripts.Data;
 using EchoduKarma.Scripts.Entities.Player;
 using Godot;
 
+public sealed class InventorySaveData
+{
+    public int Gold { get; init; }
+    public string PlayerClass { get; init; } = "Magus";
+    public List<string> Items { get; init; } = new();
+    public Dictionary<string, string> Equipped { get; init; } = new();
+}
+
 public partial class InventoryManager : Node
 {
     public static InventoryManager Instance { get; private set; }
@@ -35,6 +43,13 @@ public partial class InventoryManager : Node
 
         AddEquipment("Bâton", notify: false);
         Equip("Bâton");
+    }
+
+    /// <summary>Réinitialise or, sac et équipement pour une nouvelle partie.</summary>
+    public void ResetToNewGameLoadout()
+    {
+        ImportSaveData(0, "Magus", Array.Empty<string>(), new Dictionary<string, string>());
+        GrantStartingLoadout();
     }
 
     public IReadOnlyList<string> GetInventoryItems() => _inventory;
@@ -325,5 +340,56 @@ public partial class InventoryManager : Node
         }
 
         return false;
+    }
+
+    public InventorySaveData ExportSaveData()
+    {
+        var equipped = new Dictionary<string, string>();
+        foreach (var pair in _equipped)
+            equipped[pair.Key.ToString()] = pair.Value;
+
+        return new InventorySaveData
+        {
+            Gold = Gold,
+            PlayerClass = PlayerClass,
+            Items = new List<string>(_inventory),
+            Equipped = equipped,
+        };
+    }
+
+    public void ImportSaveData(int gold, string playerClass, IReadOnlyList<string> items, IReadOnlyDictionary<string, string> equipped)
+    {
+        _inventory.Clear();
+        _equipped.Clear();
+
+        Gold = Math.Max(0, gold);
+        PlayerClass = string.IsNullOrWhiteSpace(playerClass) ? "Magus" : playerClass.Trim();
+
+        if (items != null)
+        {
+            foreach (string item in items)
+            {
+                if (!string.IsNullOrWhiteSpace(item))
+                    _inventory.Add(item.Trim());
+            }
+        }
+
+        if (equipped != null)
+        {
+            foreach (var pair in equipped)
+            {
+                if (!Enum.TryParse(pair.Key, out EquipmentSlot slot))
+                    continue;
+
+                if (string.IsNullOrWhiteSpace(pair.Value))
+                    continue;
+
+                _equipped[slot] = pair.Value.Trim();
+            }
+        }
+
+        EmitSignal(SignalName.GoldChanged, Gold);
+        EmitSignal(SignalName.InventoryChanged);
+        EmitSignal(SignalName.EquipmentChanged);
     }
 }

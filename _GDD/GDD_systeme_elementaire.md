@@ -32,7 +32,8 @@ Ce cycle s'applique **deux fois** par action offensive lorsque les conditions so
 | Fichier | Colonne | Rôle |
 | :--- | :--- | :--- |
 | `Datas/Persos/heroes.csv` | `Affinity` | Affinité du héros joueur (+ `Classe` pour filtrer les sorts) |
-| `Datas/Bestiary/bestiary.csv` | `Affinity` | Affinité de chaque ennemi |
+| `Datas/Bestiary/bestiary.csv` | `Affinity`, `Skills` | Affinité + sorts planifiables (élément via `skills.csv`) |
+| `Datas/Bestiary/{ennemi}.csv` | stats niveau | Force, Esprit, Agi pour formules et initiative |
 | `Datas/Persos/skills.csv` | `Élément` | Élément de la compétence (`Fire`, `Water`, etc.) |
 
 Exemples (état actuel du projet) :
@@ -43,12 +44,14 @@ Exemples (état actuel du projet) :
 | Rat | Earth |
 | Gobi | Water |
 
-| Compétence | Élément |
-| :--- | :--- |
-| Flammeche | Fire |
-| Soin | Water |
+| Compétence | Élément | Vitesse | Niv. requis | Classes |
+| :--- | :--- | :--- | :--- | :--- |
+| Flammeche | Fire | 10 | 1 | Magus |
+| Stalagtite | Earth | 6 | 3 | Magus |
+| Soin | Water | 10 | 7 | Magus, Paladin |
+| Renforcement | Earth | 5 | 10 | Magus |
 
-Séparateur CSV : **`;`** (bestiaire, héros) ou **`,`** (skills) selon le fichier — ne pas mélanger.
+Séparateur CSV skills / bestiaire / héros : **`;`** — voir [`GDD_donnees_reference.md`](GDD_donnees_reference.md).
 
 ---
 
@@ -174,13 +177,17 @@ Le **Karma de zone** s'applique **en plus** (stats, dégâts subis, soins) — v
 
 ### Évolutions prévues (non implémentées)
 
-* Compétences magiques **ennemies** (même formule, lanceur = ennemi).
 * Affichage de l'affinité ennemie dans le HUD de combat.
+* Sorts réservés aux ennemis (hors catalogue joueur).
 * Équipements ou passifs modifiant les multiplicateurs élémentaires.
 
 ---
 
 ## 8. Voir aussi
 
-* `GDD_systeme_karma.md` — jauge de zone, stats et dégâts subis/soins.
-* `GDD_histoire_zone.md` — contexte Rat (Terre) et Gobi (Eau) en introduction.
+* [`GDD_INDEX.md`](GDD_INDEX.md)
+* [`GDD_combat.md`](GDD_combat.md) — boucle combat et formules brutes
+* [`GDD_systeme_karma.md`](GDD_systeme_karma.md)
+* [`GDD_systeme_initiative.md`](GDD_systeme_initiative.md)
+* [`GDD_systeme_ia_ennemis.md`](GDD_systeme_ia_ennemis.md)
+* [`GDD_histoire_zone.md`](GDD_histoire_zone.md)

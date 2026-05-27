@@ -27,6 +27,9 @@ public partial class BattleHud : CanvasLayer
     readonly Dictionary<Enemy, EnemyStatWidgets> _enemyWidgets = new();
     readonly List<string> _logHistory = new();
 
+    BattleInitiativeTrack _initiativeTrack;
+    BattleManager _battleManager;
+
     [Export] RichTextLabel _playerHpLabel;
     [Export] RichTextLabel _playerMpLabel;
     [Export] RichTextLabel _logs;
@@ -43,6 +46,10 @@ public partial class BattleHud : CanvasLayer
     public override void _Ready()
     {
         _uiScene = GetNode<Control>("Scene");
+        _battleManager = GetTree().GetFirstNodeInGroup(BattleManager.GroupName) as BattleManager;
+
+        _initiativeTrack = new BattleInitiativeTrack();
+        _uiScene.AddChild(_initiativeTrack);
         _actionMenu = GetNode<Control>("Scene/Actions/Panel/ActionMenu");
         _playerPanel = GetNode<Control>("Scene/CombatantsPanel/PlayerPanel");
         _skillsListPanel = GetNode<VBoxContainer>("Scene/Actions/Panel/SkillsList");
@@ -91,12 +98,28 @@ public partial class BattleHud : CanvasLayer
         if (battlePlayer != null)
             UpdatePlayerStats(battlePlayer);
 
-        GetNode<Button>("Scene/Actions/Panel/ActionMenu/BtnAttack").Pressed += () => OnButtonPressed("Attack");
-        GetNode<Button>("Scene/Actions/Panel/ActionMenu/BtnMagic").Pressed += () => OnButtonPressed("Magic");
-        GetNode<Button>("Scene/Actions/Panel/ActionMenu/BtnDefense").Pressed += () => OnButtonPressed("Defense");
-        GetNode<Button>("Scene/Actions/Panel/ActionMenu/BtnEscape").Pressed += () => OnButtonPressed("Flee");
+        WireActionButton(GetNode<Button>("Scene/Actions/Panel/ActionMenu/BtnAttack"), "Attack");
+        WireActionButton(GetNode<Button>("Scene/Actions/Panel/ActionMenu/BtnMagic"), "Magic");
+        WireActionButton(GetNode<Button>("Scene/Actions/Panel/ActionMenu/BtnDefense"), "Defense");
+        WireActionButton(GetNode<Button>("Scene/Actions/Panel/ActionMenu/BtnEscape"), "Flee");
 
         StartCursorAnim();
+    }
+
+    void WireActionButton(Button button, string actionKey)
+    {
+        if (button == null)
+            return;
+
+        button.Pressed += () => OnButtonPressed(actionKey);
+        button.MouseEntered += () => _battleManager?.PreviewPlayerInitiative(actionKey);
+        button.FocusEntered += () => _battleManager?.PreviewPlayerInitiative(actionKey);
+        button.MouseExited += () => _battleManager?.PreviewPlayerInitiative("Attack");
+    }
+
+    public void UpdateInitiativeTrack(IReadOnlyList<InitiativeDisplayEntry> entries)
+    {
+        _initiativeTrack?.SetEntries(entries);
     }
 
     static readonly StyleBoxFlat _enemyPanelStyle = new()
@@ -256,6 +279,8 @@ public partial class BattleHud : CanvasLayer
 
         if (btnAttack != null && btnAttack.IsInsideTree())
             btnAttack.GrabFocus();
+
+        _battleManager?.PreviewPlayerInitiative("Attack");
     }
 
     public void HideMenu()
@@ -369,9 +394,18 @@ public partial class BattleHud : CanvasLayer
                 ExpandIcon = true,
             };
             btn.AddThemeFontSizeOverride("font_size", 11);
-            btn.Pressed += () => OnButtonPressed($"Magic:{skill.Name}");
+            Skill captured = skill;
+            btn.Pressed += () => OnButtonPressed($"Magic:{captured.Name}");
+            btn.MouseEntered += () => _battleManager?.PreviewPlayerInitiative($"Magic:{captured.Name}", captured);
+            btn.FocusEntered += () => _battleManager?.PreviewPlayerInitiative($"Magic:{captured.Name}", captured);
+            btn.MouseExited += () => _battleManager?.PreviewPlayerInitiative("Attack");
             _skillsListPanel.AddChild(btn);
         }
+
+        if (_skillsListPanel.GetChildCount() > 0)
+            _battleManager?.PreviewPlayerInitiative(
+                $"Magic:{skills[0].Name}",
+                skills[0]);
 
         _skillsListPanel.Show();
         if (_skillsListPanel.GetChildCount() > 0)

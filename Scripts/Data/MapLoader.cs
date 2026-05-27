@@ -11,5 +11,6 @@ public partial class MapLoader : Node3D
 		string scenePath = GetTree().CurrentScene?.SceneFilePath ?? "";
 		GameManager.Instance?.SetMapContext(ZoneName, scenePath);
 		DialogueSystem.Instance.LoadZoneDialogues(ZoneName);
+		MusicManager.Instance?.PlayZone(ZoneName);
 	}
 }

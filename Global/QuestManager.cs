@@ -439,4 +439,65 @@ public partial class QuestManager : Node
             _runtimeStates[questId] = new QuestRuntime();
         return _runtimeStates[questId];
     }
+
+    public List<QuestSaveEntry> ExportQuestStates()
+    {
+        var entries = new List<QuestSaveEntry>();
+
+        foreach (var questId in _quests.Keys)
+        {
+            if (!_runtimeStates.TryGetValue(questId, out QuestRuntime rt))
+                continue;
+
+            if (rt.Status == QuestStatus.Inactive)
+                continue;
+
+            entries.Add(new QuestSaveEntry
+            {
+                Id = questId,
+                Status = (int)rt.Status,
+                CurrentStep = rt.CurrentStep,
+                CompletedStepIndices = new List<int>(rt.CompletedStepIndices),
+                KillCounts = new Dictionary<string, int>(rt.KillCounts),
+            });
+        }
+
+        return entries;
+    }
+
+    public void ImportQuestStates(IReadOnlyList<QuestSaveEntry> entries)
+    {
+        _runtimeStates.Clear();
+
+        if (entries == null)
+            return;
+
+        foreach (QuestSaveEntry entry in entries)
+        {
+            if (string.IsNullOrWhiteSpace(entry.Id) || !_quests.ContainsKey(entry.Id))
+                continue;
+
+            var rt = new QuestRuntime
+            {
+                Status = Enum.IsDefined(typeof(QuestStatus), entry.Status)
+                    ? (QuestStatus)entry.Status
+                    : QuestStatus.Inactive,
+                CurrentStep = entry.CurrentStep,
+            };
+
+            if (entry.CompletedStepIndices != null)
+            {
+                foreach (int index in entry.CompletedStepIndices)
+                    rt.CompletedStepIndices.Add(index);
+            }
+
+            if (entry.KillCounts != null)
+            {
+                foreach (var pair in entry.KillCounts)
+                    rt.KillCounts[pair.Key] = pair.Value;
+            }
+
+            _runtimeStates[entry.Id] = rt;
+        }
+    }
 }

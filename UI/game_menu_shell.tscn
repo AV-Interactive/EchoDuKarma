@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://d3gn7yxbe6mjs" path="res://UI/inventory_page.tscn" id="3_inventory"]
 [ext_resource type="PackedScene" uid="uid://vbcno0dgtf73" path="res://UI/quest_journal_page.tscn" id="4_quests"]
 [ext_resource type="PackedScene" uid="uid://cskillspage001" path="res://UI/skills_page.tscn" id="5_skills"]
+[ext_resource type="PackedScene" uid="uid://csavepage001" path="res://UI/save_page.tscn" id="6_save"]
 [ext_resource type="Texture2D" path="res://Assets/UI/stats/karma.png" id="6_karma"]
 [ext_resource type="Texture2D" path="res://Assets/UI/weapons/staff.png" id="7_staff"]
 [ext_resource type="Texture2D" path="res://Assets/UI/pocket.png" id="8_pocket"]
@@ -42,7 +43,7 @@ content_margin_top = 8.0
 content_margin_right = 8.0
 content_margin_bottom = 8.0
 
-[node name="GameMenuShell" type="Control" node_paths=PackedStringArray("_titleLabel", "_statsTabButton", "_skillsTabButton", "_inventoryTabButton", "_questsTabButton", "_closeButton", "_statsPage", "_skillsPage", "_inventoryPage", "_questsPage")]
+[node name="GameMenuShell" type="Control" node_paths=PackedStringArray("_titleLabel", "_statsTabButton", "_skillsTabButton", "_inventoryTabButton", "_questsTabButton", "_systemTabButton", "_closeButton", "_statsPage", "_skillsPage", "_inventoryPage", "_questsPage", "_systemPage")]
 z_index = 10
 layout_mode = 3
 anchors_preset = 15
@@ -57,11 +58,13 @@ _statsTabButton = NodePath("Dimmer/PanelContainer/MarginContainer/MainRow/NavPan
 _skillsTabButton = NodePath("Dimmer/PanelContainer/MarginContainer/MainRow/NavPanel/Margin/VBox/SkillsTabButton")
 _inventoryTabButton = NodePath("Dimmer/PanelContainer/MarginContainer/MainRow/NavPanel/Margin/VBox/InventoryTabButton")
 _questsTabButton = NodePath("Dimmer/PanelContainer/MarginContainer/MainRow/NavPanel/Margin/VBox/QuestsTabButton")
+_systemTabButton = NodePath("Dimmer/PanelContainer/MarginContainer/MainRow/NavPanel/Margin/VBox/SystemTabButton")
 _closeButton = NodePath("Dimmer/PanelContainer/MarginContainer/MainRow/NavPanel/Margin/VBox/CloseButton")
 _statsPage = NodePath("Dimmer/PanelContainer/MarginContainer/MainRow/ContentColumn/ContentHost/PlayerStatsPage")
 _skillsPage = NodePath("Dimmer/PanelContainer/MarginContainer/MainRow/ContentColumn/ContentHost/SkillsPage")
 _inventoryPage = NodePath("Dimmer/PanelContainer/MarginContainer/MainRow/ContentColumn/ContentHost/InventoryPage")
 _questsPage = NodePath("Dimmer/PanelContainer/MarginContainer/MainRow/ContentColumn/ContentHost/QuestJournalPage")
+_systemPage = NodePath("Dimmer/PanelContainer/MarginContainer/MainRow/ContentColumn/ContentHost/SavePage")
 
 [node name="Dimmer" type="ColorRect" parent="."]
 layout_mode = 1
@@ -168,6 +171,17 @@ text = "Quêtes (J)"
 alignment = 0
 toggle_mode = true
 
+[node name="SystemTabButton" type="Button" parent="Dimmer/PanelContainer/MarginContainer/MainRow/NavPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/font_size = 11
+text = "Système (Échap)"
+alignment = 0
+toggle_mode = true
+
 [node name="NavSpacer" type="Control" parent="Dimmer/PanelContainer/MarginContainer/MainRow/NavPanel/Margin/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
@@ -244,9 +258,19 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
+[node name="SavePage" parent="Dimmer/PanelContainer/MarginContainer/MainRow/ContentColumn/ContentHost" instance=ExtResource("6_save")]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
 [node name="HintLabel" type="Label" parent="Dimmer/PanelContainer/MarginContainer/MainRow/ContentColumn"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 9
 theme_override_colors/font_color = Color(0.45, 0.52, 0.62, 1)
-text = "↑↓ onglets · C/I/J/K raccourcis · Échap fermer / retour"
+text = "↑↓ onglets · C/I/J/K raccourcis · Échap menu système / fermer"
 horizontal_alignment = 1

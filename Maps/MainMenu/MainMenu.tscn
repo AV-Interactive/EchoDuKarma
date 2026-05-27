@@ -1,0 +1,236 @@
+[gd_scene format=3 uid="uid://cyc8taatpyiuq"]
+
+[ext_resource type="Script" uid="uid://bmainmenu01cs" path="res://Scripts/UI/MainMenu.cs" id="1_menu"]
+[ext_resource type="Script" uid="uid://cyc8taas0fiuq" path="res://Scripts/UI/MainMenuBackground.cs" id="2_background"]
+[ext_resource type="Script" uid="uid://necg3gqnqk7m" path="res://Scripts/UI/MainMenuAtmosphere.cs" id="3_atmosphere"]
+[ext_resource type="Script" uid="uid://buj01o3wcai8u" path="res://Scripts/UI/MainMenuParticles.cs" id="4_particles"]
+[ext_resource type="Texture2D" uid="uid://dgurkx6pa4fog" path="res://Assets/UI/landscape.png" id="5_landscape"]
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_rghk4"]
+load_path = "res://.godot/imported/landscape.png-c5be49cb37eb9c7bad39c181023ae296.ctex"
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_menu_panel"]
+content_margin_left = 16.0
+content_margin_top = 16.0
+content_margin_right = 16.0
+content_margin_bottom = 16.0
+bg_color = Color(0.04, 0.07, 0.12, 0.82)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.62, 0.78, 0.85)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+shadow_color = Color(0, 0, 0, 0.35)
+shadow_size = 6
+
+[node name="MainMenu" type="Control" unique_id=737889560 node_paths=PackedStringArray("_titleLabel", "_subtitleLabel", "_taglineLabel", "_newGameButton", "_continueButton", "_loadButton", "_quitButton", "_fadeOverlay", "_loadOverlayHost")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_menu")
+_titleLabel = NodePath("Content/TitleBlock/TitleLabel")
+_subtitleLabel = NodePath("Content/TitleBlock/SubtitleLabel")
+_taglineLabel = NodePath("Content/TitleBlock/TaglineLabel")
+_newGameButton = NodePath("Content/MenuPanel/Margin/VBox/NewGameButton")
+_continueButton = NodePath("Content/MenuPanel/Margin/VBox/ContinueButton")
+_loadButton = NodePath("Content/MenuPanel/Margin/VBox/LoadButton")
+_quitButton = NodePath("Content/MenuPanel/Margin/VBox/QuitButton")
+_fadeOverlay = NodePath("FadeOverlay")
+_loadOverlayHost = NodePath("LoadOverlayHost")
+
+[node name="LandscapeBackground" type="TextureRect" parent="." unique_id=2005420759]
+z_index = -100
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("CompressedTexture2D_rghk4")
+expand_mode = 1
+stretch_mode = 6
+script = ExtResource("2_background")
+
+[node name="LandscapeGlow" type="TextureRect" parent="." unique_id=1945765503]
+z_index = -99
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("5_landscape")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="OverlayGradients" type="Control" parent="." unique_id=1267601289]
+z_index = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="TopGradient" type="ColorRect" parent="OverlayGradients" unique_id=547081353]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 200.0
+grow_horizontal = 2
+mouse_filter = 2
+color = Color(0.02, 0.05, 0.1, 0.35)
+
+[node name="BottomGradient" type="ColorRect" parent="OverlayGradients" unique_id=889215775]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -280.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+color = Color(0.02, 0.04, 0.08, 0.55)
+
+[node name="ParticlesLayer" type="Control" parent="." unique_id=1775230429]
+z_index = 2
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="MainMenuParticles" type="Node2D" parent="ParticlesLayer" unique_id=734847388]
+script = ExtResource("4_particles")
+
+[node name="Atmosphere" type="Control" parent="." unique_id=104294743]
+z_index = 3
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("3_atmosphere")
+
+[node name="Content" type="Control" parent="." unique_id=2117540217]
+z_index = 4
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="TitleBlock" type="VBoxContainer" parent="Content" unique_id=405679174]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -420.0
+offset_top = 48.0
+offset_right = 420.0
+offset_bottom = 200.0
+grow_horizontal = 2
+theme_override_constants/separation = 6
+
+[node name="TitleLabel" type="RichTextLabel" parent="Content/TitleBlock" unique_id=1664613378]
+custom_minimum_size = Vector2(0, 88)
+layout_mode = 2
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+
+[node name="SubtitleLabel" type="Label" parent="Content/TitleBlock" unique_id=1184946227]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.82, 0.9, 0.96, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.65)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 20
+text = "Les échos du passé résonnent encore…"
+horizontal_alignment = 1
+
+[node name="TaglineLabel" type="Label" parent="Content/TitleBlock" unique_id=1173638878]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.75, 0.85, 1)
+theme_override_font_sizes/font_size = 12
+text = "HD-2D · Tour par tour · Karma"
+horizontal_alignment = 1
+
+[node name="MenuPanel" type="PanelContainer" parent="Content" unique_id=1725490619]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -220.0
+offset_top = -300.0
+offset_right = 220.0
+offset_bottom = -56.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_menu_panel")
+
+[node name="Margin" type="MarginContainer" parent="Content/MenuPanel" unique_id=2061640364]
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="Content/MenuPanel/Margin" unique_id=1147814322]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="NewGameButton" type="Button" parent="Content/MenuPanel/Margin/VBox" unique_id=553610523]
+custom_minimum_size = Vector2(360, 40)
+layout_mode = 2
+text = "  Nouvelle partie"
+
+[node name="ContinueButton" type="Button" parent="Content/MenuPanel/Margin/VBox" unique_id=1308843343]
+custom_minimum_size = Vector2(360, 40)
+layout_mode = 2
+text = "  Continuer"
+
+[node name="LoadButton" type="Button" parent="Content/MenuPanel/Margin/VBox" unique_id=859686013]
+custom_minimum_size = Vector2(360, 40)
+layout_mode = 2
+text = "  Charger"
+
+[node name="QuitButton" type="Button" parent="Content/MenuPanel/Margin/VBox" unique_id=1376983067]
+custom_minimum_size = Vector2(360, 40)
+layout_mode = 2
+text = "  Quitter"
+
+[node name="LoadOverlayHost" type="Control" parent="." unique_id=816690075]
+z_index = 10
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="FadeOverlay" type="ColorRect" parent="." unique_id=312999954]
+z_index = 20
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0)

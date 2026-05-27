@@ -14,9 +14,9 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 content_margin_left = 8.0
-content_margin_top = 6.0
+content_margin_top = 5.0
 content_margin_right = 8.0
-content_margin_bottom = 6.0
+content_margin_bottom = 5.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_summary"]
 bg_color = Color(0.05, 0.07, 0.11, 0.95)
@@ -29,10 +29,10 @@ corner_radius_top_left = 3
 corner_radius_top_right = 3
 corner_radius_bottom_right = 3
 corner_radius_bottom_left = 3
-content_margin_left = 8.0
-content_margin_top = 6.0
-content_margin_right = 8.0
-content_margin_bottom = 6.0
+content_margin_left = 6.0
+content_margin_top = 4.0
+content_margin_right = 6.0
+content_margin_bottom = 4.0
 
 [node name="QuestDetailPanel" type="PanelContainer" node_paths=PackedStringArray("_nameLabel", "_metaLabel", "_descriptionLabel", "_stepsContainer", "_objectiveLabel", "_rewardsLabel")]
 layout_mode = 2
@@ -42,10 +42,10 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 script = ExtResource("1_detail")
 _nameLabel = NodePath("MarginContainer/RootVBox/Header/NameLabel")
 _metaLabel = NodePath("MarginContainer/RootVBox/Header/MetaLabel")
-_descriptionLabel = NodePath("MarginContainer/RootVBox/BodyScroll/Margin/BodyVBox/DescriptionLabel")
-_stepsContainer = NodePath("MarginContainer/RootVBox/BodyScroll/Margin/BodyVBox/StepsList")
-_objectiveLabel = NodePath("MarginContainer/RootVBox/SummaryRow/ObjectivePanel/Margin/ObjectiveLabel")
-_rewardsLabel = NodePath("MarginContainer/RootVBox/SummaryRow/RewardsPanel/Margin/RewardsLabel")
+_descriptionLabel = NodePath("MarginContainer/RootVBox/BodyVBox/DescriptionLabel")
+_stepsContainer = NodePath("MarginContainer/RootVBox/BodyVBox/StepsColumns")
+_objectiveLabel = NodePath("MarginContainer/RootVBox/SummaryRow/ObjectivePanel/Margin/VBox/ObjectiveLabel")
+_rewardsLabel = NodePath("MarginContainer/RootVBox/SummaryRow/RewardsPanel/Margin/VBox/RewardsLabel")
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 layout_mode = 2
@@ -56,17 +56,17 @@ size_flags_vertical = 3
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_constants/separation = 6
+theme_override_constants/separation = 4
 
 [node name="Header" type="VBoxContainer" parent="MarginContainer/RootVBox"]
 layout_mode = 2
-theme_override_constants/separation = 2
+theme_override_constants/separation = 1
 
 [node name="NameLabel" type="RichTextLabel" parent="MarginContainer/RootVBox/Header"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/normal_font_size = 14
-theme_override_font_sizes/bold_font_size = 14
+theme_override_font_sizes/normal_font_size = 12
+theme_override_font_sizes/bold_font_size = 12
 bbcode_enabled = true
 text = "[b]Titre de la quête[/b]"
 fit_content = true
@@ -75,59 +75,51 @@ scroll_active = false
 [node name="MetaLabel" type="RichTextLabel" parent="MarginContainer/RootVBox/Header"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/normal_font_size = 11
+theme_override_font_sizes/normal_font_size = 9
 bbcode_enabled = true
 text = "[color=#58B4C6]ANNEXE[/color]  ·  Introduction  ·  [color=#FFD166]En cours[/color]"
 fit_content = true
 scroll_active = false
 
-[node name="BodyScroll" type="ScrollContainer" parent="MarginContainer/RootVBox"]
+[node name="BodyVBox" type="VBoxContainer" parent="MarginContainer/RootVBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-horizontal_scroll_mode = 0
+theme_override_constants/separation = 3
 
-[node name="Margin" type="MarginContainer" parent="MarginContainer/RootVBox/BodyScroll"]
+[node name="DescriptionTitle" type="Label" parent="MarginContainer/RootVBox/BodyVBox"]
 layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/margin_right = 4
-
-[node name="BodyVBox" type="VBoxContainer" parent="MarginContainer/RootVBox/BodyScroll/Margin"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 8
-
-[node name="DescriptionTitle" type="Label" parent="MarginContainer/RootVBox/BodyScroll/Margin/BodyVBox"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 11
+theme_override_font_sizes/font_size = 9
 theme_override_colors/font_color = Color(0.75, 0.8, 0.88, 1)
 text = "Description"
 
-[node name="DescriptionLabel" type="RichTextLabel" parent="MarginContainer/RootVBox/BodyScroll/Margin/BodyVBox"]
+[node name="DescriptionLabel" type="RichTextLabel" parent="MarginContainer/RootVBox/BodyVBox"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/normal_font_size = 11
+theme_override_font_sizes/normal_font_size = 9
 bbcode_enabled = true
 text = "Texte descriptif de la quête."
 fit_content = true
 scroll_active = false
 autowrap_mode = 3
 
-[node name="StepsTitle" type="Label" parent="MarginContainer/RootVBox/BodyScroll/Margin/BodyVBox"]
+[node name="StepsTitle" type="Label" parent="MarginContainer/RootVBox/BodyVBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 11
+theme_override_font_sizes/font_size = 9
 theme_override_colors/font_color = Color(0.75, 0.8, 0.88, 1)
 text = "Étapes"
 
-[node name="StepsList" type="VBoxContainer" parent="MarginContainer/RootVBox/BodyScroll/Margin/BodyVBox"]
+[node name="StepsColumns" type="HBoxContainer" parent="MarginContainer/RootVBox/BodyVBox"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 8
 
 [node name="SummaryRow" type="HBoxContainer" parent="MarginContainer/RootVBox"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 8
+size_flags_vertical = 0
+theme_override_constants/separation = 6
 
 [node name="ObjectivePanel" type="PanelContainer" parent="MarginContainer/RootVBox/SummaryRow"]
 layout_mode = 2
@@ -141,18 +133,18 @@ size_flags_horizontal = 3
 
 [node name="VBox" type="VBoxContainer" parent="MarginContainer/RootVBox/SummaryRow/ObjectivePanel/Margin"]
 layout_mode = 2
-theme_override_constants/separation = 2
+theme_override_constants/separation = 1
 
 [node name="Title" type="Label" parent="MarginContainer/RootVBox/SummaryRow/ObjectivePanel/Margin/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 10
+theme_override_font_sizes/font_size = 9
 theme_override_colors/font_color = Color(0.75, 0.8, 0.88, 1)
 text = "Objectif"
 
 [node name="ObjectiveLabel" type="RichTextLabel" parent="MarginContainer/RootVBox/SummaryRow/ObjectivePanel/Margin/VBox"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/normal_font_size = 11
+theme_override_font_sizes/normal_font_size = 9
 bbcode_enabled = true
 text = "[color=#FFD166]Éliminer Rat : 0/2[/color]"
 fit_content = true
@@ -171,18 +163,18 @@ size_flags_horizontal = 3
 
 [node name="VBox" type="VBoxContainer" parent="MarginContainer/RootVBox/SummaryRow/RewardsPanel/Margin"]
 layout_mode = 2
-theme_override_constants/separation = 2
+theme_override_constants/separation = 1
 
 [node name="Title" type="Label" parent="MarginContainer/RootVBox/SummaryRow/RewardsPanel/Margin/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 10
+theme_override_font_sizes/font_size = 9
 theme_override_colors/font_color = Color(0.75, 0.8, 0.88, 1)
 text = "Récompenses"
 
 [node name="RewardsLabel" type="RichTextLabel" parent="MarginContainer/RootVBox/SummaryRow/RewardsPanel/Margin/VBox"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/normal_font_size = 11
+theme_override_font_sizes/normal_font_size = 9
 bbcode_enabled = true
 text = "[color=#FFD166]+10 XP[/color]  ·  [color=#F5D76E]+20 or[/color]"
 fit_content = true

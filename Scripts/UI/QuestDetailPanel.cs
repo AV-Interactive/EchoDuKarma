@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Godot;
 
 public partial class QuestDetailPanel : PanelContainer
@@ -6,12 +7,22 @@ public partial class QuestDetailPanel : PanelContainer
     [Export] RichTextLabel _nameLabel;
     [Export] RichTextLabel _metaLabel;
     [Export] RichTextLabel _descriptionLabel;
-    [Export] VBoxContainer _stepsContainer;
+    [Export] HBoxContainer _stepsContainer;
     [Export] RichTextLabel _objectiveLabel;
     [Export] RichTextLabel _rewardsLabel;
 
     public void SetQuest(QuestData quest, QuestRuntime runtime)
     {
+        if (quest == null || runtime == null)
+            return;
+
+        if (_nameLabel == null || _metaLabel == null || _descriptionLabel == null
+            || _stepsContainer == null || _objectiveLabel == null || _rewardsLabel == null)
+        {
+            GD.PrintErr("[QuestDetailPanel] Exports manquants — détail quête non affiché.");
+            return;
+        }
+
         _nameLabel.Text = $"[b]{quest.Name}[/b]";
 
         string statusText = runtime.Status switch
@@ -37,17 +48,96 @@ public partial class QuestDetailPanel : PanelContainer
         foreach (Node child in _stepsContainer.GetChildren())
             child.QueueFree();
 
-        if (quest.Steps == null || quest.Steps.Length == 0)
+        var entries = new List<(int Index, string Text, string Tone)>();
+
+        if (quest.Steps != null)
         {
-            AddStepLine("—", "neutral");
+            for (int i = 0; i < quest.Steps.Length; i++)
+            {
+                string rawStep = quest.Steps[i];
+                if (string.IsNullOrWhiteSpace(rawStep))
+                    continue;
+
+                string prefix = GetStepPrefix(i, quest, runtime);
+                entries.Add((i, $"{prefix} {QuestData.GetStepLabel(rawStep)}", GetStepTone(i, quest, runtime)));
+            }
+        }
+
+        if (entries.Count == 0)
+        {
+            BuildSingleColumnSteps(new[] { ("—", "neutral") }, fontSize: 10);
             return;
         }
 
-        for (int i = 0; i < quest.Steps.Length; i++)
+        (int columnCount, int fontSize) = GetStepLayout(entries.Count);
+        int rowsPerColumn = (int)Math.Ceiling(entries.Count / (double)columnCount);
+
+        _stepsContainer.AddThemeConstantOverride("separation", columnCount > 1 ? 10 : 0);
+
+        var columns = new List<VBoxContainer>(columnCount);
+        for (int c = 0; c < columnCount; c++)
         {
-            string prefix = GetStepPrefix(i, quest, runtime);
-            AddStepLine($"{prefix} {QuestData.GetStepLabel(quest.Steps[i])}", GetStepTone(i, quest, runtime));
+            var column = new VBoxContainer
+            {
+                SizeFlagsHorizontal = SizeFlags.ExpandFill,
+                SizeFlagsVertical = SizeFlags.ShrinkBegin,
+            };
+            column.AddThemeConstantOverride("separation", 1);
+            columns.Add(column);
+            _stepsContainer.AddChild(column);
         }
+
+        for (int i = 0; i < entries.Count; i++)
+        {
+            int col = Math.Min(i / rowsPerColumn, columnCount - 1);
+            var (_, text, tone) = entries[i];
+            columns[col].AddChild(CreateStepLabel(text, tone, fontSize));
+        }
+    }
+
+    void BuildSingleColumnSteps(IEnumerable<(string Text, string Tone)> lines, int fontSize)
+    {
+        var column = new VBoxContainer
+        {
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            SizeFlagsVertical = SizeFlags.ShrinkBegin,
+        };
+        column.AddThemeConstantOverride("separation", 1);
+        _stepsContainer.AddChild(column);
+
+        foreach (var (text, tone) in lines)
+            column.AddChild(CreateStepLabel(text, tone, fontSize));
+    }
+
+    static (int ColumnCount, int FontSize) GetStepLayout(int stepCount) => stepCount switch
+    {
+        <= 3 => (1, 10),
+        <= 6 => (2, 9),
+        <= 9 => (3, 9),
+        <= 12 => (3, 8),
+        _    => (3, 7),
+    };
+
+    static Label CreateStepLabel(string text, string tone, int fontSize)
+    {
+        Color color = tone switch
+        {
+            "done"    => new Color("#7AE582"),
+            "current" => new Color("#FFD166"),
+            _         => new Color("#8899AA"),
+        };
+
+        var label = new Label
+        {
+            Text = text,
+            AutowrapMode = TextServer.AutowrapMode.Off,
+            ClipText = true,
+            TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis,
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+        };
+        label.AddThemeFontSizeOverride("font_size", fontSize);
+        label.AddThemeColorOverride("font_color", color);
+        return label;
     }
 
     static string GetStepPrefix(int index, QuestData quest, QuestRuntime runtime)
@@ -88,26 +178,6 @@ public partial class QuestDetailPanel : PanelContainer
         return "pending";
     }
 
-    void AddStepLine(string text, string tone)
-    {
-        string color = tone switch
-        {
-            "done"    => "#7AE582",
-            "current" => "#FFD166",
-            _         => "#8899AA",
-        };
-
-        var label = new RichTextLabel
-        {
-            BbcodeEnabled = true,
-            Text = $"[color={color}]{text}[/color]",
-            FitContent = true,
-            ScrollActive = false,
-        };
-        label.AddThemeFontSizeOverride("normal_font_size", 11);
-        _stepsContainer.AddChild(label);
-    }
-
     static string FormatObjective(QuestData quest, QuestRuntime runtime)
     {
         if (quest.UsesAllStepsCompletion)
@@ -145,7 +215,7 @@ public partial class QuestDetailPanel : PanelContainer
 
     static string FormatRewards(QuestData quest)
     {
-        var parts = new System.Collections.Generic.List<string>();
+        var parts = new List<string>();
 
         if (quest.RewardXp > 0)
             parts.Add($"[color=#FFD166]+{quest.RewardXp} XP[/color]");

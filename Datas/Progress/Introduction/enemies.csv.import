@@ -1,0 +1,16 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://cylrj27amrxhv"
+
+[deps]
+
+source_file="res://Datas/Progress/Introduction/enemies.csv"
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

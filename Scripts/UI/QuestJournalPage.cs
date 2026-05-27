@@ -25,6 +25,10 @@ public partial class QuestJournalPage : Control, IGameMenuTabPage
         Visible = false;
         MouseFilter = MouseFilterEnum.Ignore;
 
+        _detailPanel ??= GetNodeOrNull<QuestDetailPanel>("MarginContainer/VBoxContainer/DetailView/QuestDetail");
+        if (_detailPanel == null)
+            GD.PrintErr("[QuestJournalPage] QuestDetailPanel introuvable — vérifiez l'export _detailPanel.");
+
         _backButton.Pressed += ShowList;
 
         if (QuestManager.Instance is not null)
@@ -101,6 +105,12 @@ public partial class QuestJournalPage : Control, IGameMenuTabPage
         if (quest is null)
             return;
 
+        if (_detailPanel == null)
+        {
+            GD.PrintErr("[QuestJournalPage] Impossible d'afficher le détail : panneau absent.");
+            return;
+        }
+
         _viewingQuestId = questId;
         _detailPanel.SetQuest(quest, QuestManager.Instance.GetRuntime(questId));
 
@@ -146,7 +156,8 @@ public partial class QuestJournalPage : Control, IGameMenuTabPage
             count++;
             var row = packed.Instantiate<QuestStatRow>();
             row.Bind(data, runtime);
-            row.Pressed += () => OnRowPressed(row);
+            string questId = data.Id;
+            row.Pressed += () => ShowDetail(questId);
             _questList.AddChild(row);
             _rows.Add(row);
         }
@@ -164,14 +175,6 @@ public partial class QuestJournalPage : Control, IGameMenuTabPage
             ShowDetail(restoreQuestId);
         else if (restoreDetail)
             ShowList();
-    }
-
-    void OnRowPressed(QuestStatRow row)
-    {
-        if (row is null || string.IsNullOrEmpty(row.QuestId))
-            return;
-
-        ShowDetail(row.QuestId);
     }
 
     void ConfigureRowFocus()

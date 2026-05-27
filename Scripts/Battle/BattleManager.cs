@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using EchoduKarma.Scripts.Data;
 using EchoduKarma.Scripts.Entities.Player;
+using EchoduKarma.Scripts.UI;
 
 /// <summary>
 /// Lead Developer Refactor: Orchestrates the turn-based battle logic.
@@ -69,8 +70,11 @@ public partial class BattleManager : Node
 
     [ExportGroup("Turn Management")]
     private BattleState _currentState;
-    private List<IBattler> _turnOrder = new List<IBattler>();
-    private int _currentTurnIndex = 0;
+    private readonly List<WaveActionEntry> _roundQueue = new();
+    private int _roundTurnIndex;
+    private bool _roundExecutionStarted;
+    private int? _previewPlayerInitiative;
+    private string _previewPlayerActionLabel;
 
     [ExportGroup("Action Selection State")]
     private bool _isPlayerDefending = false;
@@ -80,6 +84,7 @@ public partial class BattleManager : Node
     private bool _isActionRunning = false;
 
     private readonly HashSet<Enemy> _defendingEnemies = new();
+    private readonly CombatBuffTracker _buffTracker = new();
 
     private bool _isReady = false;
     private float _zoneKarma;
@@ -200,7 +205,7 @@ public partial class BattleManager : Node
         RegisterCameraBattleFocus();
         _hud?.SetupEnemies(_enemies);
         LogKarmaCombatStart();
-        DetermineTurnOrder();
+        BeginRound();
     }
 
     void RegisterCameraBattleFocus()
@@ -217,31 +222,16 @@ public partial class BattleManager : Node
 
     private void HandleSelectionState()
     {
-        if (_turnOrder.Count == 0)
+        if (_roundExecutionStarted)
         {
-            GD.PushError("[BattleManager] Turn order empty. Resetting to Setup.");
-            ChangeState(BattleState.Setup);
+            AdvanceRoundExecution();
             return;
         }
 
-        // Loop turn index if out of bounds
-        if (_currentTurnIndex >= _turnOrder.Count)
-            _currentTurnIndex = 0;
-
-        var activeUnit = _turnOrder[_currentTurnIndex];
-
-        if (activeUnit == _playerBattler)
-        {
-            _isPlayerDefending = false;
-            _hud?.ClearActiveHighlight();
-            _hud?.SetActivePlayer(true);
-            _hud?.ShowMenu();
-        }
-        else
-        {
-            // Auto-transition to Action for AI units
-            ChangeState(BattleState.Action);
-        }
+        _isPlayerDefending = false;
+        _hud?.ClearActiveHighlight();
+        _hud?.SetActivePlayer(true);
+        _hud?.ShowMenu();
     }
 
     private void HandleActionState() => ExecuteCurrentTurn();
@@ -286,10 +276,10 @@ public partial class BattleManager : Node
                 _hud.ShowMagicMenu(_playerSkills);
                 break;
             case "Defense":
-                ExecuteDefense();
+                CommitAndStartRoundExecution(BuildPlayerActionEntry("Defense"));
                 break;
             case "Flee":
-                ExecuteFlee();
+                CommitAndStartRoundExecution(BuildPlayerActionEntry("Flee"));
                 break;
         }
     }
@@ -308,7 +298,15 @@ public partial class BattleManager : Node
         // Support skills (Heal/Buff) are self-targeted for now
         if (_selectedSkill.Type == SkillType.Support)
         {
-            ExecuteMagicAction(_playerBattler, _selectedSkill);
+            if (_playerBattler.CurrentMp < _selectedSkill.Cost)
+            {
+                _hud?.ShowLogs($"{_playerBattler.Name} n'a pas assez de MP pour utiliser {_selectedSkill.Name} !");
+                _hud?.ShowMenu();
+                return;
+            }
+
+            CommitAndStartRoundExecution(
+                BuildPlayerActionEntry($"Magic:{_selectedSkill.Name}", _selectedSkill));
         }
         else
         {
@@ -393,9 +391,23 @@ public partial class BattleManager : Node
         _hud?.HideTargetCursor();
 
         if (_selectedSkill != null)
-            ExecuteMagicAction(_enemies[_targetIndex], _selectedSkill);
+        {
+            if (_playerBattler.CurrentMp < _selectedSkill.Cost)
+            {
+                _hud?.ShowLogs($"{_playerBattler.Name} n'a pas assez de MP pour utiliser {_selectedSkill.Name} !");
+                _selectedSkill = null;
+                _hud?.ShowMenu();
+                return;
+            }
+
+            CommitAndStartRoundExecution(
+                BuildPlayerActionEntry($"Magic:{_selectedSkill.Name}", _selectedSkill, _targetIndex));
+        }
         else
-            ExecutePhysicalAttack(_enemies[_targetIndex]);
+        {
+            CommitAndStartRoundExecution(
+                BuildPlayerActionEntry("Attack", targetIndex: _targetIndex));
+        }
     }
 
     private void CancelTargetSelection()
@@ -421,28 +433,18 @@ public partial class BattleManager : Node
 
     #region --- Combat Execution: Player ---
 
-    private async void ExecutePhysicalAttack(Enemy target)
+    private async Task RunPlayerPhysicalAttackAsync(Enemy target)
     {
-        if (_isActionRunning) return;
-        _isActionRunning = true;
-
         if (_playerBattler == null || target == null)
-        {
-            _isActionRunning = false;
-            ChangeState(BattleState.Evaluation);
             return;
-        }
 
-        ChangeState(BattleState.Action);
-
-        // CHANGEMENT ANGLE CAMERA — cadre l'ennemi ciblé au centre
         await _cameraDirector.CutTo(CameraDirector.CameraShot.PlayerAttack, target);
         _playerActor?.OnCameraChanged(CameraDirector.CameraShot.PlayerAttack);
 
         if (_playerActor != null)
             await _playerActor.PlayAttackAnimation();
 
-        int playerStr = GetPlayerEffectiveStat(_playerBattler.Strength, KarmaCombatModifiers.StatKind.Force);
+        int playerStr = GetPlayerAttackStrength();
         LogElementCombat(_playerBattler.Affinity, null, target.Affinity);
         int damage = CalculatePhysicalDamage(_playerBattler, target, playerStr, target.Defense);
 
@@ -466,26 +468,13 @@ public partial class BattleManager : Node
         // RETOUR PLAN NEUTRE
         await _cameraDirector.CutTo(CameraDirector.CameraShot.Neutral);
         _playerActor?.OnCameraChanged(CameraDirector.CameraShot.Neutral);
-        
-        _isActionRunning = false;
-        
-        ChangeState(BattleState.Evaluation);
     }
 
-    private async void ExecuteMagicAction(IBattler target, Skill skill)
+    private async Task RunPlayerMagicAsync(IBattler target, Skill skill)
     {
-        if (_isActionRunning) return;
-
-        if (_playerBattler.CurrentMp < skill.Cost)
-        {
-            _hud?.ShowLogs($"{_playerBattler.Name} n'a pas assez de MP pour utiliser {skill.Name} !");
-            await ToSignal(GetTree().CreateTimer(_actionResultDelay), "timeout");
-            CancelPlayerActionAndShowMenu();
+        if (_playerBattler == null || skill == null)
             return;
-        }
 
-        _isActionRunning = true;
-        ChangeState(BattleState.Action);
         _playerBattler.CurrentMp -= skill.Cost;
         _hud?.UpdatePlayerStats(_playerBattler);
 
@@ -503,6 +492,8 @@ public partial class BattleManager : Node
 
         if (isOffensive)
             ApplyMagicDamage(target, skill);
+        else if (SkillSupportEffect.GetKind(skill) == SkillSupportEffect.Kind.BuffForce)
+            ApplyForceBuffEffect(target, skill);
         else
             ApplyHealEffect(skill);
 
@@ -510,10 +501,48 @@ public partial class BattleManager : Node
 
         await _cameraDirector.CutTo(CameraDirector.CameraShot.Neutral);
         _playerActor?.OnCameraChanged(CameraDirector.CameraShot.Neutral);
+    }
 
-        _isActionRunning = false;
-        
-        ChangeState(BattleState.Evaluation);
+    private async Task RunPlayerDefenseAsync()
+    {
+        _isPlayerDefending = true;
+        _hud?.ShowLogs($"{_playerBattler.Name} se prépare à encaisser !");
+        await ToSignal(GetTree().CreateTimer(_defenseDelay), "timeout");
+    }
+
+    private async Task<bool> RunPlayerFleeAsync()
+    {
+        _hud?.ShowLogs($"{_playerBattler.Name} tente de fuir...");
+        await ToSignal(GetTree().CreateTimer(_fleeDelay), "timeout");
+
+        if (GD.Randf() > 0.5f)
+        {
+            _hud?.ShowLogs("Fuite réussie !");
+            await ToSignal(GetTree().CreateTimer(_actionResultDelay), "timeout");
+            EndBattle(BattleEndReason.Flee);
+            return true;
+        }
+
+        _hud?.ShowLogs("L'ennemi vous barre la route !");
+        await ToSignal(GetTree().CreateTimer(_actionResultDelay), "timeout");
+        return false;
+    }
+
+    private void ApplyForceBuffEffect(IBattler target, Skill skill)
+    {
+        if (target == null || skill == null)
+            return;
+
+        int turns = SkillSupportEffect.RollDuration(skill);
+        int amount = skill.Power;
+
+        _buffTracker.ApplyForceBuff(target, amount, turns, skill.Name);
+        _hud?.ShowLogs($"{target.Name} gagne +{amount} Force pour {turns} tour{(turns > 1 ? "s" : "")} !");
+
+        if (target == _playerBattler)
+            _hud?.UpdatePlayerStats(_playerBattler);
+
+        SyncInitiativeHud();
     }
 
     private void ApplyHealEffect(Skill skill)
@@ -560,77 +589,9 @@ public partial class BattleManager : Node
         _hud?.ShowDamage(new Vector2(screenPos.X, screenPos.Y - 24f), damage, Colors.Red);
     }
 
-    private async void ExecuteDefense()
-    {
-        ChangeState(BattleState.Action);
-        _isPlayerDefending = true;
-        _hud?.ShowLogs($"{_playerBattler.Name} se prépare à encaisser !");
-        await ToSignal(GetTree().CreateTimer(_defenseDelay), "timeout");
-        ChangeState(BattleState.Evaluation);
-    }
-
-    /// <summary>
-    /// Fuite : retour immédiat à la map sans XP ni butin (voir docs/COMBAT_REGRESSION.md).
-    /// Les kills / karma déjà appliqués avant la fuite restent acquis.
-    /// </summary>
-    async void ExecuteFlee()
-    {
-        ChangeState(BattleState.Action);
-        _hud?.ShowLogs($"{_playerBattler.Name} tente de fuir...");
-        await ToSignal(GetTree().CreateTimer(_fleeDelay), "timeout");
-
-        if (GD.Randf() > 0.5f)
-        {
-            _hud?.ShowLogs("Fuite réussie !");
-            await ToSignal(GetTree().CreateTimer(_actionResultDelay), "timeout");
-            EndBattle(BattleEndReason.Flee);
-        }
-        else
-        {
-            _hud?.ShowLogs("L'ennemi vous barre la route !");
-            await ToSignal(GetTree().CreateTimer(_actionResultDelay), "timeout");
-            ChangeState(BattleState.Evaluation);
-        }
-    }
-
     #endregion
 
     #region --- Combat Execution: Enemy ---
-
-    private void ExecuteCurrentTurn()
-    {
-        if (_currentTurnIndex >= _turnOrder.Count) return;
-        var activeUnit = _turnOrder[_currentTurnIndex];
-
-        if (activeUnit is Enemy enemy)
-            ProcessEnemyTurn(enemy);
-    }
-
-    private async void ProcessEnemyTurn(Enemy enemy)
-    {
-        if (enemy == null || enemy.CurrentPv <= 0)
-        {
-            ChangeState(BattleState.Evaluation);
-            return;
-        }
-
-        switch (enemy.Stats.AiPattern)
-        {
-            case AiPattern.Aggressive:
-                await ExecuteEnemyAttack(enemy, aggressiveBonus: enemy.CurrentPv <= enemy.Stats.Pv * 0.3f);
-                break;
-            case AiPattern.Defensive:
-                bool lowHp = enemy.CurrentPv <= enemy.Stats.Pv * 0.5f;
-                if (lowHp && GD.Randf() < 0.6f)
-                    await ExecuteEnemyDefend(enemy);
-                else
-                    await ExecuteEnemyAttack(enemy);
-                break;
-            default: // Normal
-                await ExecuteEnemyAttack(enemy);
-                break;
-        }
-    }
 
     private async Task ExecuteEnemyAttack(Enemy enemy, bool aggressiveBonus = false)
     {
@@ -650,7 +611,7 @@ public partial class BattleManager : Node
         await ToSignal(GetTree().CreateTimer(_enemyPreAttackDelay), "timeout");
         await enemy.PlayAttackAnimation();
 
-        int baseStrength = aggressiveBonus ? Mathf.RoundToInt(enemy.Stats.Strength * 1.2f) : enemy.Stats.Strength;
+        int baseStrength = GetEnemyAttackStrength(enemy, aggressiveBonus);
         int playerDef = GetPlayerEffectiveStat(_playerBattler.Defense, KarmaCombatModifiers.StatKind.Defense);
         LogElementCombat(enemy.Affinity, null, _playerBattler.Affinity);
         int damage = CalculatePhysicalDamage(enemy, _playerBattler, baseStrength, playerDef);
@@ -684,6 +645,77 @@ public partial class BattleManager : Node
         ChangeState(BattleState.Evaluation);
     }
 
+    private async Task ExecuteEnemySkillAsync(Enemy enemy, Skill skill, WaveActionEntry.ActionKind kind)
+    {
+        if (enemy == null || skill == null || _playerBattler == null)
+        {
+            ChangeState(BattleState.Evaluation);
+            return;
+        }
+
+        if (enemy.CurrentMp < skill.Cost)
+        {
+            _hud?.ShowLogs($"{enemy.EnemyName} manque de PM pour {skill.Name} — attaque physique !");
+            bool rage = enemy.Stats?.AiPattern == AiPattern.Aggressive
+                && enemy.CurrentPv <= enemy.Stats.Pv * 0.3f;
+            await ExecuteEnemyAttack(enemy, rage);
+            return;
+        }
+
+        enemy.CurrentMp -= skill.Cost;
+
+        await _cameraDirector.CutTo(CameraDirector.CameraShot.EnemyAttack);
+        _playerActor?.OnCameraChanged(CameraDirector.CameraShot.EnemyAttack);
+
+        _hud?.SetActiveEnemy(enemy);
+        enemy.PlayTurnHighlight();
+        _hud?.ShowLogs($"{enemy.EnemyName} utilise {skill.Name} !");
+        await ToSignal(GetTree().CreateTimer(_enemyPreAttackDelay), "timeout");
+        await enemy.PlayAttackAnimation();
+
+        if (kind == WaveActionEntry.ActionKind.EnemyHeal)
+        {
+            int heal = Mathf.Max(1, skill.Power + enemy.Spirit / 2);
+            enemy.CurrentPv = Math.Min(enemy.Pv, enemy.CurrentPv + heal);
+            _hud?.ShowLogs($"{enemy.EnemyName} récupère {heal} PV.");
+            Vector2 screenPos = GetScreenPositionOfNode(enemy);
+            _hud?.ShowDamage(screenPos, heal, Colors.Green);
+        }
+        else if (kind == WaveActionEntry.ActionKind.EnemyBuff)
+        {
+            ApplyForceBuffEffect(enemy, skill);
+        }
+        else
+        {
+            LogElementCombat(enemy.Affinity, skill.Element, _playerBattler.Affinity);
+            int damage = CalculateMagicDamage(enemy, _playerBattler, skill);
+            damage = KarmaCombatModifiers.ApplyDamageTaken(damage, _zoneKarma);
+
+            if (_isPlayerDefending)
+            {
+                damage = Math.Max(1, damage / 2);
+                _hud?.ShowLogs($"{_playerBattler.Name} bloque une partie du sort !");
+            }
+
+            ShakeScreen();
+            _playerBattler.CurrentPv -= damage;
+            _hud?.UpdatePlayerStats(_playerBattler);
+            _hud?.ShowDamage(GetPlayerUIPosition(), damage, Colors.Red);
+            _hud?.ShowLogs($"{enemy.EnemyName} inflige {damage} dégâts magiques !");
+            EmitSignal(SignalName.PlayerDamage, damage);
+        }
+
+        await ToSignal(GetTree().CreateTimer(_actionResultDelay), "timeout");
+
+        enemy.StopTurnHighlight();
+        _hud?.ClearActiveHighlight();
+
+        await _cameraDirector.CutTo(CameraDirector.CameraShot.Neutral);
+        _playerActor?.OnCameraChanged(CameraDirector.CameraShot.Neutral);
+
+        ChangeState(BattleState.Evaluation);
+    }
+
     private async Task ExecuteEnemyDefend(Enemy enemy)
     {
         await _cameraDirector.CutTo(CameraDirector.CameraShot.Neutral);
@@ -703,30 +735,451 @@ public partial class BattleManager : Node
 
     #endregion
 
-    #region --- Turn Flow & Status Checks ---
+    #region --- Round, initiative & turns ---
 
-    private void DetermineTurnOrder()
+    void BeginRound()
     {
-        _turnOrder.Clear();
-        if (_playerBattler != null) _turnOrder.Add(_playerBattler);
-        _turnOrder.AddRange(_enemies);
+        if (_playerBattler == null || _playerBattler.CurrentPv <= 0)
+        {
+            ChangeState(BattleState.Defeat);
+            return;
+        }
 
-        _turnOrder = _turnOrder.OrderByDescending(GetBattlerInitiative).ToList();
-        _currentTurnIndex = 0;
-        
+        if (_enemies.Count == 0)
+        {
+            ChangeState(BattleState.Victory);
+            return;
+        }
+
+        _roundQueue.Clear();
+        _roundTurnIndex = 0;
+        _roundExecutionStarted = false;
+        _isPlayerDefending = false;
+        ClearInitiativePreview();
+        TickCombatBuffs();
+
+        foreach (Enemy enemy in _enemies)
+        {
+            if (enemy.CurrentPv > 0)
+                _roundQueue.Add(PlanEnemyTurn(enemy));
+        }
+
+        _hud?.ShowLogs("Choisissez votre action.");
+        SyncInitiativeHud();
         ChangeState(BattleState.Selection);
+    }
+
+    void CommitAndStartRoundExecution(WaveActionEntry playerAction)
+    {
+        if (playerAction == null || _roundExecutionStarted)
+            return;
+
+        _roundQueue.RemoveAll(e => e.Battler == _playerBattler);
+        _roundQueue.Add(playerAction);
+        SortRoundByInitiative();
+
+        _roundExecutionStarted = true;
+        _roundTurnIndex = 0;
+        ClearInitiativePreview();
+        LogRoundOrder();
+
+        AdvanceRoundExecution();
+    }
+
+    WaveActionEntry BuildPlayerActionEntry(string actionKey, Skill skill = null, int targetIndex = -1)
+    {
+        var kind = ResolvePlayerActionKind(actionKey, skill);
+        return new WaveActionEntry
+        {
+            Battler = _playerBattler,
+            Kind = kind,
+            Initiative = ComputePreviewInitiative(actionKey, skill),
+            Skill = skill,
+            TargetIndex = targetIndex,
+        };
+    }
+
+    static WaveActionEntry.ActionKind ResolvePlayerActionKind(string actionKey, Skill skill)
+    {
+        if (actionKey == "Attack")
+            return WaveActionEntry.ActionKind.PlayerPhysical;
+        if (actionKey == "Defense")
+            return WaveActionEntry.ActionKind.PlayerDefend;
+        if (actionKey == "Flee")
+            return WaveActionEntry.ActionKind.PlayerFlee;
+
+        if (actionKey.StartsWith("Magic:", StringComparison.Ordinal) && skill != null)
+        {
+            if (skill.Type != SkillType.Support)
+                return WaveActionEntry.ActionKind.PlayerMagic;
+
+            return SkillSupportEffect.GetKind(skill) == SkillSupportEffect.Kind.BuffForce
+                ? WaveActionEntry.ActionKind.PlayerBuff
+                : WaveActionEntry.ActionKind.PlayerHeal;
+        }
+
+        return WaveActionEntry.ActionKind.PlayerPhysical;
+    }
+
+    bool IsPlayerSelectionPhase() =>
+        !_roundExecutionStarted && _currentState == BattleState.Selection;
+
+    /// <summary>Aperçu initiative joueur + tri HUD temps réel (phase de choix).</summary>
+    public void PreviewPlayerInitiative(string actionKey, Skill skill = null)
+    {
+        if (!IsPlayerSelectionPhase() || _playerBattler == null)
+            return;
+
+        _previewPlayerInitiative = ComputePreviewInitiative(actionKey, skill);
+        _previewPlayerActionLabel = DescribePreviewAction(actionKey, skill);
+        SyncInitiativeHud();
+    }
+
+    public void ClearInitiativePreview()
+    {
+        _previewPlayerInitiative = null;
+        _previewPlayerActionLabel = null;
+    }
+
+    void SyncInitiativeHud()
+    {
+        if (_hud == null)
+            return;
+
+        _hud.UpdateInitiativeTrack(BuildInitiativeDisplayRows());
+    }
+
+    List<InitiativeDisplayEntry> BuildInitiativeDisplayRows()
+    {
+        var rows = new List<InitiativeDisplayEntry>();
+
+        if (!_roundExecutionStarted)
+        {
+            foreach (WaveActionEntry entry in _roundQueue)
+            {
+                if (!IsRoundEntryAlive(entry))
+                    continue;
+
+                rows.Add(ToDisplayEntry(entry, isActive: false, isCompleted: false));
+            }
+
+            rows.Add(new InitiativeDisplayEntry
+            {
+                DisplayName = _playerBattler.Name,
+                Portrait = CombatantPortrait.GetPlayerPortrait(),
+                Initiative = _previewPlayerInitiative
+                    ?? ComputePreviewInitiative("Attack"),
+                ActionLabel = _previewPlayerActionLabel ?? "Choisir…",
+                IsPlayer = true,
+                IsPending = false,
+                IsActive = _currentState == BattleState.Selection,
+                IsCompleted = false,
+                Buffs = BuildBuffDisplays(_playerBattler),
+            });
+
+            rows.Sort(CompareDisplayEntries);
+            return rows;
+        }
+
+        for (int i = 0; i < _roundQueue.Count; i++)
+        {
+            WaveActionEntry entry = _roundQueue[i];
+            if (!IsRoundEntryAlive(entry))
+                continue;
+
+            bool completed = i < _roundTurnIndex;
+            bool active = i == _roundTurnIndex && _currentState == BattleState.Action;
+            rows.Add(ToDisplayEntry(entry, active, completed));
+        }
+
+        return rows;
+    }
+
+    static int CompareDisplayEntries(InitiativeDisplayEntry a, InitiativeDisplayEntry b)
+    {
+        if (a.Initiative < 0 && b.Initiative >= 0)
+            return 1;
+        if (b.Initiative < 0 && a.Initiative >= 0)
+            return -1;
+
+        int byInit = b.Initiative.CompareTo(a.Initiative);
+        if (byInit != 0)
+            return byInit;
+
+        if (a.IsPlayer)
+            return -1;
+        if (b.IsPlayer)
+            return 1;
+
+        return string.Compare(a.DisplayName, b.DisplayName, StringComparison.Ordinal);
+    }
+
+    InitiativeDisplayEntry ToDisplayEntry(WaveActionEntry entry, bool isActive, bool isCompleted)
+    {
+        bool isPlayer = entry.Battler == _playerBattler;
+        string displayName = isPlayer
+            ? _playerBattler.Name
+            : entry.Enemy?.EnemyName ?? "?";
+
+        return new InitiativeDisplayEntry
+        {
+            DisplayName = displayName,
+            Portrait = isPlayer
+                ? CombatantPortrait.GetPlayerPortrait()
+                : CombatantPortrait.GetEnemyPortrait(displayName),
+            Initiative = entry.Initiative,
+            ActionLabel = DescribeWaveAction(entry),
+            IsPlayer = isPlayer,
+            IsActive = isActive,
+            IsCompleted = isCompleted,
+            Buffs = BuildBuffDisplays(entry.Battler),
+        };
+    }
+
+    List<InitiativeBuffDisplay> BuildBuffDisplays(IBattler battler)
+    {
+        var displays = new List<InitiativeBuffDisplay>();
+
+        foreach (CombatBuffSnapshot snapshot in _buffTracker.GetSnapshots(battler))
+        {
+            displays.Add(new InitiativeBuffDisplay
+            {
+                Icon = UiIcons.GetCombatBuffIcon(snapshot.Kind),
+                TurnsLeft = snapshot.TurnsLeft,
+                Tooltip = snapshot.Kind switch
+                {
+                    CombatBuffKind.Force =>
+                        $"{snapshot.SourceName} : +{snapshot.Amount} Force · {snapshot.TurnsLeft} tour{(snapshot.TurnsLeft > 1 ? "s" : "")}",
+                    _ => $"{snapshot.SourceName} · {snapshot.TurnsLeft} tour{(snapshot.TurnsLeft > 1 ? "s" : "")}",
+                },
+            });
+        }
+
+        return displays;
+    }
+
+    static string DescribeWaveAction(WaveActionEntry entry) => entry.Kind switch
+    {
+        WaveActionEntry.ActionKind.PlayerWaiting => "Ton tour",
+        WaveActionEntry.ActionKind.PlayerPhysical => "Attaque",
+        WaveActionEntry.ActionKind.PlayerMagic => entry.Skill?.Name ?? "Magie",
+        WaveActionEntry.ActionKind.PlayerHeal => entry.Skill?.Name ?? "Soin",
+        WaveActionEntry.ActionKind.PlayerBuff => entry.Skill?.Name ?? "Buff",
+        WaveActionEntry.ActionKind.PlayerDefend => "Défense",
+        WaveActionEntry.ActionKind.PlayerFlee => "Fuite",
+        WaveActionEntry.ActionKind.EnemyAttack => "Attaque",
+        WaveActionEntry.ActionKind.EnemyMagic => entry.Skill?.Name ?? "Magie",
+        WaveActionEntry.ActionKind.EnemyHeal => entry.Skill?.Name ?? "Soin",
+        WaveActionEntry.ActionKind.EnemyBuff => entry.Skill?.Name ?? "Buff",
+        WaveActionEntry.ActionKind.EnemyDefend => "Défense",
+        _ => "",
+    };
+
+    string DescribePreviewAction(string actionKey, Skill skill)
+    {
+        if (actionKey == "Attack")
+            return "Attaque";
+        if (actionKey == "Defense")
+            return "Défense";
+        if (actionKey == "Flee")
+            return "Fuite";
+        if (actionKey == "Magic")
+            return "Magie…";
+        if (actionKey.StartsWith("Magic:", StringComparison.Ordinal) && skill != null)
+            return skill.Name;
+        return "…";
+    }
+
+    int ComputePreviewInitiative(string actionKey, Skill skill = null)
+    {
+        if (_playerBattler == null)
+            return 0;
+
+        if (actionKey == "Attack")
+            return CombatInitiative.ForPhysical(_playerBattler, isPlayer: true, _zoneKarma);
+        if (actionKey == "Defense")
+            return CombatInitiative.ForDefend(_playerBattler, isPlayer: true, _zoneKarma);
+        if (actionKey == "Flee")
+            return CombatInitiative.ForFlee(_playerBattler, isPlayer: true, _zoneKarma);
+
+        if (actionKey.StartsWith("Magic:", StringComparison.Ordinal) && skill != null)
+            return CombatInitiative.ForSkill(_playerBattler, isPlayer: true, _zoneKarma, skill);
+
+        return CombatInitiative.ForPhysical(_playerBattler, isPlayer: true, _zoneKarma);
+    }
+
+    WaveActionEntry PlanEnemyTurn(Enemy enemy) => EnemyTurnPlanner.Plan(enemy);
+
+    void SortRoundByInitiative() =>
+        _roundQueue.Sort(CompareRoundEntries);
+
+    int CompareRoundEntries(WaveActionEntry a, WaveActionEntry b)
+    {
+        int byInit = b.Initiative.CompareTo(a.Initiative);
+        if (byInit != 0)
+            return byInit;
+
+        if (a.Battler == _playerBattler)
+            return -1;
+        if (b.Battler == _playerBattler)
+            return 1;
+
+        return string.Compare(
+            a.Enemy?.EnemyName,
+            b.Enemy?.EnemyName,
+            StringComparison.Ordinal);
+    }
+
+    void LogRoundOrder()
+    {
+        var parts = _roundQueue
+            .Where(IsRoundEntryAlive)
+            .Select(e =>
+            {
+                string name = e.Battler == _playerBattler
+                    ? _playerBattler.Name
+                    : e.Enemy?.EnemyName ?? "?";
+                return $"{name}({e.Initiative})";
+            });
+        _hud?.ShowLogs($"Ordre du round : {string.Join(" → ", parts)}");
+    }
+
+    void AdvanceRoundExecution()
+    {
+        while (_roundTurnIndex < _roundQueue.Count)
+        {
+            if (IsRoundEntryAlive(_roundQueue[_roundTurnIndex]))
+            {
+                SyncInitiativeHud();
+                ChangeState(BattleState.Action);
+                return;
+            }
+
+            _roundTurnIndex++;
+        }
+
+        BeginRound();
+    }
+
+    void ExecuteCurrentTurn()
+    {
+        if (_roundTurnIndex >= _roundQueue.Count)
+        {
+            BeginRound();
+            return;
+        }
+
+        WaveActionEntry entry = _roundQueue[_roundTurnIndex];
+        if (!IsRoundEntryAlive(entry))
+        {
+            ChangeState(BattleState.Evaluation);
+            return;
+        }
+
+        if (entry.Battler == _playerBattler)
+            _ = RunPlayerTurn(entry);
+        else
+            _ = RunEnemyTurn(entry);
+    }
+
+    async Task RunPlayerTurn(WaveActionEntry entry)
+    {
+        _hud?.HideMenu();
+        if (_isActionRunning)
+            return;
+
+        _isActionRunning = true;
+
+        try
+        {
+            switch (entry.Kind)
+            {
+                case WaveActionEntry.ActionKind.PlayerPhysical:
+                    if (entry.TargetIndex >= 0 && entry.TargetIndex < _enemies.Count
+                        && _enemies[entry.TargetIndex].CurrentPv > 0)
+                        await RunPlayerPhysicalAttackAsync(_enemies[entry.TargetIndex]);
+                    break;
+
+                case WaveActionEntry.ActionKind.PlayerMagic:
+                    if (entry.Skill != null && entry.TargetIndex >= 0 && entry.TargetIndex < _enemies.Count
+                        && _enemies[entry.TargetIndex].CurrentPv > 0)
+                        await RunPlayerMagicAsync(_enemies[entry.TargetIndex], entry.Skill);
+                    break;
+
+                case WaveActionEntry.ActionKind.PlayerHeal:
+                case WaveActionEntry.ActionKind.PlayerBuff:
+                    if (entry.Skill != null)
+                        await RunPlayerMagicAsync(_playerBattler, entry.Skill);
+                    break;
+
+                case WaveActionEntry.ActionKind.PlayerDefend:
+                    await RunPlayerDefenseAsync();
+                    break;
+
+                case WaveActionEntry.ActionKind.PlayerFlee:
+                    if (await RunPlayerFleeAsync())
+                        return;
+                    break;
+            }
+        }
+        finally
+        {
+            _isActionRunning = false;
+        }
+
+        ChangeState(BattleState.Evaluation);
+    }
+
+    async Task RunEnemyTurn(WaveActionEntry entry)
+    {
+        _hud?.HideMenu();
+
+        if (entry.Enemy == null)
+        {
+            ChangeState(BattleState.Evaluation);
+            return;
+        }
+
+        switch (entry.Kind)
+        {
+            case WaveActionEntry.ActionKind.EnemyDefend:
+                await ExecuteEnemyDefend(entry.Enemy);
+                break;
+
+            case WaveActionEntry.ActionKind.EnemyMagic:
+            case WaveActionEntry.ActionKind.EnemyHeal:
+            case WaveActionEntry.ActionKind.EnemyBuff:
+                if (entry.Skill != null)
+                    await ExecuteEnemySkillAsync(entry.Enemy, entry.Skill, entry.Kind);
+                else
+                    ChangeState(BattleState.Evaluation);
+                break;
+
+            case WaveActionEntry.ActionKind.EnemyAttack:
+            default:
+                bool rage = entry.Enemy.Stats?.AiPattern == AiPattern.Aggressive
+                    && entry.Enemy.CurrentPv <= entry.Enemy.Stats.Pv * 0.3f;
+                await ExecuteEnemyAttack(entry.Enemy, rage);
+                break;
+        }
+    }
+
+    static bool IsRoundEntryAlive(WaveActionEntry entry)
+    {
+        if (entry.Battler == null)
+            return false;
+
+        return entry.Battler.CurrentPv > 0;
     }
 
     private void CheckBattleStatus()
     {
-        // 1. Defeat Check
         if (_playerBattler != null && _playerBattler.CurrentPv <= 0)
         {
             ChangeState(BattleState.Defeat);
             return;
         }
 
-        // 2. Victory Check (after cleaning up dead enemies)
         UpdateActiveEnemies();
 
         if (_enemies.Count == 0)
@@ -735,9 +1188,8 @@ public partial class BattleManager : Node
             return;
         }
 
-        // 3. Increment turn and continue
-        _currentTurnIndex = (_currentTurnIndex + 1) % _turnOrder.Count;
-        ChangeState(BattleState.Selection);
+        _roundTurnIndex++;
+        AdvanceRoundExecution();
     }
 
     private void UpdateActiveEnemies()
@@ -756,13 +1208,10 @@ public partial class BattleManager : Node
 
                 _defendingEnemies.Remove(dead);
                 _enemies.RemoveAt(i);
-                _turnOrder.Remove(dead);
             }
         }
-        
-        // Safety: index adjustment if units were removed
-        if (_currentTurnIndex >= _turnOrder.Count) 
-            _currentTurnIndex = 0;
+
+        SyncInitiativeHud();
     }
 
     #endregion
@@ -822,6 +1271,27 @@ public partial class BattleManager : Node
         return Math.Max(1, Mathf.RoundToInt(baseDamage * variance * elementMult));
     }
 
+    int GetPlayerAttackStrength()
+    {
+        int baseStr = GetPlayerEffectiveStat(_playerBattler.Strength, KarmaCombatModifiers.StatKind.Force);
+        return baseStr + _buffTracker.GetForceBonus(_playerBattler);
+    }
+
+    int GetEnemyAttackStrength(Enemy enemy, bool aggressiveBonus)
+    {
+        int strength = enemy.Strength + _buffTracker.GetForceBonus(enemy);
+        if (aggressiveBonus)
+            strength = Mathf.RoundToInt(strength * 1.2f);
+
+        return strength;
+    }
+
+    void TickCombatBuffs()
+    {
+        foreach (string name in _buffTracker.TickRoundEnd())
+            _hud?.ShowLogs($"L'effet de renforcement sur {name} s'est dissipé.");
+    }
+
     private int CalculateHealAmount(Skill skill)
     {
         int playerSpirit = GetPlayerEffectiveStat(_playerBattler.Spirit, KarmaCombatModifiers.StatKind.Spirit);
@@ -830,14 +1300,6 @@ public partial class BattleManager : Node
         float elementMult = ElementCombat.GetAffinityPowerMultiplier(_playerBattler.Affinity, skill.Element);
         int rawHeal = Mathf.RoundToInt(baseHeal * variance * elementMult);
         return KarmaCombatModifiers.ApplyHealAmount(rawHeal, _zoneKarma);
-    }
-
-    int GetBattlerInitiative(IBattler battler)
-    {
-        if (battler == _playerBattler)
-            return GetPlayerEffectiveStat(battler.Dexterity, KarmaCombatModifiers.StatKind.Dexterity);
-
-        return battler.Dexterity;
     }
 
     void ApplyKarmaForMonsterKill(string enemyName)
@@ -933,8 +1395,7 @@ public partial class BattleManager : Node
         {
             var stats = _enemyStatsSource[i];
             var enemy = EnemyScene.Instantiate<Enemy>();
-
-            enemy.EnemyName = stats.EnemyName;
+            enemy.InitializeFromBattleStats(stats);
             
             if (_enemiesAnchor != null)
             {
@@ -952,9 +1413,7 @@ public partial class BattleManager : Node
                     anchorPos.Z);
             }
 
-            // Copie explicite des PV depuis la liste de combat (indépendant d'un futur bestiaire modifié en runtime)
-            enemy.CurrentPv = stats.Pv;
-            
+            // PV/PM déjà initialisés via InitializeFromBattleStats
             _enemies.Add(enemy);
         }
     }

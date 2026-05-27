@@ -34,7 +34,30 @@
 
 ---
 
-## 4. Documentation systèmes
+## 4. Zone Introduction — implémentée aujourd’hui
 
-* `GDD_systeme_karma.md` — jauge de zone et modificateurs globaux.
-* `GDD_systeme_elementaire.md` — affinités, cycle, formules et tutoriel Sage du Karma.
+| Élément | Détail gameplay actuel |
+| :--- | :--- |
+| Map | `Maps/Intro/Map.tscn`, zone `Introduction` |
+| Karma départ | +15 |
+| PNJ | Marchand (SOS rats), Sage Karma, Livre, testeurs |
+| Combat intro | `BATTLE:Rat:2` via quête marchand ; test `Rat\|Gobi` |
+| Boutique | Débloquée après quête — `MARCHAND_INTRO` |
+| Tutoriels | Dialogues karma + éléments (`PNJ_KARMA_01`–`11`) |
+
+Les zones 1–3 ci-dessus restent la **vision narrative** ; seul le segment « Route / Éveil » est partiellement couvert par la map Intro.
+
+---
+
+## 5. Documentation systèmes
+
+Index complet : [`GDD_INDEX.md`](GDD_INDEX.md)
+
+* [`GDD_donnees_reference.md`](GDD_donnees_reference.md) — CSV
+* [`GDD_combat.md`](GDD_combat.md) — combat
+* [`GDD_dialogues_quetes.md`](GDD_dialogues_quetes.md) — Intro
+* [`GDD_economie_progression.md`](GDD_economie_progression.md) — boutique & XP
+* [`GDD_systeme_karma.md`](GDD_systeme_karma.md)
+* [`GDD_systeme_elementaire.md`](GDD_systeme_elementaire.md)
+* [`GDD_systeme_initiative.md`](GDD_systeme_initiative.md)
+* [`GDD_systeme_ia_ennemis.md`](GDD_systeme_ia_ennemis.md)

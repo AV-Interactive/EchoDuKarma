@@ -21,8 +21,21 @@ public partial class QuestStatRow : Button
 
     public override void _Ready()
     {
+        ApplyPassMouseFilterToChildren(this);
+
         if (_stepBar != null)
             _stepBar.MouseFilter = MouseFilterEnum.Ignore;
+    }
+
+    static void ApplyPassMouseFilterToChildren(Node node)
+    {
+        foreach (Node child in node.GetChildren())
+        {
+            if (child is Control control)
+                control.MouseFilter = MouseFilterEnum.Pass;
+
+            ApplyPassMouseFilterToChildren(child);
+        }
     }
 
     public void Bind(QuestData quest, QuestRuntime runtime)

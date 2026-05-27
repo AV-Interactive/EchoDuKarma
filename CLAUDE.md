@@ -46,6 +46,18 @@ The battle flow is a **state machine** in `BattleManager`:
 - `StatHandler` reads a CSV file (set via `[Export] DataFilePath`) to populate a `Dictionary<int, Stats>` keyed by level.
 - `SkillManager.LoadSkills()` reads `Datas/Persos/skills.csv` and returns all skills. `Player._Ready()` then filters them by class (currently hardcoded to `"Magus"`).
 
+### Initiative & combat rounds (`Scripts/Data/CombatInitiative.cs`, `BattleManager`)
+- Each **round**: enemies plan (IA) → player chooses → sort by initiative (desc) → execute all.
+- Formulas: skill = `AgiEffective + skill.Speed`; physical/defend = `AgiEffective`; flee = `AgiEffective + 5`; enemy skill = `Agi + skill.Speed` (bestiary `Skills` → `skills.csv`); enemy melee = `Agi` only.
+- See `_GDD/GDD_systeme_initiative.md` and `_GDD/GDD_systeme_ia_ennemis.md`.
+
+### Enemy AI (`Scripts/Data/EnemyTurnPlanner.cs`)
+- Plans **skill**, **melee**, or **defend** per round from `IA` + `Skills` + HP/MP.
+- Patterns: `Aggressive`, `Defensive`, `Normal` — see `_GDD/GDD_systeme_ia_ennemis.md`.
+
+### Game design docs (`_GDD/`)
+Full gameplay reference synced with code: start at `_GDD/GDD_INDEX.md` (combat, karma, elements, initiative, CSV tables, economy, quests).
+
 ### Elemental Combat (`Scripts/Data/ElementCombat.cs`)
 - Cycle: **Fire → Earth → Air → Water → Fire** (strong ×1.5, weak ×0.75 per cycle check).
 - **Affinity synergy**: skill element matches battler affinity → ×1.25.
@@ -54,7 +66,7 @@ The battle flow is a **state machine** in `BattleManager`:
 
 ### Data / CSV Convention
 All game data lives in `Datas/` as CSV files:
-- `Datas/Bestiary/bestiary.csv` — enemy stats + `Affinity` column
+- `Datas/Bestiary/bestiary.csv` — enemy stats + `Affinity` + `Skills` (`sort1|sort2`)
 - `Datas/Persos/heroes.csv` — hero `Classe`, `Affinity`
 - `Datas/Persos/skills.csv` — skills (11 columns, class filter on col 9, `Élément` column)
 - `Datas/Persos/equipments.csv` — equipment data

@@ -53,7 +53,9 @@ public partial class Player : CharacterBody3D, IBattler
 		GameManager.Instance.CurrentPlayer = this;
 
 		_stats = GetNode<StatHandler>("PlayerStats");
-		GameManager.Instance.ApplyBattleSnapshotToPlayer(this);
+
+		if (SaveManager.Instance?.TryApplyPendingPlayerState(this) != true)
+			GameManager.Instance.ApplyBattleSnapshotToPlayer(this);
 
 		var hero = HeroManager.GetDefaultHero();
 		if (hero != null)

@@ -1,6 +1,6 @@
 # Audit gameplay — Echo du Karma
 
-**Date** : 26 mai 2026  
+**Date** : 27 mai 2026  
 **Moteur** : Godot 4.6 · C# · GL Compatibility  
 **Périmètre** : `Scripts/`, autoloads `Global/`, données `Datas/`, maps `Maps/`  
 **Référence précédente** : audit mai 2026 (~67 %)
@@ -33,7 +33,8 @@ Le **plus gros gap** reste la **persistance (0 %)** — toute progression est pe
 | Quêtes CSV | 2 | **2** |
 | Boutiques CSV | 0 | **1** (`MARCHAND_INTRO`, 2 items) |
 | Lignes dialogue Intro | ~27 | **~33** |
-| Compétences jouables | — | **2** (Flammeche, Soin) |
+| Compétences CSV | — | **4** (déblocage par niveau : Flammeche niv.1, Stalagtite niv.3, Soin niv.7, Renforcement niv.10) |
+| Initiative combat | — | **Rounds choix/exécution + panneau HUD** |
 | Sauvegarde | Non | **Non** |
 
 ---
@@ -71,7 +72,7 @@ GLOBAL PONDÉRÉ  ██████████████░░░░░░  
 |---------|---------|------|----------|
 | GameManager | `Global/GameManager.cs` | Combat, shop, retour map, actions dialogue, récompenses | ✅ Solide |
 | DialogueSystem | `Global/DialogueSystem.cs` | CSV, choix, conditions par libellé | ✅ Solide |
-| Bestiary | `Global/Bestiary.cs` | Ennemis, IA, XP, loot, affinité | ✅ OK |
+| Bestiary | `Global/Bestiary.cs` | Ennemis, IA, Skills, XP, loot, affinité | ✅ OK |
 | QuestManager | `Global/QuestManager.cs` | Quêtes, kills, ALL_STEPS, journal | ✅ Solide |
 | KarmaManager | `Global/KarmaManager.cs` | Jauge zone −100…+100 | ✅ Solide |
 | InventoryManager | `Global/InventoryManager.cs` | Or, équipement, ressources, buy/sell | ✅ Fonctionnel |
@@ -122,7 +123,7 @@ GLOBAL PONDÉRÉ  ██████████████░░░░░░  
 - Fuite : 50 % succès, pas d'XP ni butin (documenté dans `docs/COMBAT_REGRESSION.md`)
 - Karma : `KarmaCombatModifiers` (stats, dégâts subis, soins)
 - **Éléments** : `ElementCombat` — cycle Fire→Earth→Air→Water, affinité héros/ennemi, logs combat
-- IA : `Aggressive`, `Defensive`, `Normal` via `AiPattern`
+- IA : `EnemyTurnPlanner` — sort / mêlée / défense ; `Skills` bestiaire → `skills.csv` ; profils `Aggressive`, `Defensive`, `Normal` (voir `_GDD/GDD_systeme_ia_ennemis.md`)
 - `NotifyKill` → quêtes ; karma −0,15 par monstre
 - Caméras : Neutral, PlayerAttack, PlayerMagic, EnemyAttack + fade
 - Animations LPC : `BattleActor` (thrust, spellcast, hurt)
@@ -248,4 +249,4 @@ Explorer → Parler PNJ → (conditions karma/quête) → Choix / Combat
 
 ---
 
-*Référence croisée : [TASKS.md](TASKS.md) pour le backlog actionnable · [docs/COMBAT_REGRESSION.md](docs/COMBAT_REGRESSION.md) pour les scénarios combat.*
+*Référence croisée : [_GDD/GDD_INDEX.md](_GDD/GDD_INDEX.md) pour la doc gameplay · [TASKS.md](TASKS.md) backlog · [docs/COMBAT_REGRESSION.md](docs/COMBAT_REGRESSION.md) tests combat.*

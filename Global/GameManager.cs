@@ -51,6 +51,18 @@ public partial class GameManager: Node
             ReturnScenePath = scenePath;
 
         KarmaManager.Instance?.SetCurrentZone(ReturnZoneName);
+        ZoneEnemyCatalog.LoadZone(ReturnZoneName);
+    }
+
+    /// <summary>Efface la progression en mémoire avant une nouvelle partie.</summary>
+    public void ClearProgressForNewGame()
+    {
+        _battleSnapshot = null;
+        _progressionTable = null;
+        _pendingLevelUpPopupCount = 0;
+        ListEnemiesBattle.Clear();
+        SetMenuBlockingWorld(false);
+        PlayerMoved = true;
     }
 
     public PlayerBattleSnapshot GetBattleSnapshot() => _battleSnapshot;
@@ -117,6 +129,7 @@ public partial class GameManager: Node
         Instance = this;
         
         RegisterEvents();
+        ZoneEnemyCatalog.LoadZone(ReturnZoneName);
         
         CallDeferred(nameof(ConnectToSignals));
         GD.Print("[AUTOLOAD] GameManager Ready - End");
@@ -214,24 +227,20 @@ public partial class GameManager: Node
             string enemyName = enemiesArray[i].Trim();
             int nbEnemies = int.Parse(quantityArray[i]);
 
-            // On récupère les stats depuis le Bestiaire
-            EnemyStats stats = Bestiary.Instance.GetEnemy(enemyName);
+            for (int j = 0; j < nbEnemies; j++)
+            {
+                int level = ZoneEnemyCatalog.RollEnemyLevel(ReturnZoneName, enemyName);
+                EnemyStats stats = Bestiary.Instance.GetEnemyAtLevel(enemyName, level);
 
-            if (stats != null)
-            {
-                for (int j = 0; j < nbEnemies; j++)
-                {
-                    // On ajoute les stats à la liste pour le BattleManager
-                    ListEnemiesBattle.Add(stats);
-                }
-            }
-            else
-            {
-                GD.PrintErr($"Erreur : L'ennemi '{enemyName}' n'existe pas dans le Bestiaire !");
+                if (stats != null)
+                    ListEnemiesBattle.Add(stats.Clone());
+                else if (j == 0)
+                    GD.PrintErr($"Erreur : L'ennemi '{enemyName}' n'existe pas dans le Bestiaire !");
             }
         }
         
         GD.Print("[GameManager] Transition vers la scène de combat...");
+        MusicManager.Instance?.PlayBattle();
         GetTree().ChangeSceneToFile("res://Maps/Battles/Basic.tscn");
 
         _battleSignalRetryCount = 0;

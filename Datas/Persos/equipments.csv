@@ -1,6 +1,6 @@
 Nom;Slot;Type;Force;Agi;Esprit;Defense;Capacité passive;Classes;Prix
-Bâton;Main;Arme;2;2;2;0;;Magus|Paladin;10
-Bâton usé;Main;Arme;0;0;5;0;;Magus;15
-Bâton Commun;Main;Arme;0;0;7;0;;Magus;100
-Gourdin;Main;Arme;3;0;0;0;;Paladin;20
+Bâton;Main;Arme;2;5;2;0;;Magus|Paladin;10
+Bâton usé;Main;Arme;0;5;5;0;;Magus;15
+Bâton Commun;Main;Arme;0;5;7;0;;Magus;100
+Gourdin;Main;Arme;3;7;0;0;;Paladin;20
 Bâton de DEV;Main;Arme;100;100;100;100;Un item parfait fait par un être parfait.;Magus|Paladin;0

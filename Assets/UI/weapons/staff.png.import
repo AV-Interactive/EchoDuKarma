@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://1e82neschpom"
 path.s3tc="res://.godot/imported/staff.png-22a73f31146fd71b9f6c886c883e5697.s3tc.ctex"
+path.etc2="res://.godot/imported/staff.png-22a73f31146fd71b9f6c886c883e5697.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://Assets/UI/weapons/staff.png"
-dest_files=["res://.godot/imported/staff.png-22a73f31146fd71b9f6c886c883e5697.s3tc.ctex"]
+dest_files=["res://.godot/imported/staff.png-22a73f31146fd71b9f6c886c883e5697.s3tc.ctex", "res://.godot/imported/staff.png-22a73f31146fd71b9f6c886c883e5697.etc2.ctex"]
 
 [params]
 

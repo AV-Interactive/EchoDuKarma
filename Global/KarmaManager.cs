@@ -107,4 +107,25 @@ public partial class KarmaManager : Node
         string sign = delta > 0f ? "+" : "";
         return sign + delta.ToString("0.##", CultureInfo.InvariantCulture);
     }
+
+    public Dictionary<string, float> ExportZoneKarma() => new(_zoneKarma);
+
+    public void ImportZoneKarma(IReadOnlyDictionary<string, float> values, string currentZone)
+    {
+        _zoneKarma.Clear();
+
+        if (values != null)
+        {
+            foreach (var pair in values)
+            {
+                if (string.IsNullOrWhiteSpace(pair.Key))
+                    continue;
+
+                _zoneKarma[pair.Key.Trim()] = Clamp(pair.Value);
+            }
+        }
+
+        EnsureZoneInitialized("Introduction");
+        SetCurrentZone(string.IsNullOrWhiteSpace(currentZone) ? "Introduction" : currentZone.Trim());
+    }
 }

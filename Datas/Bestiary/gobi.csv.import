@@ -1,0 +1,16 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://bl0gybqyj5wyf"
+
+[deps]
+
+source_file="res://Datas/Bestiary/gobi.csv"
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

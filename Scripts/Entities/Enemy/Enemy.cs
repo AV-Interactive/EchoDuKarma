@@ -9,6 +9,18 @@ public partial class Enemy : CharacterBody3D, IBattler
     
     public EnemyStats Stats { get; private set; }
 
+    /// <summary>Injecte les stats de combat avant ajout à l'arbre (évite un rechargement niveau 1).</summary>
+    public void InitializeFromBattleStats(EnemyStats stats)
+    {
+        if (stats == null)
+            return;
+
+        Stats = stats.Clone();
+        EnemyName = stats.EnemyName;
+        CurrentPv = Stats.Pv;
+        CurrentMp = Mathf.Max(Mathf.Max(Stats.Mp, Stats.Spirit * 2), 8);
+    }
+
     // Implémentation de IBattler (GlobalPosition est géré par Node3D automatiquement)
     public string Name => EnemyName;
     public int Level => Stats?.Level ?? 1;
@@ -28,11 +40,16 @@ public partial class Enemy : CharacterBody3D, IBattler
     public override void _Ready()
     {
         _sprite = GetNode<Sprite3D>("Node3D/Sprite3D");
-        Stats = Bestiary.Instance.GetEnemy(EnemyName);
+
+        if (Stats == null && !string.IsNullOrWhiteSpace(EnemyName))
+            Stats = Bestiary.Instance?.GetEnemy(EnemyName);
 
         if (Stats != null)
         {
-            CurrentPv = Stats.Pv;
+            if (CurrentPv <= 0)
+                CurrentPv = Stats.Pv;
+            if (CurrentMp <= 0)
+                CurrentMp = Mathf.Max(Mathf.Max(Stats.Mp, Stats.Spirit * 2), 8);
             LoadTexture();
         }
     }

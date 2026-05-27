@@ -4,8 +4,9 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://qs5u0456vgrc"
 path.s3tc="res://.godot/imported/Tree_AZAZA.jpg-8426a69ef6e6e80b0fb19963e8d5415e.s3tc.ctex"
+path.etc2="res://.godot/imported/Tree_AZAZA.jpg-8426a69ef6e6e80b0fb19963e8d5415e.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 generator_parameters={
@@ -15,7 +16,7 @@ generator_parameters={
 [deps]
 
 source_file="res://Assets/World/Props/Models/Tree/Tree_AZAZA.jpg"
-dest_files=["res://.godot/imported/Tree_AZAZA.jpg-8426a69ef6e6e80b0fb19963e8d5415e.s3tc.ctex"]
+dest_files=["res://.godot/imported/Tree_AZAZA.jpg-8426a69ef6e6e80b0fb19963e8d5415e.s3tc.ctex", "res://.godot/imported/Tree_AZAZA.jpg-8426a69ef6e6e80b0fb19963e8d5415e.etc2.ctex"]
 
 [params]
 

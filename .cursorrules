@@ -63,8 +63,9 @@ Déplacement clavier/manette uniquement ! A prendre en compte dans le code.
 
 ### Format CSV de référence
 
-**bestiary.csv / EdK.csv**
-`Nom, Niveau, PV, XP, FORCE, ESPRIT, AGI, DEF, IA, LOOT`
+**bestiary.csv**
+`Nom, Niveau, PV, XP, FORCE, ESPRIT, AGI, DEF, IA, LOOT, Affinity, Skills`
+- `Skills` = `Sort1|Sort2` (noms `skills.csv`) — initiative = Agi + Vitesse sort ; IA = Normal | Aggressive | Defensive (`EnemyTurnPlanner`)
 
 **skills.csv**
 `Nom, Type, Description, Coût PM, Puissance, Élément, Vitesse, Effet special, Type de cible, Classes, Level requis`

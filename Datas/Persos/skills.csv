@@ -1,5 +1,5 @@
 Nom;Type;Description;Coût PM;Puissance;Élément;Vitesse;Effet special;Type de cible;Classes;Level requis
 Flammeche;Attack;Une puissante flamme projetée sur l’ennemie qui le brûle instantanément.;4;2;Fire;10;;Mono;Magus;1
-Soin;Support;Un voile magique enveloppe la cible pour lui rendre de la vitalité.;6;3;Water;10;;Mono;Magus,Paladin;7
-Stalagtite;Attack;Une pointe de pierre venant du ciel qui s’abat sur l’ennemie;4;3;Earth;10;;Mono;Magus;3
-Renforcement;Support;Une aura de puissance qui enveloppe la cible;8;5;Earth;5;;Mono;Magus;10
+Soin;Support;Un voile magique enveloppe la cible pour lui rendre de la vitalité.;6;3;Water;10;Heal;Mono;Magus,Paladin;7
+Stalagtite;Attack;Une pointe de pierre venant du ciel qui s’abat sur l’ennemie;8;5;Earth;5;;Mono;Magus;3
+Renforcement;Support;Une aura de puissance qui enveloppe la cible;8;5;Earth;5;BuffForce:2-5;Mono;Magus;10

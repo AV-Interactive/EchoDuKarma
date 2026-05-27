@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://b78j4fox65ebl"
 path.s3tc="res://.godot/imported/Tree_Albedo.png-11d7c70e7f1cb4654bbd444f1901078d.s3tc.ctex"
+path.etc2="res://.godot/imported/Tree_Albedo.png-11d7c70e7f1cb4654bbd444f1901078d.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://Assets/World/Textures/Tree_Albedo.png"
-dest_files=["res://.godot/imported/Tree_Albedo.png-11d7c70e7f1cb4654bbd444f1901078d.s3tc.ctex"]
+dest_files=["res://.godot/imported/Tree_Albedo.png-11d7c70e7f1cb4654bbd444f1901078d.s3tc.ctex", "res://.godot/imported/Tree_Albedo.png-11d7c70e7f1cb4654bbd444f1901078d.etc2.ctex"]
 
 [params]
 

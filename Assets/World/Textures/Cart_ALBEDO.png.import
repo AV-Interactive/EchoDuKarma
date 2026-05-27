@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cc52cuhbkk2pj"
 path.s3tc="res://.godot/imported/Cart_ALBEDO.png-a9e3f4487cdb24aaa4c772d43c046a3f.s3tc.ctex"
+path.etc2="res://.godot/imported/Cart_ALBEDO.png-a9e3f4487cdb24aaa4c772d43c046a3f.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://Assets/World/Textures/Cart_ALBEDO.png"
-dest_files=["res://.godot/imported/Cart_ALBEDO.png-a9e3f4487cdb24aaa4c772d43c046a3f.s3tc.ctex"]
+dest_files=["res://.godot/imported/Cart_ALBEDO.png-a9e3f4487cdb24aaa4c772d43c046a3f.s3tc.ctex", "res://.godot/imported/Cart_ALBEDO.png-a9e3f4487cdb24aaa4c772d43c046a3f.etc2.ctex"]
 
 [params]
 

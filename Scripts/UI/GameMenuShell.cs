@@ -9,6 +9,7 @@ public enum GameMenuTab
     Skills,
     Inventory,
     Quests,
+    System,
 }
 
 public partial class GameMenuShell : Control
@@ -18,11 +19,13 @@ public partial class GameMenuShell : Control
     [Export] Button _skillsTabButton;
     [Export] Button _inventoryTabButton;
     [Export] Button _questsTabButton;
+    [Export] Button _systemTabButton;
     [Export] Button _closeButton;
     [Export] PlayerStatsPage _statsPage;
     [Export] SkillsPage _skillsPage;
     [Export] InventoryPage _inventoryPage;
     [Export] QuestJournalPage _questsPage;
+    [Export] SavePage _systemPage;
 
     Control _dialogueUi;
     GameMenuTab _currentTab = GameMenuTab.Stats;
@@ -41,6 +44,7 @@ public partial class GameMenuShell : Control
         _skillsTabButton.Pressed += () => OpenTab(GameMenuTab.Skills);
         _inventoryTabButton.Pressed += () => OpenTab(GameMenuTab.Inventory);
         _questsTabButton.Pressed += () => OpenTab(GameMenuTab.Quests);
+        _systemTabButton.Pressed += () => OpenTab(GameMenuTab.System);
         _closeButton.Pressed += Close;
 
         ConfigureNavFocus();
@@ -58,9 +62,12 @@ public partial class GameMenuShell : Control
         _inventoryTabButton.FocusNeighborBottom = _inventoryTabButton.GetPathTo(_questsTabButton);
 
         _questsTabButton.FocusNeighborTop = _questsTabButton.GetPathTo(_inventoryTabButton);
-        _questsTabButton.FocusNeighborBottom = _questsTabButton.GetPathTo(_closeButton);
+        _questsTabButton.FocusNeighborBottom = _questsTabButton.GetPathTo(_systemTabButton);
 
-        _closeButton.FocusNeighborTop = _closeButton.GetPathTo(_questsTabButton);
+        _systemTabButton.FocusNeighborTop = _systemTabButton.GetPathTo(_questsTabButton);
+        _systemTabButton.FocusNeighborBottom = _systemTabButton.GetPathTo(_closeButton);
+
+        _closeButton.FocusNeighborTop = _closeButton.GetPathTo(_systemTabButton);
         _closeButton.FocusNeighborBottom = _closeButton.GetPathTo(_statsTabButton);
     }
 
@@ -73,7 +80,8 @@ public partial class GameMenuShell : Control
             return;
 
         if (focused != _statsTabButton && focused != _skillsTabButton &&
-            focused != _inventoryTabButton && focused != _questsTabButton && focused != _closeButton)
+            focused != _inventoryTabButton && focused != _questsTabButton &&
+            focused != _systemTabButton && focused != _closeButton)
             return;
 
         focused.EmitSignal(Button.SignalName.Pressed);
@@ -107,7 +115,16 @@ public partial class GameMenuShell : Control
         }
 
         if (!Visible)
+        {
+            if (!Input.IsActionJustPressed("menu") && !Input.IsActionJustPressed("ui_cancel"))
+                return;
+
+            if (IsDialogueOpen() || IsShopOpen())
+                return;
+
+            OpenTab(GameMenuTab.System);
             return;
+        }
 
         if (!Input.IsActionJustPressed("menu") && !Input.IsActionJustPressed("ui_cancel"))
             return;
@@ -137,6 +154,12 @@ public partial class GameMenuShell : Control
 
     bool IsDialogueOpen() => _dialogueUi != null && _dialogueUi.Visible;
 
+    bool IsShopOpen()
+    {
+        var shop = GetTree().GetFirstNodeInGroup(ShopUI.GroupName) as ShopUI;
+        return shop != null && shop.IsOpen;
+    }
+
     public void OpenTab(GameMenuTab tab)
     {
         if (!Visible && IsDialogueOpen())
@@ -154,8 +177,8 @@ public partial class GameMenuShell : Control
         }
 
         SwitchTab(tab);
-        if (wasClosed && tab == GameMenuTab.Stats)
-            CallDeferred(MethodName.FocusNav);
+        if (wasClosed)
+            CallDeferred(tab == GameMenuTab.System ? MethodName.FocusSystemNav : MethodName.FocusNav);
     }
 
     public void Close()
@@ -167,6 +190,7 @@ public partial class GameMenuShell : Control
         _skillsPage.OnTabHidden();
         _inventoryPage.OnTabHidden();
         _questsPage.OnTabHidden();
+        _systemPage.OnTabHidden();
 
         Visible = false;
         GameManager.Instance.SetMenuBlockingWorld(false);
@@ -185,6 +209,7 @@ public partial class GameMenuShell : Control
         _skillsPage.Visible = tab == GameMenuTab.Skills;
         _inventoryPage.Visible = tab == GameMenuTab.Inventory;
         _questsPage.Visible = tab == GameMenuTab.Quests;
+        _systemPage.Visible = tab == GameMenuTab.System;
 
         UpdateTitle();
         UpdateTabButtons();
@@ -199,6 +224,7 @@ public partial class GameMenuShell : Control
         GameMenuTab.Skills => _skillsPage,
         GameMenuTab.Inventory => _inventoryPage,
         GameMenuTab.Quests => _questsPage,
+        GameMenuTab.System => _systemPage,
         _ => null,
     };
 
@@ -213,6 +239,7 @@ public partial class GameMenuShell : Control
             GameMenuTab.Skills => "Compétences",
             GameMenuTab.Inventory => "Inventaire",
             GameMenuTab.Quests => "Journal des quêtes",
+            GameMenuTab.System => "Système",
             _ => "",
         };
     }
@@ -223,6 +250,7 @@ public partial class GameMenuShell : Control
         SetTabPressed(_skillsTabButton, _currentTab == GameMenuTab.Skills);
         SetTabPressed(_inventoryTabButton, _currentTab == GameMenuTab.Inventory);
         SetTabPressed(_questsTabButton, _currentTab == GameMenuTab.Quests);
+        SetTabPressed(_systemTabButton, _currentTab == GameMenuTab.System);
     }
 
     static void SetTabPressed(Button button, bool active)
@@ -237,6 +265,8 @@ public partial class GameMenuShell : Control
     }
 
     void FocusNav() => _statsTabButton?.GrabFocus();
+
+    void FocusSystemNav() => _systemTabButton?.GrabFocus();
 
     void FocusContent() => GetActiveTabPage()?.FocusDefault();
 }

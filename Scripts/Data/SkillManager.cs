@@ -82,4 +82,34 @@ public partial class SkillManager : Node
         _catalog = skillList;
         return skillList;
     }
+
+    /// <summary>Recherche insensible à la casse (clés bestiaire type « stalagtite »).</summary>
+    public static Skill GetByName(string skillKey)
+    {
+        if (string.IsNullOrWhiteSpace(skillKey))
+            return null;
+
+        string key = skillKey.Trim();
+        return LoadSkills().FirstOrDefault(s =>
+            string.Equals(s.Name, key, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>Sorts listés dans le bestiaire (`sort1|sort2`).</summary>
+    public static List<Skill> ResolveByKeys(IEnumerable<string> keys)
+    {
+        var resolved = new List<Skill>();
+        if (keys == null)
+            return resolved;
+
+        foreach (string key in keys)
+        {
+            Skill skill = GetByName(key);
+            if (skill != null)
+                resolved.Add(skill);
+            else
+                GD.PrintErr($"[SkillManager] Sort introuvable pour le bestiaire : '{key}'");
+        }
+
+        return resolved;
+    }
 }

@@ -29,6 +29,9 @@ public static class UiIcons
     public const string ElementAir = "res://Assets/UI/elements/air.png";
     public const string ElementEarth = "res://Assets/UI/elements/earth.png";
     public const string ElementHeal = "res://Assets/UI/elements/heal.png";
+    public const string BuffReinforcement = "res://Assets/UI/buffs/reinforcement.png";
+    public const string BuffHeavy = "res://Assets/UI/buffs/eavy.png";
+    public const string BuffSleep = "res://Assets/UI/buffs/sleep.png";
 
     public static Texture2D GetItemIcon(string itemName)
     {
@@ -76,6 +79,15 @@ public static class UiIcons
         string path = ResolveElementPath(element);
         return path != null ? Load(path) : null;
     }
+
+    /// <summary>Icône de buff temporaire en combat (Assets/UI/buffs).</summary>
+    public static Texture2D GetCombatBuffIcon(CombatBuffKind kind) => kind switch
+    {
+        CombatBuffKind.Force => Load(BuffReinforcement),
+        CombatBuffKind.Heavy => Load(BuffHeavy),
+        CombatBuffKind.Sleep => Load(BuffSleep),
+        _ => Load(BuffReinforcement),
+    };
 
     public static Texture2D GetSkillIcon(Skill skill)
     {
