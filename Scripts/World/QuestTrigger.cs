@@ -1,4 +1,5 @@
 using Godot;
+using EchoduKarma.Scripts.Data;
 
 /// <summary>
 /// Zone ou point d'interaction 3D qui démarre une quête.
@@ -64,6 +65,9 @@ public partial class QuestTrigger : Area3D
     void TryStartQuest()
     {
         if (OneShot && _hasTriggered)
+            return;
+
+        if (GameManager.Instance is not { CanInteractWithWorld: true })
             return;
 
         if (string.IsNullOrWhiteSpace(QuestId))

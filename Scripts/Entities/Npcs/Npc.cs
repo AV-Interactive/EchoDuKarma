@@ -21,7 +21,10 @@ public partial class Npc : CharacterBody3D
     public override void _Ready()
     {
         _sprite = GetNode<Sprite3D>("Node3D/Sprite3D");
-        _sprite.Texture = SpriteTexture;
+
+        if (_sprite is not NpcVisuals { SpritesBasePath: { Length: > 0 } } && SpriteTexture != null)
+            _sprite.Texture = SpriteTexture;
+
         _currentDialogueId = GetActiveStartDialogueId();
         
         // On récupère l'Area3D pour la détection 3D
@@ -71,16 +74,19 @@ public partial class Npc : CharacterBody3D
         };
     }
 
-    // On utilise UnhandledInput pour ne pas déclencher le dialogue si on clique sur un bouton d'UI
     public override void _UnhandledInput(InputEvent @event)
     {
-        if (_isPlayerInRange && @event.IsActionPressed("Interaction"))
-        {
-            if (GetViewport().GuiGetFocusOwner() != null) return;
-            
-            GD.Print($"On tente une interaction avec {NpcName}");
-            AdvanceDialogue();
-        }
+        if (!_isPlayerInRange || !@event.IsActionPressed("Interaction"))
+            return;
+
+        if (GameManager.Instance.IsMenuBlockingWorld)
+            return;
+
+        if (GetViewport().GuiGetFocusOwner() != null)
+            return;
+
+        GD.Print($"On tente une interaction avec {NpcName}");
+        AdvanceDialogue();
     }
 
     public void AdvanceDialogue()

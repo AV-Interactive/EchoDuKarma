@@ -9,6 +9,7 @@ public partial class CameraDirector : Node3D
     {
         Neutral,
         PlayerAttack,
+        PlayerMagic,
         EnemyAttack,
     }
     
@@ -26,6 +27,7 @@ public partial class CameraDirector : Node3D
         {
             { CameraShot.Neutral,       GetNode<Camera3D>("ShotNeutral") },
             { CameraShot.PlayerAttack,  GetNode<Camera3D>("ShotPlayerAttack") },
+            { CameraShot.PlayerMagic,   GetNode<Camera3D>("ShotPlayerMagic") },
             { CameraShot.EnemyAttack,   GetNode<Camera3D>("ShotEnemyAttack") }
         };
 

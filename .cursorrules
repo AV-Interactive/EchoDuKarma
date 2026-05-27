@@ -1,0 +1,198 @@
+# CURSOR RULES — Echo du Karma
+## Lead Developer: Toine | Engine: Godot 4.6 | Language: C#
+
+---
+
+## 🏗️ ARCHITECTURE & PRINCIPES
+
+### Principes fondamentaux
+- **Composition over Inheritance** : préférer les composants découplés aux hiérarchies profondes.
+- **Single Responsibility** : chaque script a une responsabilité unique et claire.
+- **Single Source of Truth** : une seule classe détient et expose une donnée (ex: CameraFollow3D pour les limites terrain).
+- **Signaux Godot** pour la communication découplée entre nœuds (éviter les GetNode en cascade).
+- **State Machine** pour tout comportement à états multiples (combat, dialogues, IA ennemis).
+
+### Patterns privilégiés
+- **Autoload / Singleton** uniquement pour les managers globaux (GameManager, SaveManager, AudioManager).
+- **Observer Pattern via Signaux** pour les événements de jeu (mort d'ennemi, level up, fin de dialogue).
+- **Command Pattern** pour les actions de combat (permet undo, replay, log).
+
+---
+
+## 🗂️ STRUCTURE DU PROJET
+
+```
+res://
+├── Scenes/
+│   ├── World/          # Map.tscn, Road.tscn, zones
+│   ├── Entities/       # Player.tscn, Enemy.tscn, NPC.tscn
+│   ├── UI/             # HUD.tscn, DialogueBox.tscn, BattleUI.tscn
+│   └── Battle/         # BattleManager.tscn
+├── Scripts/
+│   ├── Core/           # GameManager.cs, SaveManager.cs
+│   ├── World/          # CameraFollow3D.cs, GrassSpawner.cs, Player.cs
+│   ├── Battle/         # BattleManager.cs, TurnQueue.cs, BattleAction.cs
+│   ├── Dialogue/       # DialogueManager.cs, DialogueParser.cs
+│   ├── Entities/       # CharacterStats.cs, Enemy.cs, EnemyAI.cs
+│   └── Data/           # Resources (SkillData.cs, EquipmentData.cs, EnemyData.cs)
+├── Resources/
+│   ├── Skills/         # .tres pour chaque compétence
+│   ├── Equipments/     # .tres pour chaque équipement
+│   └── Enemies/        # .tres pour chaque ennemi
+└── Assets/
+    ├── Models/         # .blend importés
+    ├── Textures/       # GrassMask.png, Ground_Albedo, etc.
+    └── Audio/
+```
+
+---
+
+## ⚔️ SYSTÈMES RPG — DONNÉES DE RÉFÉRENCE
+
+### Stats de base (toutes entités)
+`PV`, `PM`, `Force`, `Esprit`, `Agi`, `Def`
+
+### Classes jouables connues
+`Magus`, `Paladin`
+
+### Éléments
+`Fire`, `Water` (à étendre)
+
+### Format CSV de référence
+
+**bestiary.csv / EdK.csv**
+`Nom, Niveau, PV, XP, FORCE, ESPRIT, AGI, DEF, IA, LOOT`
+
+**skills.csv**
+`Nom, Type, Description, Coût PM, Puissance, Élément, Vitesse, Effet special, Type de cible, Classes, Level requis`
+
+**equipments.csv**
+`Nom, Slot, Type, Force, Agi, Esprit, Defense, Capacité passive, Classes, Prix`
+
+**progressionmage.csv**
+`Seuil XP, Niveau, Multiplicateur, PV, PM, Force, Esprit, Agi, Def`
+
+**dialogues.csv**
+`ID, TYPE DIALOGUE, PNJ, TEXTE, CONDITION ACCES, ACTION POST DIALOGUE, LIEN SUIVANT`
+- Types : `TEXT`, `CHOICE`
+- Action spéciale : `BATTLE:NomEnnemi|...:quantité|...` → déclenche un combat
+
+---
+
+## 🌍 WORLD — ÉTAT ACTUEL
+
+### Terrain (CampainMap.blend → Road.tscn)
+- Scale: **5.0** sur tous axes | Rotation Y: **-90°**
+- `StaticBody3D + CollisionShape3D` pour les collisions
+
+### GrassSpawner.cs
+- Chunks déterministes (seed par coordonnées)
+- Heightmap précalculée au `_Ready` → `Dictionary<Vector2I, float>`
+- GrassMask.png : détection herbe vs chemin via `terrainColor.G > terrainColor.R * 1.3f`
+- Paramètres : `ChunkSize=4`, `ChunkRadius=3`, `GrassPerChunk=300`, `NoiseThreshold=0.15`
+
+### CameraFollow3D.cs
+- Hérite de `Camera3D` | Style Xenogears : rotation fixe `(-35°, 45°, 0°)`
+- Lerp smooth dans `_PhysicsProcess` | Rotation 90° par paliers
+- Limites terrain auto-détectées via AABB → propriétés publiques `MapMin`, `MapMax`, `BorderMargin`
+
+### Player.cs
+- Clamp position après `MoveAndSlide()` en lisant `CameraFollow3D` (single source of truth)
+
+---
+
+## 💬 SYSTÈME DE DIALOGUE
+
+### Parsing
+- Lire `dialogues.csv` → charger dans des `DialogueEntry` Resources ou des structs
+- `LIEN SUIVANT` : navigation linéaire ou branchée (CHOICE → plusieurs liens séparés par ligne)
+- `ACTION POST DIALOGUE` : parser les tokens (ex: `BATTLE:Rat|Gobi:1|1`)
+- Supporter les balises BBCode Godot dans les textes (ex: `[color=#58B4C6]`)
+
+### Architecture recommandée
+```
+DialogueManager (Autoload)
+  ├── DialogueParser       → charge et parse le CSV
+  ├── DialogueRunner       → exécute le flux (TEXT, CHOICE)
+  └── Signal: dialogue_ended(actionToken: string)
+```
+
+---
+
+## ⚔️ SYSTÈME DE COMBAT (Tour par tour)
+
+### Architecture recommandée
+```
+BattleManager (State Machine)
+  States: Idle → PlayerTurn → EnemyTurn → Victory → Defeat
+  ├── TurnQueue            → tri par AGI
+  ├── BattleAction         → Command Pattern (Execute, données cible/source/skill)
+  └── Signals: turn_started, action_executed, battle_ended
+```
+
+### IA Ennemis (champ IA dans CSV)
+- `"Équilibré (tuto)"` → attaque basique aléatoire
+- `"Se défend bien"` → priorise Def, contre-attaque
+- Implémenter via **Strategy Pattern** : `IEnemyAI` → classes concrètes par comportement
+
+### Formule de dégâts de base
+```
+dégâts = (Puissance_skill * Stat_attaquant) / (Def_défenseur + 1)
+```
+Ajuster selon l'élément et les effets spéciaux du skill.
+
+---
+
+## 📋 CONVENTIONS DE CODE C#
+
+```csharp
+// Nommage
+public class BattleManager : Node          // PascalCase pour classes
+private int _currentTurn;                  // _camelCase pour champs privés
+public int CurrentTurn { get; private set; } // PascalCase pour propriétés
+private void HandleTurnStart() { }         // PascalCase pour méthodes
+
+// Signaux Godot (C#)
+[Signal] public delegate void TurnStartedEventHandler(CharacterStats character);
+
+// Export Inspector
+[Export] public float SmoothSpeed = 5.0f;
+
+// Null safety
+if (target is not null) { }               // préférer 'is not null' à != null
+
+// Ressources de données
+[GlobalClass]
+public partial class SkillData : Resource
+{
+    [Export] public string SkillName;
+    [Export] public int ManaCost;
+    [Export] public int Power;
+    // ...
+}
+```
+
+### À éviter
+- `GetNode()` en dehors du `_Ready` → stocker la référence en champ privé
+- Logique de jeu dans les scripts UI → séparer View et Logic
+- Magic numbers → utiliser des constantes nommées ou des `[Export]`
+- Héritage profond (>2 niveaux) → préférer la composition
+
+---
+
+## 📝 FORMAT DES RÉPONSES
+
+1. **Contexte court** : rappel de ce qu'on fait et pourquoi
+2. **Code C#** : commenté, optimisé, prêt à coller dans Godot
+3. **Justification d'architecture** : pourquoi ce choix (pattern, découplage, perf)
+4. **⚠️ Pièges à éviter** si pertinent
+5. **❓ Question de validation** : toujours terminer par une question ciblée
+
+---
+
+## 🚫 À NE JAMAIS FAIRE
+
+- Ne jamais suggérer GDScript : le projet est **100% C#**
+- Ne jamais utiliser `GetTree().Root.FindChild()` en production → trop fragile
+- Ne jamais dupliquer la logique terrain entre Player et Camera
+- Ne jamais faire de logique lourde dans `_Process` sans vérification de delta ou condition de changement d'état

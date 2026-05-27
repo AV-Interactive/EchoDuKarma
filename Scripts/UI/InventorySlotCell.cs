@@ -17,13 +17,31 @@ public partial class InventorySlotCell : Button
     public Equipment Equipment { get; private set; }
     public bool IsEquippedCell { get; private set; }
 
-    public void ApplyDimensions(Vector2 cellSize, Vector2 iconSize, int hintFontSize = 8)
+    public override void _Ready()
+    {
+        if (_itemLabel != null)
+        {
+            _itemLabel.AddThemeFontSizeOverride("font_size", 7);
+            _itemLabel.TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis;
+            _itemLabel.AutowrapMode = TextServer.AutowrapMode.Off;
+            _itemLabel.ClipText = true;
+        }
+    }
+
+    public void ApplyDimensions(Vector2 cellSize, Vector2 iconSize, int hintFontSize = 8, int itemFontSize = 7)
     {
         CustomMinimumSize = cellSize;
         if (_icon != null)
             _icon.CustomMinimumSize = iconSize;
         if (_hintLabel != null)
             _hintLabel.AddThemeFontSizeOverride("font_size", hintFontSize);
+        if (_itemLabel != null)
+        {
+            _itemLabel.AddThemeFontSizeOverride("font_size", itemFontSize);
+            _itemLabel.TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis;
+            _itemLabel.AutowrapMode = TextServer.AutowrapMode.Off;
+            _itemLabel.ClipText = true;
+        }
     }
 
     public void BindPaperDollSlot(EquipmentSlot slot, Equipment equipment)
@@ -71,7 +89,7 @@ public partial class InventorySlotCell : Button
         _hintLabel.Text = resource.Type;
         _hintLabel.AddThemeColorOverride("font_color", ColorAvailable);
 
-        _itemLabel.Text = Truncate(resource.Name, 12);
+        _itemLabel.Text = Truncate(resource.Name, 9);
         _itemLabel.AddThemeColorOverride("font_color", Colors.White);
         Modulate = Colors.White;
     }
@@ -90,7 +108,7 @@ public partial class InventorySlotCell : Button
         _hintLabel.Text = equipment.Type;
         _hintLabel.AddThemeColorOverride("font_color", canEquip ? ColorAvailable : ColorLocked);
 
-        _itemLabel.Text = Truncate(equipment.Name, 12);
+        _itemLabel.Text = Truncate(equipment.Name, 9);
         _itemLabel.AddThemeColorOverride("font_color", canEquip ? Colors.White : ColorLocked);
         Modulate = Colors.White;
     }

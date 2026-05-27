@@ -41,6 +41,21 @@ public partial class PlayerStatsPage : Control
 
         if (InventoryManager.Instance is not null)
             InventoryManager.Instance.EquipmentChanged += OnEquipmentChanged;
+
+        SetupAvatar();
+    }
+
+    void SetupAvatar()
+    {
+        if (_avatar == null)
+            return;
+
+        var atlas = new AtlasTexture
+        {
+            Atlas = GD.Load<Texture2D>(LpcSprites.Idle),
+            Region = new Rect2(0, 0, LpcSprites.FrameSize, LpcSprites.FrameSize)
+        };
+        _avatar.Texture = atlas;
     }
 
     public override void _ExitTree()
@@ -101,6 +116,7 @@ public partial class PlayerStatsPage : Control
         Visible = true;
         ZIndex = 10;
         MoveToFront();
+        GameManager.Instance.SetMenuBlockingWorld(true);
         GameManager.Instance.PlayerMoved = false;
         _closeButton.GrabFocus();
     }
@@ -108,6 +124,7 @@ public partial class PlayerStatsPage : Control
     public void Close()
     {
         Visible = false;
+        GameManager.Instance.SetMenuBlockingWorld(false);
         GameManager.Instance.PlayerMoved = true;
         GetViewport()?.GuiReleaseFocus();
     }

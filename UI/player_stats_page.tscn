@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://bsbotyhp0xrc7"]
 
 [ext_resource type="Script" uid="uid://d8stats7page01" path="res://Scripts/UI/PlayerStatsPage.cs" id="1_stats"]
-[ext_resource type="Texture2D" uid="uid://ctkbskepw3pk" path="res://Assets/Actors/Heroes/Magus.png" id="2_avatar"]
+[ext_resource type="Texture2D" path="res://Assets/Actors/Heroes/magus/standard/idle.png" id="2_avatar"]
 [ext_resource type="Texture2D" path="res://Assets/UI/stats/strength.png" id="3_str"]
 [ext_resource type="Texture2D" path="res://Assets/UI/stats/spirit.png" id="4_spr"]
 [ext_resource type="Texture2D" path="res://Assets/UI/stats/agility.png" id="5_agi"]

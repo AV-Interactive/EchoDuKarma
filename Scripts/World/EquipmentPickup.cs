@@ -64,7 +64,7 @@ public partial class EquipmentPickup : Area3D
         if (GetViewport().GuiGetFocusOwner() != null)
             return;
 
-        if (GameManager.Instance is { PlayerMoved: false })
+        if (GameManager.Instance is not { CanInteractWithWorld: true })
             return;
 
         TryPickup();

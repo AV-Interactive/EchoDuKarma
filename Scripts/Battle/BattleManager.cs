@@ -12,6 +12,8 @@ using EchoduKarma.Scripts.Entities.Player;
 /// </summary>
 public partial class BattleManager : Node
 {
+    public const string GroupName = "battle_manager";
+
     #region --- Enums & Signals ---
 
     public enum BattleState
@@ -62,6 +64,7 @@ public partial class BattleManager : Node
     [Export] float _xpDisplayDelay     = 1.5f; // durée affichage message XP
     [Export] float _levelUpDelay       = 2.0f; // durée affichage niveau gagné
     [Export] float _exitBattleDelay    = 2.5f; // pause finale avant retour map
+    [Export] float _lootDisplayDelay     = 1.2f; // durée affichage message butin
     [Export] float _defeatDelay        = 3.0f; // durée affichage message de défaite
 
     [ExportGroup("Turn Management")]
@@ -88,6 +91,7 @@ public partial class BattleManager : Node
 
     public override void _Ready()
     {
+        AddToGroup(GroupName);
         CallDeferred(nameof(InitializeBattle));
     }
 
@@ -111,6 +115,7 @@ public partial class BattleManager : Node
         if (_hud != null)
         {
             _hud.ActionSelected += OnPlayerActionSelected;
+            PlayerDamage += _hud.OnPlayerDamageReceived;
         }
         else
         {
@@ -462,19 +467,18 @@ public partial class BattleManager : Node
         _hud?.UpdatePlayerStats(_playerBattler);
 
         bool isOffensive = skill.Type != SkillType.Support;
+        var magicShot = CameraDirector.CameraShot.PlayerMagic;
+
+        await _cameraDirector.CutTo(magicShot);
+        _playerActor?.OnCameraChanged(magicShot);
+
+        if (_playerActor != null)
+            await _playerActor.PlaySpellcastAnimation();
 
         if (isOffensive)
-        {
-            await _cameraDirector.CutTo(CameraDirector.CameraShot.PlayerAttack);
-            _playerActor?.OnCameraChanged(CameraDirector.CameraShot.PlayerAttack);
             ApplyMagicDamage(target, skill);
-        }
         else
-        {
-            await _cameraDirector.CutTo(CameraDirector.CameraShot.Neutral);
-            _playerActor?.OnCameraChanged(CameraDirector.CameraShot.Neutral);
             ApplyHealEffect(skill);
-        }
 
         await ToSignal(GetTree().CreateTimer(_actionResultDelay), "timeout");
 
@@ -533,6 +537,10 @@ public partial class BattleManager : Node
         ChangeState(BattleState.Evaluation);
     }
 
+    /// <summary>
+    /// Fuite : retour immédiat à la map sans XP ni butin (voir docs/COMBAT_REGRESSION.md).
+    /// Les kills / karma déjà appliqués avant la fuite restent acquis.
+    /// </summary>
     async void ExecuteFlee()
     {
         ChangeState(BattleState.Action);
@@ -951,7 +959,35 @@ public partial class BattleManager : Node
             await ToSignal(GetTree().CreateTimer(_levelUpDelay), "timeout");
         }
 
+        var lootAcquired = DistributeBattleLoot();
+        foreach (string itemName in lootAcquired)
+        {
+            _hud?.ShowLogs($"Butin : {itemName}");
+            await ToSignal(GetTree().CreateTimer(_lootDisplayDelay), "timeout");
+        }
+
         ExitBattleSequence();
+    }
+
+    List<string> DistributeBattleLoot()
+    {
+        var acquired = new List<string>();
+        var inventory = InventoryManager.Instance;
+        if (inventory == null || _enemyStatsSource == null)
+            return acquired;
+
+        foreach (EnemyStats enemy in _enemyStatsSource)
+        {
+            foreach (string itemName in EnemyStats.ParseLoot(enemy.Loot))
+            {
+                if (inventory.TryAddItem(itemName))
+                    acquired.Add(itemName);
+                else
+                    GD.Print($"[BattleManager] Butin non ajouté : '{itemName}' (inventaire plein ou déjà possédé).");
+            }
+        }
+
+        return acquired;
     }
 
     private async void ExitBattleSequence()
@@ -968,7 +1004,10 @@ public partial class BattleManager : Node
         GD.Print($"[BattleManager] Battle ended with reason: {reason}");
         // Nettoyage des abonnements pour éviter des callbacks fantômes après la scene change
         if (_hud != null)
+        {
             _hud.ActionSelected -= OnPlayerActionSelected;
+            PlayerDamage -= _hud.OnPlayerDamageReceived;
+        }
 
         _isSelectingTarget = false; // stoppe la capture d’input locale
 

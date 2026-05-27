@@ -96,10 +96,6 @@ public partial class BattleHud : CanvasLayer
         GetNode<Button>("Scene/Actions/Panel/ActionMenu/BtnDefense").Pressed += () => OnButtonPressed("Defense");
         GetNode<Button>("Scene/Actions/Panel/ActionMenu/BtnEscape").Pressed += () => OnButtonPressed("Flee");
 
-        var battleManager = GetTree().Root.FindChild("BattleManager", true, false) as BattleManager;
-        if (battleManager != null)
-            battleManager.PlayerDamage += OnPlayerDamageReceived;
-
         StartCursorAnim();
     }
 
@@ -275,7 +271,7 @@ public partial class BattleHud : CanvasLayer
         EmitSignal(nameof(ActionSelected), action);
     }
 
-    void OnPlayerDamageReceived(int damage)
+    public void OnPlayerDamageReceived(int damage)
     {
         var player = GameManager.Instance.GetBattleSnapshot()
             ?? GameManager.Instance.CurrentPlayer as IBattler;

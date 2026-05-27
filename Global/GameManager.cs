@@ -10,6 +10,14 @@ public partial class GameManager: Node
     public static GameManager Instance { get; private set; }
     
     public bool PlayerMoved { get; set; } = true;
+
+    /// <summary>True quand inventaire, stats ou journal bloquent les interactions monde.</summary>
+    public bool IsMenuBlockingWorld { get; private set; }
+
+    public void SetMenuBlockingWorld(bool blocking) => IsMenuBlockingWorld = blocking;
+
+    /// <summary>False pendant un menu, un dialogue ou toute UI bloquante.</summary>
+    public bool CanInteractWithWorld => PlayerMoved && !IsMenuBlockingWorld;
     
     [Signal] public delegate void PlayerLevelUpEventHandler(int levelUpAmount);
     
@@ -317,7 +325,7 @@ public partial class GameManager: Node
     
     void ConnectBattleSignals()
     {
-        var bm = GetTree().Root.FindChild("BattleManager", true, false) as BattleManager;
+        var bm = GetTree().GetFirstNodeInGroup(BattleManager.GroupName) as BattleManager;
         if (bm == null)
         {
             if (++_battleSignalRetryCount > 10)

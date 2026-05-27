@@ -106,6 +106,7 @@ public partial class QuestJournalPage : Control
         Visible = true;
         ZIndex = 10;
         MoveToFront();
+        GameManager.Instance.SetMenuBlockingWorld(true);
         GameManager.Instance.PlayerMoved = false;
         FocusList();
     }
@@ -114,6 +115,7 @@ public partial class QuestJournalPage : Control
     {
         Visible = false;
         ShowList();
+        GameManager.Instance.SetMenuBlockingWorld(false);
         GameManager.Instance.PlayerMoved = true;
         GetViewport()?.GuiReleaseFocus();
     }

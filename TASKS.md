@@ -1,402 +1,220 @@
-# Echo du Karma — Tâches prioritaires (Battle System)
+# Echo du Karma — Backlog & tâches
 
-Document de suivi pour fermer la **boucle combat** : entrer en combat → jouer un tour → gagner/perdre/fuir → récompense → retour sur la map.
+Document de suivi actionnable. Synthèse complète : **[AUDIT.md](AUDIT.md)**.
 
-**État actuel (~45 % du gameplay RPG)** : la machine à états et le HUD sont en place, mais la boucle monde ↔ combat n’est pas fiable et la progression post-combat est quasi absente.
-
-**Fichiers centraux**
-
-| Rôle | Fichier |
-|------|---------|
-| Orchestration combat | `Scripts/Battle/BattleManager.cs` |
-| Interface combat | `Scripts/UI/BattleHud.cs` |
-| Caméras combat | `Scripts/Battle/CameraDirector.cs` |
-| Entités | `Scripts/Entities/Enemy/Enemy.cs`, `Scripts/Entities/Player/Player.cs` |
-| Stats / XP | `Scripts/Data/StatHandler.cs` |
-| Lancement & fin de combat | `Global/GameManager.cs` |
-| Données ennemis | `Global/Bestiary.cs`, `Datas/Bestiary/bestiary.csv` |
-| Scène combat | `Maps/Battles/Basic.tscn` |
+**État global : ~67 % du gameplay RPG** (vertical slice Intro ~75 %).
 
 ---
 
-## P0 — Bloquants (à faire en premier)
+## Légende statuts
 
-Ces tâches débloquent une **boucle jouable** sans soft-lock ni fin de combat « fantôme ».
-
----
-
-### P0.1 — Brancher le signal `BattleEnded` sur `GameManager`
-
-**Problème**  
-Dans `Global/GameManager.cs`, la méthode `ConnectBattleSignals()` déclare une fonction locale du même nom mais **ne l’appelle jamais**. Le timer après `StartBattle()` invoque donc une méthode vide : `BattleManager.BattleEnded` n’est probablement jamais connecté à `OnBattleEnded`.
-
-**Conséquence**  
-Après victoire, défaite ou fuite, le joueur peut rester bloqué sur la scène `Maps/Battles/Basic.tscn` sans retour automatique sur la map.
-
-**À faire**
-
-1. Fusionner la logique en une seule méthode (ou appeler explicitement la fonction locale dès l’entrée).
-2. Conserver le mécanisme de retry (`FindChild("BattleManager")` + `CallDeferred`, max ~10 tentatives).
-3. S’abonner une seule fois : `bm.BattleEnded += OnBattleEnded` (éviter les doubles abonnements si `StartBattle` est rappelé).
-
-**Critères d’acceptation**
-
-- [ ] Lancer un combat via dialogue (`BATTLE:Rat:2`) ou PNJ test.
-- [ ] Gagner, perdre ou fuir avec succès → la scène repasse sur `res://Maps/Intro/Map.tscn`.
-- [ ] La console affiche `[GameManager] Signal de fin de combat reçu : …` à chaque fin.
-
-**Statut** : implémenté (à valider en playtest Godot).
-
-**Référence** : `Global/GameManager.cs` — `ConnectBattleSignals`, `_subscribedBattleManager`.
+| Statut | Signification |
+|--------|---------------|
+| ✅ | Fait (à valider en playtest si besoin) |
+| 🔶 | Partiel |
+| ⬜ | À faire |
 
 ---
 
-### P0.2 — Corriger le rechargement des dialogues au retour de map
+## P0 — Boucle combat (TERMINÉ)
 
-**Problème**  
-`OnBattleEnded` appelle `LoadZoneDialogues(map)` avec le **chemin de scène** (`res://Maps/Intro/Map.tscn`). Or `DialogueSystem.LoadZoneDialogues` attend un **nom de zone** et construit le chemin `res://Datas/Progress/{zoneName}/dialogues.csv`.
+| ID | Tâche | Statut |
+|----|-------|--------|
+| P0.1 | Brancher `BattleEnded` → `GameManager.OnBattleEnded` | ✅ |
+| P0.2 | Retour map + zone (`ReturnScenePath`, `MapLoader`, snapshot) | ✅ |
+| P0.3 | Soft-lock MP insuffisants (`CancelPlayerActionAndShowMenu`) | ✅ |
+| P0.4 | XP victoire + level up (`GrantBattleExperience`) | ✅ |
+| P0.5 | Playtest boucle Marchand (checklist manuelle) | ⬜ |
 
-**Conséquence**  
-Les dialogues ne se rechargent pas correctement après un combat ; les PNJ peuvent se comporter de façon incohérente.
-
-**À faire**
-
-1. Stocker avant le combat la zone courante (ex. `"Introduction"`) — export sur `MapLoader`, propriété sur `GameManager`, ou constante temporaire si une seule map.
-2. Après `ChangeSceneToFile`, appeler `LoadZoneDialogues("Introduction")` (ou la zone mémorisée).
-
-**Critères d’acceptation**
-
-- [ ] Après un combat, parler au Marchand ou au Testeur : les textes s’affichent normalement.
-- [ ] Aucune erreur `Fichier introuvable` pour un CSV sous `Datas/Progress/`.
-
-**Statut** : implémenté + correctifs post-retour map (snapshot joueur, combat différé, proximité PNJ).
-
-**Référence** : `Global/GameManager.cs`, `Global/PlayerBattleSnapshot.cs`, `Scripts/Data/MapLoader.cs`, `Scripts/Entities/Npcs/Npc.cs`.
-
----
-
-### P0.3 — Soft-lock magie : MP insuffisants
-
-**Problème**  
-Dans `BattleManager.ExecuteMagicAction`, si `_player.CurrentMp < skill.Cost`, le code fait `return` après avoir mis `_isActionRunning = true` sans le remettre à `false`.
-
-**Conséquence**  
-Toutes les actions suivantes (attaque, magie, etc.) sont ignorées (`if (_isActionRunning) return`).
-
-**À faire**
-
-1. Avant le `return`, assigner `_isActionRunning = false`.
-2. Optionnel : repasser en `BattleState.Selection` au lieu de laisser l’état incohérent.
-
-**Critères d’acceptation**
-
-- [x] En combat, choisir une compétence trop chère en MP → message d’erreur → le menu réapparaît et une autre action est possible.
-
-**Statut** : fait (`CancelPlayerActionAndShowMenu`, vérif MP avant `_isActionRunning`).
-
-**Référence** : `Scripts/Battle/BattleManager.cs` — `ExecuteMagicAction`, `CancelPlayerActionAndShowMenu`.
-
----
-
-### P0.4 — Appliquer l’XP au joueur en cas de victoire
-
-**Problème**  
-`HandleVictory` calcule `totalXp` depuis `_enemyStatsSource` et l’affiche dans les logs, mais **aucune valeur n’est écrite** dans `StatHandler` (`CurrentExperience` existe mais n’est pas utilisée en combat).
-
-**Conséquence**  
-Le combat n’avance pas la progression ; le pourcentage « gameplay RPG » reste artificiel.
-
-**À faire**
-
-1. Exposer sur `StatHandler` (ou `Player`) une méthode du type `AddExperience(int amount)` :
-   - incrémenter `CurrentExperience` ;
-   - comparer au seuil `XPForNextLevel` du niveau actuel (colonne 0 de `progression-mage.csv`) ;
-   - si seuil atteint : appeler `LevelUp()` (déjà présent) et émettre `GameManager.PlayerLevelUp` si souhaité pour cohérence avec les dialogues.
-2. Appeler cette méthode depuis `HandleVictory` **avant** `ExitBattleSequence`.
-3. Afficher dans le HUD un message du type « +120 XP » puis « Niveau 2 ! » si level up.
-
-**Données**  
-- XP par ennemi : `EnemyStats.XpValue` (`Datas/Bestiary/bestiary.csv`, colonne XP).
-- Seuils par niveau : `Datas/Persos/Magus/progression-mage.csv` (`Seuil XP`, `Niveau`).
-
-**Critères d’acceptation**
-
-- [x] Vaincre 2 Rats : `CurrentExperience` augmente ; logs / HUD cohérents.
-- [x] Si le seuil est dépassé : niveau + PV/PM max mis à jour (snapshot + `ApplyToPlayer`).
-
-**Statut** : fait (`StatHandler.AddExperience`, `GrantBattleExperience`, HUD victoire).
-
-**Référence** : `Scripts/Battle/BattleManager.cs` `HandleVictory` ; `Scripts/Data/StatHandler.cs` ; `Global/PlayerBattleSnapshot.cs` ; `Global/GameManager.cs`.
-
----
-
-### P0.5 — Playtest boucle complète (checklist manuelle)
-
-À exécuter dans Godot 4.6 après P0.1–P0.4.
+### P0.5 — Checklist playtest
 
 | Étape | Action attendue |
 |-------|-----------------|
-| 1 | Map Intro → interaction Marchand → choix « Aider » |
+| 1 | Map Intro → Marchand → « Aider » (karma ≥ 10) |
 | 2 | Combat 2× Rat → victoire |
-| 3 | Retour map automatique, dialogues OK |
-| 4 | PV/MP / XP reflètent le combat (ou level up visible) |
-| 5 | Relancer combat → pas de double signal / crash |
-| 6 | Tester MP insuffisant → pas de blocage |
-| 7 | Tester défaite (se faire tuer) → retour map ou écran défaite cohérent |
-| 8 | Tester fuite réussie → retour map |
+| 3 | Retour map, dialogues OK, PNJ « merci » si quête done |
+| 4 | XP / or / objet quête / karma cohérents |
+| 5 | Re-combat sans double signal / crash |
+| 6 | MP insuffisant → pas de blocage |
+| 7 | Défaite → map, 1 PV |
+| 8 | Fuite → retour map |
 
 ---
 
-## P1 — Fiabilisation combat (juste après P0)
+## P1 — Fiabilisation combat (TERMINÉ)
 
-Améliorations qui réduisent les bugs et la dette sans refonte complète.
+| ID | Tâche | Statut |
+|----|-------|--------|
+| P1.1 | `ReturnScenePath` / `ReturnZoneName` mémorisés | ✅ |
+| P1.2 | Défaite : retour map, 1 PV / 0 MP sur snapshot | ✅ |
+| P1.3 | Doublon `PlayerDamage` sur `BattleHud` | ✅ |
+| P1.4 | `SpawnPlayer` : erreur si instantiate null | ✅ |
+| P1.5 | PV ennemis copiés depuis `_enemyStatsSource` | ✅ |
+| P1.6 | Mort ennemi 3D (`Enemy.PlayDefeatAnimation`) | ✅ |
 
 ---
 
-### P1.1 — Mémoriser la map et la zone de retour de combat
+## P2 — Enrichissement combat
 
-**Problème**  
-`OnBattleEnded` hardcode `res://Maps/Intro/Map.tscn`. Tout nouveau combat depuis une autre map reviendrait au mauvais endroit.
+| ID | Tâche | Priorité | Statut |
+|----|-------|----------|--------|
+| P2.1 | Caméra magie / soin (`ExecuteMagicAction`) | Basse | ✅ |
+| P2.2 | Attaque joueur : await `BattleActor.PlayAttackAnimation` | Basse | ✅ |
+| P2.3 | IA ennemie (`Aggressive` / `Defensive`) | — | ✅ |
+| P2.4 | **Loot post-combat** depuis `bestiary.csv` colonne LOOT | **Haute** | ✅ |
+| P2.5 | Règles fuite (pas XP) documentées / testées | Basse | ✅ |
+| P2.6 | Scénarios de régression combat documentés | Basse | ✅ |
+| P2.7 | Remplacer `FindChild("BattleManager")` par `[Export]` ou groupes | Moyenne | ✅ |
+
+### P2.4 — Loot post-combat (détail)
+
+**Problème** : `EnemyStats.Loot` chargé mais jamais distribué après victoire.
 
 **À faire**
 
-1. Ajouter sur `GameManager` : `string ReturnScenePath` et `string ReturnZoneName`.
-2. Les renseigner au lancement du combat (`StartBattle` ou depuis `MapLoader` au `_Ready` de la map).
-3. `OnBattleEnded` utilise ces champs au lieu de constantes.
+1. Parser le loot (ex. `"Gelée, Fleur de gobi"` ou nom unique).
+2. À la victoire : roll ou distribution garantie par ennemi vaincu.
+3. Appeler `InventoryManager.TryAddItem` + feedback HUD / toast.
 
-**Critères d’acceptation**
-
-- [ ] Préparer le terrain pour plusieurs maps sans modifier `OnBattleEnded` à chaque fois.
+**Fichiers** : `Global/Bestiary.cs`, `Scripts/Battle/BattleManager.cs` (`HandleVictory`).
 
 ---
 
-### P1.2 — Défaite : comportement explicite
+## P3 — Progression & personnage
 
-**Problème**  
-`HandleDefeatState` affiche un message puis `EndBattle(Defeat)`, mais le flux joueur (game over, rechargement map, soin partiel) n’est pas défini.
+| ID | Tâche | Priorité | Statut |
+|----|-------|----------|--------|
+| P3.1 | Filtrer skills par `LevelRequired` + niveau actuel | **Haute** | ⬜ |
+| P3.2 | Classe joueur dynamique (plus `"Magus"` en dur) | **Haute** | ⬜ |
+| P3.3 | Snapshot combat : inclure bonus équipement dans stats | Moyenne | 🔶 |
+| P3.4 | Déblocage skill à la montée de niveau (signal / log) | Basse | ⬜ |
+| P3.5 | Paladin jouable (progression CSV + classe) | Basse | ⬜ |
 
-**À faire**
-
-1. Décider du design : retour map avec PV à 1, écran « Game Over », ou rechargement dernière sauvegarde (quand save existera).
-2. Implémenter le choix dans `OnBattleEnded` selon `BattleEndReason.Defeat`.
-3. Remettre `CurrentPlayer` / stats dans un état cohérent (ex. soin minimal à la map).
-
-**Critères d’acceptation**
-
-- [ ] Défaite → le joueur n’est pas bloqué et comprend ce qui se passe.
+**Référence** : `Scripts/Entities/Player/Player.cs`, `Global/PlayerBattleSnapshot.cs`.
 
 ---
 
-### P1.3 — `BattleHud` : abonnement dupliqué à `PlayerDamage`
+## P4 — Économie & inventaire
 
-**Problème**  
-Dans `BattleHud._Ready`, `battleManager.PlayerDamage += OnPlayerDamageReceived` est enregistré **deux fois** (lignes 53–54).
+| ID | Tâche | Priorité | Statut |
+|----|-------|----------|--------|
+| P4.1 | **Boutique marchand** (acheter / prix CSV) | **Haute** | ⬜ |
+| P4.2 | Modificateur prix selon karma zone (GDD) | Moyenne | ⬜ |
+| P4.3 | Vendre des objets | Basse | ⬜ |
+| P4.4 | Consommables utilisables (map ou combat) | Basse | ⬜ |
+| P4.5 | Stack ressources identiques (si design le prévoit) | Basse | ⬜ |
 
-**À faire**  
-Supprimer le doublon.
-
-**Critères d’acceptation**
-
-- [ ] Un coup ennemi ne déclenche qu’une mise à jour HP.
-
-**Référence** : `Scripts/UI/BattleHud.cs`.
+**Référence** : `Global/InventoryManager.cs`, `Datas/Persos/equipments.csv`, `_GDD/GDD_systeme_karma.md`.
 
 ---
 
-### P1.4 — Spawn joueur : branche d’erreur `SpawnPlayer`
+## P5 — Karma (monde)
 
-**Problème**  
-Si `Instantiate<BattleActor>()` échoue, le `else` fait `AddChild(_playerAnchor)` sur le `BattleManager`, ce qui est incorrect.
+| ID | Tâche | Priorité | Statut |
+|----|-------|----------|--------|
+| P5.1 | Karma combat + dialogues + quêtes + kills | — | ✅ |
+| P5.2 | UI `KarmaBanner` | — | ✅ |
+| P5.3 | **Effets monde GDD** : marchands apathiques (+70) | Moyenne | ⬜ |
+| P5.4 | Auberges / soins hors combat selon karma | Moyenne | ⬜ |
+| P5.5 | Exploitation cristaux → baisse karma | Basse | ⬜ |
+| P5.6 | Spawns / types ennemis selon seuils karma | Basse | ⬜ |
 
-**À faire**  
-Logger une erreur critique et `return` sans muter la scène, ou afficher un message HUD.
-
-**Référence** : `Scripts/Battle/BattleManager.cs` `SpawnPlayer`.
-
----
-
-### P1.5 — Synchroniser les PV ennemis au spawn
-
-**Problème**  
-`BattleManager` assigne `enemy.EnemyName` puis s’appuie sur `Enemy._Ready()` qui recharge le bestiaire. Les PV devraient être OK, mais une copie explicite depuis `_enemyStatsSource[i]` rend le combat indépendant d’un futur bestiaire modifié en runtime.
-
-**À faire**  
-Après instanciation : `enemy.CurrentPv = stats.Pv` (et stats déjà portées par la liste de combat).
-
-**Critères d’acceptation**
-
-- [ ] Les PV affichés / subis correspondent aux valeurs du CSV pour ce combat.
+**Référence** : `_GDD/GDD_systeme_karma.md`, `Global/KarmaManager.cs`.
 
 ---
 
-### P1.6 — Mort ennemi : feedback visuel 3D
+## P6 — Quêtes & narration
 
-**Problème**  
-`UpdateActiveEnemies` tween `modulate:a` et `scale` sur le nœud `Enemy` (`CharacterBody3D`) ; en 3D le fade peut ne pas être visible (effet surtout sur `Sprite3D` enfant).
+| ID | Tâche | Priorité | Statut |
+|----|-------|----------|--------|
+| P6.1 | `QuestManager` + journal UI + kills | — | ✅ |
+| P6.2 | `DialogueConditions` (QUEST, KARMA) | — | ✅ |
+| P6.3 | PNJ dialogues conditionnels (`ConditionalStartIds`) | — | ✅ |
+| P6.4 | Compléter quête Intro (`QUEST_INTRO` 3 étapes) en playtest | Moyenne | ⬜ |
+| P6.5 | Exploiter `DIAL_LINK` quêtes → dialogues post-quête | Basse | ⬜ |
+| P6.6 | Quêtes secondaires supplémentaires (CSV) | Moyenne | ⬜ |
+| P6.7 | Échec / abandon de quête | Basse | ⬜ |
 
-**À faire**  
-Cibler `Node3D/Sprite3D` ou le mesh enfant pour le fade / scale à la mort.
-
----
-
-## P2 — Enrichissement battle (après boucle stable)
-
-Fonctionnalités qui améliorent le « vrai » RPG combat sans être bloquantes pour la quête Intro.
-
----
-
-### P2.1 — Caméra magie / soin
-
-**Constat**  
-Les attaques physiques et tours ennemis utilisent `CameraDirector.CutTo` ; `ExecuteMagicAction` ne change pas de plan caméra.
-
-**À faire**  
-Couper vers `PlayerAttack` (ou un plan dédié) pour les sorts offensifs ; plan neutre pour le soin.
+**Référence** : `Datas/Progress/quests.csv`, `Scripts/UI/QuestJournalPage.cs`.
 
 ---
 
-### P2.2 — Jouer les animations d’attaque
+## P7 — Monde & contenu
 
-**Constat**  
-`BattleActor.PlayAttackAnimation()` et `Enemy.PlayAttackAnimation()` existent mais ne sont pas appelés depuis `BattleManager`.
-
-**À faire**  
-Await l’animation avant d’appliquer les dégâts (ou en parallèle selon le feel voulu).
-
----
-
-### P2.3 — IA ennemie basée sur `AiStyle`
-
-**Constat**  
-`bestiary.csv` a une colonne `AiStyle` ; `ProcessEnemyTurn` ne fait qu’une attaque physique.
-
-**À faire**  
-Switch simple (ex. `Aggressive`, `Defensive`) pour varier attaque / défense future.
+| ID | Tâche | Priorité | Statut |
+|----|-------|----------|--------|
+| P7.1 | Implémenter `TELEPORT` / `CHANGE_SCENE` dans `GameManager` | Moyenne | ⬜ |
+| P7.2 | Deuxième zone + CSV dialogues / quêtes | Moyenne | ⬜ |
+| P7.3 | Ennemis bestiaire supplémentaires + loot | Moyenne | ⬜ |
+| P7.4 | Contenu GDD zone Intro (`_GDD/GDD_histoire_zone.md`) | Moyenne | ⬜ |
 
 ---
 
-### P2.4 — Loot post-combat
+## P8 — Persistance (CRITIQUE)
 
-**Constat**  
-`EnemyStats.Loot` est chargé mais jamais utilisé.
+| ID | Tâche | Priorité | Statut |
+|----|-------|----------|--------|
+| P8.1 | **SaveManager** autoload (save/load slot) | **Critique** | ⬜ |
+| P8.2 | Persister : stats, XP, inventaire, or, équipement | **Critique** | ⬜ |
+| P8.3 | Persister : karma par zone, états quêtes | **Critique** | ⬜ |
+| P8.4 | Persister : position joueur + scène courante | Haute | ⬜ |
+| P8.5 | Auto-save à changement de zone / fin combat | Moyenne | ⬜ |
 
-**À faire**  
-À la victoire : parser le loot (format à définir dans le CSV) et préparer l’hook `GameManager.GainItem` (même en log tant que l’inventaire n’existe pas).
-
----
-
-### P2.5 — Récompense défaite / fuite
-
-**À décider**  
-- Fuite : pas d’XP, retour map — déjà partiellement le cas.  
-- Défaite : pas d’XP, pénalité or ou game over.
+**Impact** : sans P8, progression perdue à chaque fermeture → bloque expérience RPG réelle.
 
 ---
 
-### P2.6 — Tests de régression combat
+## P9 — Qualité & architecture
 
-Le projet n’a pas de tests automatisés. Minimum viable :
-
-- Documenter dans ce fichier les scénarios P0.5 après chaque grosse modification.
-- Option future : scène de test Godot dédiée (`Maps/Battles/Basic.tscn` + ennemis forcés via `GameManager` en debug).
-
----
-
-## Hors scope immédiat (battle-adjacent)
-
-À traiter **après** P0/P1, dans d’autres chantiers :
-
-| Sujet | Fichiers / notes |
-|-------|------------------|
-| Inventaire & équipement | `Datas/Persos/equipments.csv` non branché |
-| Or réel | `GameManager.GainGold` = stub |
-| Sauvegarde | inexistant |
-| Conditions dialogue CSV | `DialogueLine.Condition` non évaluée |
-| Classe / skills par niveau | `Player.cs` Magus en dur, toutes skills au `_Ready` |
-| Multiples alliés en combat | non prévu dans `IBattler` / `BattleManager` |
+| ID | Tâche | Priorité | Statut |
+|----|-------|----------|--------|
+| P9.1 | Supprimer / isoler code mort (`CSVLoader`, `LevelStats`, `Camera.cs` 2D) | Basse | ⬜ |
+| P9.2 | Aligner formule dégâts sur GDD ou documenter l’écart | Basse | ⬜ |
+| P9.3 | Migrer données critiques vers Resources (.tres) — optionnel | Basse | ⬜ |
+| P9.4 | `.gitignore` pour `.DS_Store` | Basse | ⬜ |
 
 ---
 
-## Ordre recommandé (résumé)
+## Ordre recommandé (2026)
 
 ```text
-P0.1 ConnectBattleSignals
-  → P0.2 Zone dialogues retour map
-  → P0.3 Fix MP / _isActionRunning
-  → P0.4 XP victoire + level up
-  → P0.5 Playtest checklist
-
-P1.1 Map/zone mémorisées
-  → P1.2 Défaite
-  → P1.3–P1.6 Polish & robustesse
-
-P2.x Enrichissement (caméra magie, anim, IA, loot)
+P0.5  Playtest Intro (validation)
+  ↓
+P2.4  Loot combat
+  ↓
+P3.1–P3.2  Skills par niveau + classe
+  ↓
+P8.1–P8.3  Sauvegarde (stats, inventaire, karma, quêtes)
+  ↓
+P4.1  Boutique marchand
+  ↓
+P7.x  Contenu (zone 2, ennemis, quêtes)
+  ↓
+P5.3+  Karma monde (GDD)
+  ↓
+P2.7, P9.x  Dette technique
 ```
 
-**Objectif P0** : quête Marchand (`MARCHAND_AIDE` → `BATTLE:Rat:2`) jouable **de bout en bout** avec progression perceptible.
+**Objectif court terme (~75 % gameplay)** : P0.5 validé + loot combat + save minimale + skills par niveau.
+
+**Objectif moyen terme (~80 %)** : boutique + 2e zone + effets karma monde légers.
 
 ---
 
----
+## Fichiers centraux (référence rapide)
 
-## Quest System — Intégrations futures
-
-### QS.1 — Lier QuestManager au système de Karma ⚠️ À FAIRE
-
-**Contexte**  
-`QuestManager.CompleteQuest()` contient un TODO explicite : appliquer `quest.KarmaImpact` à la jauge de la zone.  
-Le `GDD_systeme_karma.md` définit l'échelle (-100 / +100) et les seuils d'état du monde.
-
-**À faire quand `KarmaManager` existera**
-
-1. Créer `Global/KarmaManager.cs` (autoload) avec une propriété `ZoneKarma` par zone et les seuils définis dans le GDD.
-2. Dans `QuestManager.CompleteQuest()`, remplacer le TODO par :
-   ```csharp
-   KarmaManager.Instance?.ApplyKarmaImpact(quest.Zone, quest.KarmaImpact);
-   ```
-3. `KarmaManager` émet un signal `KarmaChanged(string zone, int newValue)` pour que la UI et les ennemis réagissent.
-4. `BattleManager` consulte `KarmaManager` pour appliquer les modificateurs de dégâts/soins du GDD.
-
-**Fichiers concernés**  
-`Global/QuestManager.cs` (TODO marqué), `Global/GameManager.cs`, `_GDD/GDD_systeme_karma.md`
-
-**Statut** : en attente de `KarmaManager`.
+| Système | Fichiers |
+|---------|----------|
+| Orchestration | `Global/GameManager.cs` |
+| Combat | `Scripts/Battle/BattleManager.cs`, `Scripts/UI/BattleHud.cs` |
+| Joueur / stats | `Scripts/Entities/Player/Player.cs`, `Scripts/Data/StatHandler.cs` |
+| Snapshot combat | `Global/PlayerBattleSnapshot.cs` |
+| Dialogues | `Global/DialogueSystem.cs`, `Global/DialogueConditions.cs` |
+| Quêtes | `Global/QuestManager.cs`, `Datas/Progress/quests.csv` |
+| Karma | `Global/KarmaManager.cs`, `Global/KarmaCombatModifiers.cs` |
+| Inventaire | `Global/InventoryManager.cs`, `Scripts/UI/InventoryPage.cs` |
+| Données | `Datas/Bestiary/`, `Datas/Persos/`, `Datas/Progress/` |
 
 ---
 
-### QS.2 — Brancher `NotifyKill` dans BattleManager
-
-**Contexte**  
-`QuestManager.NotifyKill(enemyName)` est prêt mais n'est appelé nulle part.
-
-**À faire**  
-Dans `BattleManager`, après la mort d'un ennemi (état `Victory` ou à chaque kill confirmé) :
-```csharp
-QuestManager.Instance?.NotifyKill(enemy.EnemyName);
-```
-
-**Fichiers concernés** : `Scripts/Battle/BattleManager.cs`
-
-**Statut** : ✅ implémenté dans `UpdateActiveEnemies` — appelé à chaque kill confirmé (PV ≤ 0).
-
----
-
-### QS.3 — Évaluer `CONDITION_ACCES` des dialogues via QuestManager
-
-**Contexte**  
-`DialogueLine.Condition` est chargé depuis le CSV mais jamais évalué (voir tableau "Hors scope" ci-dessus).  
-`QuestManager.CheckCondition(condition)` supporte déjà `QUEST_ACTIVE:id`, `QUEST_DONE:id`, `QUEST_INACTIVE:id`.
-
-**À faire**  
-Dans `Npc.AdvanceDialogue()`, avant d'afficher une ligne :
-```csharp
-if (!QuestManager.Instance.CheckCondition(line.Condition)) { /* skip ou dialogue alternatif */ }
-```
-
-**Fichiers concernés** : `Scripts/Entities/Npcs/Npc.cs`
-
-**Statut** : en attente de quêtes avec conditions de dialogue réelles à tester.
-
----
-
-*Dernière mise à jour : mai 2026 — Echo du Karma, Godot 4.6, C#.*
+*Dernière mise à jour : mai 2026 — aligné sur [AUDIT.md](AUDIT.md).*

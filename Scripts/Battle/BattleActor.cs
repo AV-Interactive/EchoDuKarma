@@ -1,27 +1,40 @@
 using Godot;
 using System.Threading.Tasks;
+using EchoduKarma.Scripts.Entities.Player;
 
 /// <summary>
 /// Représentation visuelle du joueur dans la scène de combat.
-/// Texture et matériau configurés directement dans l'éditeur Godot.
 /// </summary>
 public partial class BattleActor : Node3D
 {
+    const float AttackFrameDuration = 0.07f;
+    const float SpellcastFrameDuration = 0.09f;
+
     [Export] private Sprite3D _sprite;
-    
-    const int FRAME_NEUTRAL = 24;
-    const int FRAME_PLAYER_ATTACK = 51;
-    const int FRAME_ENNEMY_ATTACK = 8;
-    
+
+    Texture2D _walkTexture;
+    Texture2D _thrustTexture;
+    Texture2D _spellcastTexture;
+    Texture2D _hurtTexture;
+
     public override void _Ready()
     {
         if (_sprite == null)
             _sprite = GetNodeOrNull<Sprite3D>("Sprite3D");
 
         if (_sprite == null)
+        {
             GD.PrintErr("[BattleActor] Sprite3D non assigné ! Vérifie l'inspecteur.");
-        
-        SetFrame(FRAME_NEUTRAL);
+            return;
+        }
+
+        _walkTexture = GD.Load<Texture2D>(LpcSprites.Walk);
+        _thrustTexture = GD.Load<Texture2D>(LpcSprites.Thrust);
+        _spellcastTexture = GD.Load<Texture2D>(LpcSprites.Spellcast);
+        _hurtTexture = GD.Load<Texture2D>(LpcSprites.Hurt);
+
+        _sprite.Hframes = LpcSprites.HFrames;
+        ShowCombatStance();
     }
 
     public void PlayHitEffect()
@@ -35,16 +48,27 @@ public partial class BattleActor : Node3D
         tween.Parallel().TweenProperty(_sprite, "position:x", _sprite.Position.X, 0.1f);
     }
 
-    // TODO: implémenter l'animation d'attaque joueur (bond en avant + retour)
-    public Task PlayAttackAnimation()
+    public Task PlayAttackAnimation() =>
+        PlayDirectionalFrames(_thrustTexture, LpcSprites.ThrustFrameCount, AttackFrameDuration);
+
+    public Task PlaySpellcastAnimation() =>
+        PlayDirectionalFrames(_spellcastTexture, LpcSprites.SpellcastFrameCount, SpellcastFrameDuration);
+
+    async Task PlayDirectionalFrames(Texture2D texture, int frameCount, float frameDuration)
     {
-        return Task.CompletedTask;
-    }
-    
-    public void SetFrame(int frame)
-    {
-        if (_sprite == null) return;
-        _sprite.Frame = frame;
+        if (_sprite == null || texture == null)
+            return;
+
+        int row = LpcSprites.DirectionRow("LEFT");
+        SetSpriteSheet(texture, 4, LpcSprites.RowFrame(row, 0));
+
+        for (int col = 0; col < frameCount; col++)
+        {
+            _sprite.Frame = LpcSprites.RowFrame(row, col);
+            await ToSignal(GetTree().CreateTimer(frameDuration), SceneTreeTimer.SignalName.Timeout);
+        }
+
+        ShowCombatStance();
     }
 
     public void OnCameraChanged(CameraDirector.CameraShot shot)
@@ -52,14 +76,42 @@ public partial class BattleActor : Node3D
         switch (shot)
         {
             case CameraDirector.CameraShot.Neutral:
-                SetFrame(FRAME_NEUTRAL);
+                ShowCombatStance();
                 break;
             case CameraDirector.CameraShot.PlayerAttack:
-                SetFrame(FRAME_PLAYER_ATTACK);
+                break;
+            case CameraDirector.CameraShot.PlayerMagic:
+                ShowSpellcastPose();
                 break;
             case CameraDirector.CameraShot.EnemyAttack:
-                SetFrame(FRAME_ENNEMY_ATTACK);
+                ShowHurtPose();
                 break;
         }
+    }
+
+    void ShowCombatStance()
+    {
+        SetSpriteSheet(_walkTexture, 4, LpcSprites.WalkPoseFrame("LEFT"));
+    }
+
+    void ShowSpellcastPose()
+    {
+        SetSpriteSheet(_spellcastTexture, 4, LpcSprites.RowFrame(0, 3));
+    }
+
+    void ShowHurtPose()
+    {
+        SetSpriteSheet(_hurtTexture, 1, 0);
+    }
+
+    void SetSpriteSheet(Texture2D texture, int vframes, int frame)
+    {
+        if (_sprite == null)
+            return;
+
+        _sprite.Texture = texture;
+        _sprite.Hframes = LpcSprites.HFrames;
+        _sprite.Vframes = vframes;
+        _sprite.Frame = frame;
     }
 }

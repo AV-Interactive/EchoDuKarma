@@ -30,6 +30,17 @@ public class EnemyStats : Stats
         GD.PrintErr($"[Bestiary] AiPattern inconnu : '{raw}' → Normal par défaut.");
         return AiPattern.Normal;
     }
+
+    /// <summary>
+    /// Parse la colonne LOOT du bestiaire (ex. "Gelée, Fleur de gobi" ou "Peau de rat").
+    /// </summary>
+    public static IReadOnlyList<string> ParseLoot(string lootRaw)
+    {
+        if (string.IsNullOrWhiteSpace(lootRaw))
+            return Array.Empty<string>();
+
+        return lootRaw.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+    }
 }
 
 public partial class Bestiary : Node

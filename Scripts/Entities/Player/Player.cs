@@ -152,10 +152,10 @@ public partial class Player : CharacterBody3D, IBattler
 
 	void UpdateSpriteDirection(float moveX)
 	{
-		if(Sprite == null) return;
-		if (Mathf.Abs(moveX) > .1f)
-		{
-			Sprite.FlipH = moveX < 0;
-		}
+		if (Sprite == null)
+			return;
+
+		// Les sprites LPC ont des lignes LEFT/RIGHT dédiées : pas de flip horizontal.
+		Sprite.FlipH = false;
 	}
 }
