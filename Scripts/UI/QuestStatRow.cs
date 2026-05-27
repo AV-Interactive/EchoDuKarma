@@ -1,4 +1,7 @@
+using EchoduKarma.Scripts.Data;
 using Godot;
+
+namespace EchoduKarma.Scripts.UI;
 
 public partial class QuestStatRow : Button
 {
@@ -15,6 +18,12 @@ public partial class QuestStatRow : Button
     static readonly Color ColorInactive = new(0.53f, 0.6f, 0.67f);
 
     public string QuestId { get; private set; }
+
+    public override void _Ready()
+    {
+        if (_stepBar != null)
+            _stepBar.MouseFilter = MouseFilterEnum.Ignore;
+    }
 
     public void Bind(QuestData quest, QuestRuntime runtime)
     {

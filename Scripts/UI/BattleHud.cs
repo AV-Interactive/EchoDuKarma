@@ -362,8 +362,12 @@ public partial class BattleHud : CanvasLayer
 
         foreach (var skill in skills)
         {
-            var btn = new Button();
-            btn.Text = $"{skill.Name} ({skill.Cost} MP)";
+            var btn = new Button
+            {
+                Text = $"{skill.Name} ({skill.Cost} MP)",
+                Icon = UiIcons.GetSkillIcon(skill),
+                ExpandIcon = true,
+            };
             btn.AddThemeFontSizeOverride("font_size", 11);
             btn.Pressed += () => OnButtonPressed($"Magic:{skill.Name}");
             _skillsListPanel.AddChild(btn);

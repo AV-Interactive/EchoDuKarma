@@ -1,0 +1,121 @@
+[gd_scene format=3 uid="uid://0x1mj52t4pum"]
+
+[ext_resource type="Script" path="res://Scripts/UI/SkillDetailPanel.cs" id="1_detail"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.09, 0.12, 0.19, 0.96)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.35, 0.55, 0.68, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+content_margin_left = 8.0
+content_margin_top = 6.0
+content_margin_right = 8.0
+content_margin_bottom = 6.0
+
+[node name="SkillDetailPanel" type="PanelContainer" node_paths=PackedStringArray("_icon", "_nameLabel", "_metaLabel", "_statsLabel", "_effectLabel", "_descriptionLabel")]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+script = ExtResource("1_detail")
+_icon = NodePath("MarginContainer/VBoxContainer/HeaderRow/Icon")
+_nameLabel = NodePath("MarginContainer/VBoxContainer/HeaderRow/TextColumn/NameLabel")
+_metaLabel = NodePath("MarginContainer/VBoxContainer/MetaLabel")
+_statsLabel = NodePath("MarginContainer/VBoxContainer/StatsLabel")
+_effectLabel = NodePath("MarginContainer/VBoxContainer/EffectLabel")
+_descriptionLabel = NodePath("MarginContainer/VBoxContainer/DescriptionLabel")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 6
+
+[node name="HeaderRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Icon" type="TextureRect" parent="MarginContainer/VBoxContainer/HeaderRow"]
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="TextColumn" type="VBoxContainer" parent="MarginContainer/VBoxContainer/HeaderRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 2
+
+[node name="NameLabel" type="RichTextLabel" parent="MarginContainer/VBoxContainer/HeaderRow/TextColumn"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/normal_font_size = 14
+theme_override_font_sizes/bold_font_size = 14
+bbcode_enabled = true
+text = "[b]Flammeche[/b]"
+fit_content = true
+scroll_active = false
+
+[node name="MetaLabel" type="RichTextLabel" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/normal_font_size = 11
+bbcode_enabled = true
+text = "[color=#F54927]Attaque[/color]  ·  [color=#58B4C6]Fire[/color]  ·  Cible : Mono"
+fit_content = true
+scroll_active = false
+
+[node name="Separator1" type="HSeparator" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="StatsTitle" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.75, 0.8, 0.88, 1)
+text = "Caractéristiques"
+
+[node name="StatsLabel" type="RichTextLabel" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/normal_font_size = 11
+bbcode_enabled = true
+text = "[color=#27B0F5]4 PM[/color]  ·  [color=#FFD166]2 puissance[/color]"
+fit_content = true
+scroll_active = false
+
+[node name="EffectLabel" type="RichTextLabel" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/normal_font_size = 11
+bbcode_enabled = true
+text = "[color=#8899AA]Effet spécial : aucun[/color]"
+fit_content = true
+scroll_active = false
+
+[node name="DescriptionTitle" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.75, 0.8, 0.88, 1)
+text = "Description"
+
+[node name="DescriptionLabel" type="RichTextLabel" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_font_sizes/normal_font_size = 11
+bbcode_enabled = true
+text = "[color=#8899AA]Aucune description[/color]"
+fit_content = true
+scroll_active = false
+autowrap_mode = 3

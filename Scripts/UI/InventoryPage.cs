@@ -3,10 +3,11 @@ using EchoduKarma.Scripts.Data;
 using EchoduKarma.Scripts.Entities.Player;
 using Godot;
 
-public partial class InventoryPage : Control
+namespace EchoduKarma.Scripts.UI;
+
+public partial class InventoryPage : Control, IGameMenuTabPage
 {
     const string CellScenePath = "res://UI/InventorySlotCell.tscn";
-    const int GridColumns = 4;
 
     [Export] Control _listView;
     [Export] EquipmentPaperDoll _paperDoll;
@@ -14,13 +15,11 @@ public partial class InventoryPage : Control
     [Export] Label _emptyLabel;
     [Export] Label _goldLabel;
     [Export] Label _itemCountLabel;
-    [Export] Button _closeButton;
     [Export] Control _detailView;
     [Export] InventoryDetailPanel _detailPanel;
     [Export] Button _backButton;
     [Export] Button _actionButton;
 
-    Control _dialogueUi;
     readonly List<InventorySlotCell> _cells = new();
     Equipment _selectedEquipment;
     ResourceItem _selectedResource;
@@ -29,12 +28,8 @@ public partial class InventoryPage : Control
     public override void _Ready()
     {
         Visible = false;
-        MouseFilter = MouseFilterEnum.Stop;
-        SetProcess(true);
+        MouseFilter = MouseFilterEnum.Ignore;
 
-        _dialogueUi = GetParent()?.GetNodeOrNull<Control>("DialogueUI");
-
-        _closeButton.Pressed += Close;
         _backButton.Pressed += ShowList;
         _actionButton.Pressed += OnActionPressed;
 
@@ -76,62 +71,31 @@ public partial class InventoryPage : Control
             Refresh();
     }
 
-    public override void _Process(double delta)
+    public void OnTabShown()
     {
-        if (Input.IsActionJustPressed("inventory"))
-        {
-            if (!Visible && IsDialogueOpen())
-                return;
-
-            Toggle();
-            return;
-        }
-
-        if (!Visible)
-            return;
-
-        if (_detailView.Visible && Input.IsActionJustPressed("ui_cancel"))
-        {
-            ShowList();
-            return;
-        }
-
-        if (_listView.Visible && (Input.IsActionJustPressed("menu") || Input.IsActionJustPressed("ui_cancel")))
-            Close();
-    }
-
-    bool IsDialogueOpen() => _dialogueUi != null && _dialogueUi.Visible;
-
-    public void Toggle()
-    {
-        if (Visible)
-            Close();
-        else
-            Open();
-    }
-
-    public void Open()
-    {
-        GetParent()?.GetNodeOrNull<PlayerStatsPage>("PlayerStatsPage")?.Close();
-        GetParent()?.GetNodeOrNull<QuestJournalPage>("QuestJournalPage")?.Close();
-
+        Visible = true;
         ShowList();
         Refresh();
-        Visible = true;
-        ZIndex = 10;
-        MoveToFront();
-        GameManager.Instance.SetMenuBlockingWorld(true);
-        GameManager.Instance.PlayerMoved = false;
-        FocusList();
+        CallDeferred(MethodName.FocusDefault);
     }
 
-    public void Close()
+    public void OnTabHidden()
     {
         Visible = false;
         ShowList();
-        GameManager.Instance.SetMenuBlockingWorld(false);
-        GameManager.Instance.PlayerMoved = true;
-        GetViewport()?.GuiReleaseFocus();
+    }
+
+    public void FocusDefault() => FocusList();
+
+    public bool TryHandleCancel()
+    {
+        if (_detailView.Visible)
+        {
+            ShowList();
+            return true;
+        }
+
+        return false;
     }
 
     void ShowList()
@@ -140,7 +104,8 @@ public partial class InventoryPage : Control
         _detailView.Visible = false;
         _selectedEquipment = null;
         _selectedResource = null;
-        CallDeferred(MethodName.FocusList);
+        if (Visible)
+            CallDeferred(MethodName.FocusList);
     }
 
     void ShowDetail(Equipment equipment, bool isEquipped)
@@ -224,8 +189,6 @@ public partial class InventoryPage : Control
                 return;
             }
         }
-
-        _closeButton.GrabFocus();
     }
 
     void Refresh()

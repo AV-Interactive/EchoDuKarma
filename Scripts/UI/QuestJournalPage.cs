@@ -2,31 +2,29 @@ using System.Collections.Generic;
 using EchoduKarma.Scripts.Data;
 using Godot;
 
-public partial class QuestJournalPage : Control
+namespace EchoduKarma.Scripts.UI;
+
+public partial class QuestJournalPage : Control, IGameMenuTabPage
 {
     const string QuestRowScenePath = "res://UI/QuestStat.tscn";
 
     [Export] Control _listView;
     [Export] VBoxContainer _questList;
     [Export] Label _emptyLabel;
-    [Export] Button _closeButton;
+    [Export] Label _questCountLabel;
+    [Export] ScrollContainer _scroll;
     [Export] Control _detailView;
     [Export] QuestDetailPanel _detailPanel;
     [Export] Button _backButton;
-    [Export] Label _questCountLabel;
 
-    Control _dialogueUi;
     readonly List<QuestStatRow> _rows = new();
+    string _viewingQuestId;
 
     public override void _Ready()
     {
         Visible = false;
-        MouseFilter = MouseFilterEnum.Stop;
-        SetProcess(true);
+        MouseFilter = MouseFilterEnum.Ignore;
 
-        _dialogueUi = GetParent()?.GetNodeOrNull<Control>("DialogueUI");
-
-        _closeButton.Pressed += Close;
         _backButton.Pressed += ShowList;
 
         if (QuestManager.Instance is not null)
@@ -50,7 +48,6 @@ public partial class QuestJournalPage : Control
     }
 
     void OnQuestChanged(string _) => RefreshIfVisible();
-
     void OnQuestStepAdvanced(string _, int __) => RefreshIfVisible();
 
     void RefreshIfVisible()
@@ -59,82 +56,53 @@ public partial class QuestJournalPage : Control
             Refresh();
     }
 
-    public override void _Process(double delta)
+    public void OnTabShown()
     {
-        if (Input.IsActionJustPressed("quests"))
-        {
-            if (!Visible && IsDialogueOpen())
-                return;
-
-            Toggle();
-            return;
-        }
-
-        if (!Visible)
-            return;
-
-        if (_detailView.Visible && Input.IsActionJustPressed("ui_cancel"))
-        {
-            ShowList();
-            return;
-        }
-
-        if (_listView.Visible && (Input.IsActionJustPressed("menu") || Input.IsActionJustPressed("ui_cancel")))
-            Close();
-    }
-
-    bool IsDialogueOpen() => _dialogueUi != null && _dialogueUi.Visible;
-
-    public void Toggle()
-    {
-        if (Visible)
-            Close();
-        else
-            Open();
-    }
-
-    public void Open()
-    {
-        var statsPage = GetParent()?.GetNodeOrNull<PlayerStatsPage>("PlayerStatsPage");
-        if (statsPage != null && statsPage.Visible)
-            statsPage.Close();
-
-        GetParent()?.GetNodeOrNull<InventoryPage>("InventoryPage")?.Close();
-
+        Visible = true;
         ShowList();
         Refresh();
-        Visible = true;
-        ZIndex = 10;
-        MoveToFront();
-        GameManager.Instance.SetMenuBlockingWorld(true);
-        GameManager.Instance.PlayerMoved = false;
-        FocusList();
+        CallDeferred(MethodName.FocusDefault);
     }
 
-    public void Close()
+    public void OnTabHidden()
     {
         Visible = false;
         ShowList();
-        GameManager.Instance.SetMenuBlockingWorld(false);
-        GameManager.Instance.PlayerMoved = true;
-        GetViewport()?.GuiReleaseFocus();
+    }
+
+    public void FocusDefault() => FocusList();
+
+    public bool TryHandleCancel()
+    {
+        if (_detailView.Visible)
+        {
+            ShowList();
+            return true;
+        }
+
+        return false;
     }
 
     void ShowList()
     {
         _listView.Visible = true;
         _detailView.Visible = false;
-        CallDeferred(MethodName.FocusList);
+        _viewingQuestId = null;
+        if (Visible)
+            CallDeferred(MethodName.FocusList);
     }
 
     void ShowDetail(string questId)
     {
-        var quest = QuestManager.Instance?.GetQuest(questId);
+        if (string.IsNullOrEmpty(questId) || QuestManager.Instance is null)
+            return;
+
+        var quest = QuestManager.Instance.GetQuest(questId);
         if (quest is null)
             return;
 
-        var runtime = QuestManager.Instance.GetRuntime(questId);
-        _detailPanel.SetQuest(quest, runtime);
+        _viewingQuestId = questId;
+        _detailPanel.SetQuest(quest, QuestManager.Instance.GetRuntime(questId));
 
         _listView.Visible = false;
         _detailView.Visible = true;
@@ -145,19 +113,26 @@ public partial class QuestJournalPage : Control
     {
         if (_rows.Count > 0)
             _rows[0].GrabFocus();
-        else
-            _closeButton.GrabFocus();
+        else if (_scroll != null)
+            _scroll.GrabFocus();
     }
 
     void Refresh()
     {
+        string restoreQuestId = _viewingQuestId;
+        bool restoreDetail = _detailView.Visible && !string.IsNullOrEmpty(restoreQuestId);
+
         ClearRows();
 
         if (QuestManager.Instance is null)
         {
             _emptyLabel.Visible = true;
+            if (_scroll != null)
+                _scroll.Visible = false;
             if (_questCountLabel != null)
                 _questCountLabel.Text = "0";
+            if (restoreDetail)
+                ShowList();
             return;
         }
 
@@ -171,17 +146,44 @@ public partial class QuestJournalPage : Control
             count++;
             var row = packed.Instantiate<QuestStatRow>();
             row.Bind(data, runtime);
-            row.Pressed += () => ShowDetail(data.Id);
+            row.Pressed += () => OnRowPressed(row);
             _questList.AddChild(row);
             _rows.Add(row);
         }
+
+        ConfigureRowFocus();
 
         _emptyLabel.Visible = !hasQuest;
         if (_questCountLabel != null)
             _questCountLabel.Text = count.ToString();
 
-        if (_questList.GetParent() is ScrollContainer scroll)
-            scroll.Visible = hasQuest;
+        if (_scroll != null)
+            _scroll.Visible = hasQuest;
+
+        if (restoreDetail && QuestManager.Instance.GetQuest(restoreQuestId) is not null)
+            ShowDetail(restoreQuestId);
+        else if (restoreDetail)
+            ShowList();
+    }
+
+    void OnRowPressed(QuestStatRow row)
+    {
+        if (row is null || string.IsNullOrEmpty(row.QuestId))
+            return;
+
+        ShowDetail(row.QuestId);
+    }
+
+    void ConfigureRowFocus()
+    {
+        for (int i = 0; i < _rows.Count; i++)
+        {
+            QuestStatRow row = _rows[i];
+            if (i > 0)
+                row.FocusNeighborTop = row.GetPathTo(_rows[i - 1]);
+            if (i < _rows.Count - 1)
+                row.FocusNeighborBottom = row.GetPathTo(_rows[i + 1]);
+        }
     }
 
     void ClearRows()

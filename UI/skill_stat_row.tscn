@@ -1,6 +1,6 @@
-[gd_scene format=3 uid="uid://dotjgmiyyrm3y"]
+[gd_scene format=3 uid="uid://0x12ymm37mum"]
 
-[ext_resource type="Script" uid="uid://dqueststatrow01" path="res://Scripts/UI/QuestStatRow.cs" id="1_row"]
+[ext_resource type="Script" path="res://Scripts/UI/SkillStatRow.cs" id="1_row"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_normal"]
 bg_color = Color(0.1, 0.13, 0.2, 0.95)
@@ -13,10 +13,6 @@ corner_radius_top_left = 5
 corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
-content_margin_left = 0.0
-content_margin_top = 0.0
-content_margin_right = 0.0
-content_margin_bottom = 0.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hover"]
 bg_color = Color(0.13, 0.17, 0.26, 1)
@@ -29,10 +25,6 @@ corner_radius_top_left = 5
 corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
-content_margin_left = 0.0
-content_margin_top = 0.0
-content_margin_right = 0.0
-content_margin_bottom = 0.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pressed"]
 bg_color = Color(0.15, 0.2, 0.3, 1)
@@ -45,10 +37,6 @@ corner_radius_top_left = 5
 corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
-content_margin_left = 0.0
-content_margin_top = 0.0
-content_margin_right = 0.0
-content_margin_bottom = 0.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_focus"]
 bg_color = Color(0.14, 0.19, 0.29, 1)
@@ -61,27 +49,9 @@ corner_radius_top_left = 5
 corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
-content_margin_left = 0.0
-content_margin_top = 0.0
-content_margin_right = 0.0
-content_margin_bottom = 0.0
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_progress_bg"]
-bg_color = Color(0.08, 0.1, 0.15, 1)
-corner_radius_top_left = 2
-corner_radius_top_right = 2
-corner_radius_bottom_right = 2
-corner_radius_bottom_left = 2
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_progress_fill"]
-bg_color = Color(1, 0.81960785, 0.4, 1)
-corner_radius_top_left = 2
-corner_radius_top_right = 2
-corner_radius_bottom_right = 2
-corner_radius_bottom_left = 2
-
-[node name="QuestStatRow" type="Button" node_paths=PackedStringArray("_accentBar", "_nameLabel", "_typeBadge", "_zoneLabel", "_statusLabel", "_stepLabel", "_stepBar")]
-custom_minimum_size = Vector2(0, 58)
+[node name="SkillStatRow" type="Button" node_paths=PackedStringArray("_accentBar", "_icon", "_nameLabel", "_typeBadge", "_costLabel")]
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 2
@@ -91,12 +61,10 @@ theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
 theme_override_styles/focus = SubResource("StyleBoxFlat_focus")
 script = ExtResource("1_row")
 _accentBar = NodePath("RowMargin/RowHBox/AccentBar")
+_icon = NodePath("RowMargin/RowHBox/Icon")
 _nameLabel = NodePath("RowMargin/RowHBox/ContentVBox/HeaderRow/NameLabel")
 _typeBadge = NodePath("RowMargin/RowHBox/ContentVBox/HeaderRow/TypeBadge")
-_zoneLabel = NodePath("RowMargin/RowHBox/ContentVBox/MetaRow/ZoneLabel")
-_statusLabel = NodePath("RowMargin/RowHBox/ContentVBox/MetaRow/StatusLabel")
-_stepLabel = NodePath("RowMargin/RowHBox/ContentVBox/ProgressRow/StepLabel")
-_stepBar = NodePath("RowMargin/RowHBox/ContentVBox/ProgressRow/StepBar")
+_costLabel = NodePath("RowMargin/RowHBox/ContentVBox/MetaRow/CostLabel")
 
 [node name="RowMargin" type="MarginContainer" parent="."]
 layout_mode = 1
@@ -116,21 +84,29 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 mouse_filter = 2
-theme_override_constants/separation = 0
+theme_override_constants/separation = 6
 
 [node name="AccentBar" type="ColorRect" parent="RowMargin/RowHBox"]
 custom_minimum_size = Vector2(4, 0)
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
-color = Color(1, 0.81960785, 0.4, 1)
+color = Color(0.9607843, 0.2862745, 0.15294118, 1)
+
+[node name="Icon" type="TextureRect" parent="RowMargin/RowHBox"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
 
 [node name="ContentVBox" type="VBoxContainer" parent="RowMargin/RowHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 mouse_filter = 2
-theme_override_constants/separation = 3
+theme_override_constants/separation = 2
 
 [node name="HeaderRow" type="HBoxContainer" parent="RowMargin/RowHBox/ContentVBox"]
 layout_mode = 2
@@ -143,67 +119,29 @@ layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 theme_override_font_sizes/font_size = 12
-text = "Nom de la quête"
+text = "Flammeche"
 clip_text = true
 
 [node name="TypeBadge" type="Label" parent="RowMargin/RowHBox/ContentVBox/HeaderRow"]
 layout_mode = 2
 mouse_filter = 2
 theme_override_font_sizes/font_size = 9
-theme_override_colors/font_color = Color(0.5529412, 0.7490196, 0.92156863, 1)
-text = "ANNEXE"
+theme_override_colors/font_color = Color(0.9607843, 0.2862745, 0.15294118, 1)
+text = "Attaque"
 horizontal_alignment = 2
 
 [node name="MetaRow" type="HBoxContainer" parent="RowMargin/RowHBox/ContentVBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
-theme_override_constants/separation = 8
 
-[node name="ZoneLabel" type="Label" parent="RowMargin/RowHBox/ContentVBox/MetaRow"]
+[node name="CostLabel" type="Label" parent="RowMargin/RowHBox/ContentVBox/MetaRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 theme_override_font_sizes/font_size = 10
-theme_override_colors/font_color = Color(0.34509805, 0.7058824, 0.7764706, 1)
-text = "Introduction"
-clip_text = true
-
-[node name="StatusLabel" type="Label" parent="RowMargin/RowHBox/ContentVBox/MetaRow"]
-layout_mode = 2
-mouse_filter = 2
-theme_override_font_sizes/font_size = 10
-theme_override_colors/font_color = Color(1, 0.81960785, 0.4, 1)
-text = "En cours"
-horizontal_alignment = 2
-
-[node name="ProgressRow" type="HBoxContainer" parent="RowMargin/RowHBox/ContentVBox"]
-layout_mode = 2
-size_flags_horizontal = 3
-mouse_filter = 2
-theme_override_constants/separation = 6
-
-[node name="StepBar" type="ProgressBar" parent="RowMargin/RowHBox/ContentVBox/ProgressRow"]
-custom_minimum_size = Vector2(0, 6)
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-mouse_filter = 2
-focus_mode = 0
-theme_override_styles/background = SubResource("StyleBoxFlat_progress_bg")
-theme_override_styles/fill = SubResource("StyleBoxFlat_progress_fill")
-max_value = 3.0
-value = 1.0
-show_percentage = false
-
-[node name="StepLabel" type="Label" parent="RowMargin/RowHBox/ContentVBox/ProgressRow"]
-custom_minimum_size = Vector2(36, 0)
-layout_mode = 2
-mouse_filter = 2
-theme_override_font_sizes/font_size = 9
-theme_override_colors/font_color = Color(0.65, 0.72, 0.8, 1)
-text = "1/3"
-horizontal_alignment = 2
+theme_override_colors/font_color = Color(0.15294118, 0.6901961, 0.9607843, 1)
+text = "4 PM"
 
 [node name="ContentPad" type="Control" parent="RowMargin/RowHBox"]
 custom_minimum_size = Vector2(8, 0)

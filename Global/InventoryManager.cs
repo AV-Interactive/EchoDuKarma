@@ -229,4 +229,47 @@ public partial class InventoryManager : Node
 
         return _inventory.Contains(equipment.Name) && equipment.IsUsableByClass(PlayerClass);
     }
+
+    public bool CanBuyEquipment(Equipment equipment, int price, out string reason)
+    {
+        reason = "";
+
+        if (equipment == null)
+        {
+            reason = "Objet inconnu.";
+            return false;
+        }
+
+        if (OwnsEquipment(equipment.Name))
+        {
+            reason = "Tu possèdes déjà cet objet.";
+            return false;
+        }
+
+        if (!equipment.IsUsableByClass(PlayerClass))
+        {
+            reason = $"Incompatible avec la classe {PlayerClass}.";
+            return false;
+        }
+
+        if (price > 0 && Gold < price)
+        {
+            reason = "Or insuffisant.";
+            return false;
+        }
+
+        return true;
+    }
+
+    public bool TryBuyEquipment(string equipmentName, int price)
+    {
+        Equipment equipment = EquipmentManager.GetEquipment(equipmentName);
+        if (!CanBuyEquipment(equipment, price, out _))
+            return false;
+
+        if (price > 0 && !SpendGold(price))
+            return false;
+
+        return AddEquipment(equipment.Name);
+    }
 }

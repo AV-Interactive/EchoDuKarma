@@ -1,8 +1,11 @@
-using Godot;
 using EchoduKarma.Scripts.Data;
+using Godot;
+using EchoduKarma.Scripts.Entities.Common;
 using EchoduKarma.Scripts.Entities.Player;
 
-public partial class PlayerStatsPage : Control
+namespace EchoduKarma.Scripts.UI;
+
+public partial class PlayerStatsPage : Control, IGameMenuTabPage
 {
     [Export] RichTextLabel _nameLabel;
     [Export] RichTextLabel _classLabel;
@@ -17,24 +20,13 @@ public partial class PlayerStatsPage : Control
     [Export] RichTextLabel _espritLabel;
     [Export] RichTextLabel _agiLabel;
     [Export] RichTextLabel _defLabel;
-    [Export] VBoxContainer _skillsContainer;
-    [Export] Button _closeButton;
     [Export] TextureRect _avatar;
     [Export] string _playerClassName = "Magus";
-
-    Control _dialogueUi;
 
     public override void _Ready()
     {
         Visible = false;
-        MouseFilter = MouseFilterEnum.Stop;
-        SetProcess(true);
-        _dialogueUi = GetParent()?.GetNodeOrNull<Control>("DialogueUI");
-
-        if (_closeButton != null)
-            _closeButton.Pressed += Close;
-        else
-            GD.PrintErr("[PlayerStatsPage] CloseButton introuvable — vérifiez les exports de la scène.");
+        MouseFilter = MouseFilterEnum.Ignore;
 
         if (GameManager.Instance != null)
             GameManager.Instance.PlayerLevelUp += OnPlayerLevelUp;
@@ -50,40 +42,32 @@ public partial class PlayerStatsPage : Control
         if (_avatar == null)
             return;
 
-        var atlas = new AtlasTexture
+        _avatar.Texture = CreateIdleAtlasFrame(LpcSpriteLayout.CameraFacingDirection);
+    }
+
+    static AtlasTexture CreateIdleAtlasFrame(string direction)
+    {
+        int frame = LpcSpriteLayout.RowFrame(LpcSpriteLayout.DirectionRow(direction), 0);
+        int col = frame % LpcSpriteLayout.HFrames;
+        int row = frame / LpcSpriteLayout.HFrames;
+        float size = LpcSpriteLayout.FrameSize;
+
+        return new AtlasTexture
         {
             Atlas = GD.Load<Texture2D>(LpcSprites.Idle),
-            Region = new Rect2(0, 0, LpcSprites.FrameSize, LpcSprites.FrameSize)
+            Region = new Rect2(col * size, row * size, size, size),
         };
-        _avatar.Texture = atlas;
     }
 
     public override void _ExitTree()
     {
         if (InventoryManager.Instance is not null)
-        {
             InventoryManager.Instance.EquipmentChanged -= OnEquipmentChanged;
-        }
 
         if (GameManager.Instance != null)
             GameManager.Instance.PlayerLevelUp -= OnPlayerLevelUp;
 
         base._ExitTree();
-    }
-
-    public override void _Process(double delta)
-    {
-        if (Input.IsActionJustPressed("stats"))
-        {
-            if (!Visible && IsDialogueOpen())
-                return;
-
-            Toggle();
-            return;
-        }
-
-        if (Visible && (Input.IsActionJustPressed("menu") || Input.IsActionJustPressed("ui_cancel")))
-            Close();
     }
 
     void OnPlayerLevelUp(int _)
@@ -98,36 +82,17 @@ public partial class PlayerStatsPage : Control
             Refresh();
     }
 
-    bool IsDialogueOpen() => _dialogueUi != null && _dialogueUi.Visible;
-
-    public void Toggle()
+    public void OnTabShown()
     {
-        if (Visible)
-            Close();
-        else
-            Open();
-    }
-
-    public void Open()
-    {
-        GetParent()?.GetNodeOrNull<QuestJournalPage>("QuestJournalPage")?.Close();
-        GetParent()?.GetNodeOrNull<InventoryPage>("InventoryPage")?.Close();
-        Refresh();
         Visible = true;
-        ZIndex = 10;
-        MoveToFront();
-        GameManager.Instance.SetMenuBlockingWorld(true);
-        GameManager.Instance.PlayerMoved = false;
-        _closeButton.GrabFocus();
+        Refresh();
     }
 
-    public void Close()
-    {
-        Visible = false;
-        GameManager.Instance.SetMenuBlockingWorld(false);
-        GameManager.Instance.PlayerMoved = true;
-        GetViewport()?.GuiReleaseFocus();
-    }
+    public void OnTabHidden() => Visible = false;
+
+    public void FocusDefault() { }
+
+    public bool TryHandleCancel() => false;
 
     void Refresh()
     {
@@ -151,7 +116,6 @@ public partial class PlayerStatsPage : Control
 
         RefreshExperience(statHandler, player.Level);
         RefreshAttributes(player);
-        RefreshSkills(player);
     }
 
     void RefreshExperience(StatHandler statHandler, int level)
@@ -201,31 +165,5 @@ public partial class PlayerStatsPage : Control
 
         int baseValue = total - bonus;
         return $"{baseValue} [color=#7AE582](+{bonus})[/color]";
-    }
-
-    void RefreshSkills(Player player)
-    {
-        foreach (Node child in _skillsContainer.GetChildren())
-            child.QueueFree();
-
-        if (player.LearnedSkills.Count == 0)
-        {
-            var emptyLabel = new Label { Text = "Aucune compétence apprise." };
-            emptyLabel.AddThemeFontSizeOverride("font_size", 12);
-            _skillsContainer.AddChild(emptyLabel);
-            return;
-        }
-
-        foreach (Skill skill in player.LearnedSkills)
-        {
-            var line = new Label
-            {
-                Text = $"{skill.Name}  —  {skill.Cost} PM · {skill.Power} puiss.",
-                AutowrapMode = TextServer.AutowrapMode.WordSmart,
-            };
-            line.AddThemeFontSizeOverride("font_size", 11);
-            line.Modulate = new Color(0.82f, 0.88f, 0.95f);
-            _skillsContainer.AddChild(line);
-        }
     }
 }

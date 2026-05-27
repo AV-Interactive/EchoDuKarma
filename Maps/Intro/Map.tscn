@@ -10,10 +10,8 @@
 [ext_resource type="Texture2D" uid="uid://cde3ducm2ro8v" path="res://Assets/World/Textures/GrassMask.png" id="5_ne6lv"]
 [ext_resource type="PackedScene" uid="uid://df5ufudng06yc" path="res://UI/dialogue.tscn" id="6_2whbv"]
 [ext_resource type="PackedScene" uid="uid://kqhj7bngint6" path="res://Scenes/tree.tscn" id="6_t4cgs"]
-[ext_resource type="PackedScene" uid="uid://bsbotyhp0xrc7" path="res://UI/player_stats_page.tscn" id="7_stats"]
 [ext_resource type="PackedScene" uid="uid://dg3wvkgnaaui0" path="res://Scenes/crate.tscn" id="7_t4cgs"]
-[ext_resource type="PackedScene" uid="uid://d3gn7yxbe6mjs" path="res://UI/inventory_page.tscn" id="8_inventory"]
-[ext_resource type="PackedScene" uid="uid://vbcno0dgtf73" path="res://UI/quest_journal_page.tscn" id="8_quests"]
+[ext_resource type="PackedScene" uid="uid://cgamemenushell01" path="res://UI/game_menu_shell.tscn" id="7_menu"]
 [ext_resource type="Texture2D" uid="uid://bxmu5hk73bkey" path="res://Assets/Actors/Npcs/Generic Male NPCs A.png" id="9_ifhrt"]
 [ext_resource type="PackedScene" uid="uid://yl7g5vmddauq" path="res://UI/KarmaBanner.tscn" id="9_karma"]
 [ext_resource type="PackedScene" uid="uid://iakcnhc4fbsq" path="res://Scenes/quest_trigger.tscn" id="10_qtrigger"]
@@ -166,7 +164,7 @@ StartDialogueId = "INTRO_SOS_01"
 ConditionalStartIds = PackedStringArray("MARCHAND_DONE_01", "MARCHAND_EN_COURS_01")
 
 [node name="Sprite3D" parent="SubViewportContainer/SubViewport/CHARACTERS/Marchand/Node3D" parent_id_path=PackedInt32Array(943380825, 1928349061) index="0" unique_id=2017281585]
-SpritesBasePath = "res://Assets/Actors/Npcs/seller/standard/"
+SpritesBasePath = "res://Assets/Actors/Npcs/sellers/01/standard/"
 
 [node name="PNJ APPRENDRE MONDE" parent="SubViewportContainer/SubViewport/CHARACTERS" unique_id=2030247009 instance=ExtResource("4_y7c5g")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2275362, 0.043306172, -5.8178864)
@@ -280,13 +278,7 @@ mouse_filter = 2
 [node name="DialogueUI" parent="GameUI/Root" unique_id=394009753 instance=ExtResource("6_2whbv")]
 layout_mode = 1
 
-[node name="PlayerStatsPage" parent="GameUI/Root" unique_id=2002023036 instance=ExtResource("7_stats")]
-layout_mode = 1
-
-[node name="QuestJournalPage" parent="GameUI/Root" unique_id=412602038 instance=ExtResource("8_quests")]
-layout_mode = 1
-
-[node name="InventoryPage" parent="GameUI/Root" unique_id=2028735628 instance=ExtResource("8_inventory")]
+[node name="GameMenuShell" parent="GameUI/Root" unique_id=2002023036 instance=ExtResource("7_menu")]
 layout_mode = 1
 
 [node name="PickupToast" parent="GameUI/Root" unique_id=1958840557 instance=ExtResource("12_toast")]
